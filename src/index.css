@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* iPad Kiosk Mode Optimizations */
+html, body {
+  overscroll-behavior: none;
+  touch-action: pan-x pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+}
+
+/* Prevent pull-to-refresh on iOS */
+body {
+  position: fixed;
+  width: 100%;
+}
+
+/* Large touch targets for iPad */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Score animation */
+.score-change {
+  will-change: transform, opacity;
+}
+
+/* Smooth transitions */
+.view-transition {
+  transition: transform 0.3s ease-out;
+}
+
+/* Fullscreen video overlay */
+.video-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: black;
+}
+
+/* Team color gradients */
+.team-gradient {
+  background: linear-gradient(135deg, var(--team-primary) 0%, var(--team-secondary) 100%);
+}
