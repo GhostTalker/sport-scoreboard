@@ -7,6 +7,7 @@ import { VideoOverlay } from './components/celebration/VideoOverlay';
 import { useUIStore } from './stores/uiStore';
 import { useGameData } from './hooks/useGameData';
 import { useScoreChange } from './hooks/useScoreChange';
+import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
 
 function App() {
   const currentView = useUIStore((state) => state.currentView);
@@ -17,6 +18,9 @@ function App() {
   
   // Watch for score changes
   useScoreChange();
+
+  // Keyboard navigation for desktop browsers
+  useKeyboardNavigation();
 
   // Prevent context menu on long press
   useEffect(() => {
