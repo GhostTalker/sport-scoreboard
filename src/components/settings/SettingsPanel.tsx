@@ -1,6 +1,5 @@
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useUIStore } from '../../stores/uiStore';
-import { useGameStore } from '../../stores/gameStore';
 import { TeamSelector } from './TeamSelector';
 import { GameSelector } from './GameSelector';
 import { DebugControls } from './DebugControls';

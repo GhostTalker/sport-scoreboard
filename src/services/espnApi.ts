@@ -109,7 +109,7 @@ function getPeriodName(period: number): string {
   }
 }
 
-function parseSituation(situation: any, homeTeamId: string, awayTeamId: string) {
+function parseSituation(situation: any, _homeTeamId: string, _awayTeamId: string) {
   if (!situation) return undefined;
   
   const possessionId = situation.possession;

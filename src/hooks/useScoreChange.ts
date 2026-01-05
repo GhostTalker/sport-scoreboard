@@ -5,7 +5,6 @@ import { detectScoreChange } from '../services/scoreDetector';
 
 export function useScoreChange() {
   const currentGame = useGameStore((state) => state.currentGame);
-  const previousScores = useGameStore((state) => state.previousScores);
   const updateScores = useGameStore((state) => state.updateScores);
   const showCelebration = useUIStore((state) => state.showCelebration);
   

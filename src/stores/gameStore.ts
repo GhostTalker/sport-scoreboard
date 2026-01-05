@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Game, GameStatus } from '../types/game';
+import type { Game } from '../types/game';
 import type { GameStats } from '../types/stats';
 
 interface PreviousScores {
@@ -58,7 +58,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   setAvailableGames: (games) => set({ availableGames: games }),
 
   updateScores: (home, away) => {
-    const { previousScores, currentGame } = get();
+    const { previousScores } = get();
     
     // Only update if scores actually changed
     if (previousScores.home !== home || previousScores.away !== away) {

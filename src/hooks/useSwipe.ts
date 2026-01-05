@@ -1,4 +1,4 @@
-import { useSwipeable, SwipeEventData } from 'react-swipeable';
+import { useSwipeable } from 'react-swipeable';
 import { useUIStore } from '../stores/uiStore';
 
 type View = 'scoreboard' | 'stats' | 'settings';

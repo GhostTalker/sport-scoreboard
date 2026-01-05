@@ -5,7 +5,6 @@ import { StatsPanel } from './components/stats/StatsPanel';
 import { SettingsPanel } from './components/settings/SettingsPanel';
 import { VideoOverlay } from './components/celebration/VideoOverlay';
 import { useUIStore } from './stores/uiStore';
-import { useGameStore } from './stores/gameStore';
 import { useGameData } from './hooks/useGameData';
 import { useScoreChange } from './hooks/useScoreChange';
 
