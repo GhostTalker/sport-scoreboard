@@ -26,69 +26,96 @@ export function MainScoreboard() {
   const isLive = currentGame.status === 'in_progress' || currentGame.status === 'halftime';
   const isFinal = currentGame.status === 'final';
 
-  // Dynamic Stadium background - inspired by NFL broadcast graphics
+  // Get background image URL for Video Wall display
+  const getBackgroundImage = () => {
+    if (isSuperBowl) {
+      return 'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?w=1920&q=90&fit=crop';
+    }
+    if (isConference) {
+      return 'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?w=1920&q=90&fit=crop';
+    }
+    if (isLive) {
+      return 'https://images.unsplash.com/photo-1566577134770-3d85bb3a9cc4?w=1920&q=90&fit=crop';
+    }
+    if (isFinal) {
+      return 'https://images.unsplash.com/photo-1577223625816-7546f9f3f505?w=1920&q=90&fit=crop';
+    }
+    if (isPlayoffs) {
+      return 'https://images.unsplash.com/photo-1566577134770-3d85bb3a9cc4?w=1920&q=90&fit=crop';
+    }
+    return 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1920&q=90&fit=crop';
+  };
+
+  // Dynamic overlay for professional broadcast look
   const getBackgroundStyle = () => {
-    // Base stadium with field grass pattern
-    const baseStadium = `
-      linear-gradient(180deg, rgba(10,15,25,0.95) 0%, rgba(15,25,35,0.9) 40%, rgba(20,40,30,0.85) 100%),
-      repeating-linear-gradient(90deg, 
-        rgba(34,139,34,0.15) 0px, 
-        rgba(34,139,34,0.15) 8px, 
-        rgba(46,125,50,0.12) 8px, 
-        rgba(46,125,50,0.12) 16px
-      ),
-      linear-gradient(180deg, #050810 0%, #0a1520 40%, #1a2e1f 70%, #1a3a1f 100%)
-    `;
+    const bgImage = getBackgroundImage();
     
     if (isSuperBowl) {
       return {
-        background: `
-          radial-gradient(ellipse at top, rgba(255,215,0,0.18) 0%, transparent 60%),
-          ${baseStadium}
+        backgroundImage: `
+          radial-gradient(ellipse at top, rgba(255,215,0,0.25) 0%, transparent 50%),
+          linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.6) 100%),
+          url(${bgImage})
         `,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
       };
     }
     
     if (isConference) {
       return {
-        background: `
-          radial-gradient(ellipse at top, rgba(200,200,220,0.14) 0%, transparent 60%),
-          ${baseStadium}
+        backgroundImage: `
+          radial-gradient(ellipse at top, rgba(200,200,220,0.2) 0%, transparent 50%),
+          linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.6) 100%),
+          url(${bgImage})
         `,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
       };
     }
     
     if (isLive) {
       return {
-        background: `
-          radial-gradient(ellipse at top, rgba(220,38,38,0.22) 0%, transparent 50%),
-          radial-gradient(ellipse at bottom, rgba(234,88,12,0.16) 0%, transparent 60%),
-          ${baseStadium}
+        backgroundImage: `
+          radial-gradient(ellipse at top, rgba(220,38,38,0.3) 0%, transparent 50%),
+          linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%),
+          url(${bgImage})
         `,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
       };
     }
     
     if (isFinal) {
       return {
-        background: `
-          radial-gradient(ellipse at top, rgba(80,80,100,0.12) 0%, transparent 60%),
-          ${baseStadium}
+        backgroundImage: `
+          linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.7) 100%),
+          url(${bgImage})
         `,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
       };
     }
     
     if (isPlayoffs) {
       return {
-        background: `
-          radial-gradient(ellipse at top, rgba(59,130,246,0.2) 0%, transparent 60%),
-          ${baseStadium}
+        backgroundImage: `
+          radial-gradient(ellipse at top, rgba(59,130,246,0.25) 0%, transparent 50%),
+          linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.6) 100%),
+          url(${bgImage})
         `,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
       };
     }
     
-    // Default (scheduled/regular season)
     return {
-      background: baseStadium,
+      backgroundImage: `
+        linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.6) 100%),
+        url(${bgImage})
+      `,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
     };
   };
 
