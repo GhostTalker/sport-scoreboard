@@ -126,6 +126,8 @@ function parseScoreboardResponse(data: any): Game[] {
     const status = parseGameStatus(event.status);
     const seasonName = getSeasonName(seasonType, week, event.season?.slug);
     
+    console.log(`[ESPN API] Game ${event.id}: seasonType=${seasonType}, week=${week}, slug=${event.season?.slug}, seasonName=${seasonName}`);
+    
     return {
       id: event.id,
       status,
