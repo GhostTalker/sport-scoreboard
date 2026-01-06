@@ -1,132 +1,159 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { fetchScoreboard, fetchGameDetails } from '../services/espnApi';
 import { POLLING_INTERVALS } from '../constants/api';
 
 export function useGameData() {
-  const currentGame = useGameStore((state) => state.currentGame);
-  const isLive = useGameStore((state) => state.isLive);
-  const setCurrentGame = useGameStore((state) => state.setCurrentGame);
-  const setAvailableGames = useGameStore((state) => state.setAvailableGames);
-  const setGameStats = useGameStore((state) => state.setGameStats);
-  const setLoading = useGameStore((state) => state.setLoading);
-  const setError = useGameStore((state) => state.setError);
-  
   const intervalRef = useRef<number | null>(null);
   const isFirstFetch = useRef(true);
+  const isFetching = useRef(false);
 
-  // Set up polling
-  useEffect(() => {
-    const fetchData = async () => {
-      // Get the CURRENT value of manuallySelectedGameId directly from store
-      const { manuallySelectedGameId } = useGameStore.getState();
-      
-      try {
-        if (isFirstFetch.current) {
-          setLoading(true);
-        }
-        setError(null);
+  const fetchData = useCallback(async () => {
+    // Prevent concurrent fetches
+    if (isFetching.current) {
+      console.log('[useGameData] Skipping fetch - already in progress');
+      return;
+    }
+    
+    isFetching.current = true;
+    
+    // Get current state directly from store
+    const store = useGameStore.getState();
+    const { manuallySelectedGameId, setAvailableGames, setCurrentGame, setGameStats, setLoading, setError } = store;
+    
+    console.log('[useGameData] Fetching data, manuallySelectedGameId:', manuallySelectedGameId);
+    
+    try {
+      if (isFirstFetch.current) {
+        setLoading(true);
+      }
+      setError(null);
 
-        // Fetch scoreboard (all games)
-        const games = await fetchScoreboard();
-        setAvailableGames(games);
+      // Fetch scoreboard (all games)
+      const games = await fetchScoreboard();
+      setAvailableGames(games);
 
-        // Determine which game to show
-        let gameToShow = null;
+      // Determine which game to show
+      let gameToShow = null;
 
-        // If user manually selected a game, ALWAYS use that game
-        if (manuallySelectedGameId) {
-          gameToShow = games.find((g) => g.id === manuallySelectedGameId);
-          console.log('[useGameData] Manual selection:', manuallySelectedGameId, 'Found:', !!gameToShow);
-        }
+      // If user manually selected a game, ALWAYS use that game
+      if (manuallySelectedGameId) {
+        gameToShow = games.find((g) => g.id === manuallySelectedGameId);
+        console.log('[useGameData] Looking for manual selection:', manuallySelectedGameId, 'Found:', gameToShow?.id);
         
-        // If no manual selection or game not found, find any live game
+        // If manual selection not found in current games, keep showing it anyway
         if (!gameToShow) {
-          gameToShow = games.find((g) => g.status === 'in_progress');
+          const { currentGame } = useGameStore.getState();
+          if (currentGame && currentGame.id === manuallySelectedGameId) {
+            console.log('[useGameData] Keeping current manually selected game');
+            gameToShow = currentGame;
+          }
         }
+      }
+      
+      // If no manual selection, find any live game
+      if (!gameToShow && !manuallySelectedGameId) {
+        gameToShow = games.find((g) => g.status === 'in_progress');
+        console.log('[useGameData] No manual selection, looking for live game:', gameToShow?.id);
+      }
 
-        // If still no game, show first available
-        if (!gameToShow && games.length > 0) {
-          gameToShow = games[0];
-        }
+      // If still no game, show first available (but only if no manual selection)
+      if (!gameToShow && !manuallySelectedGameId && games.length > 0) {
+        gameToShow = games[0];
+        console.log('[useGameData] Falling back to first game:', gameToShow?.id);
+      }
 
-        if (gameToShow) {
-          // Fetch details for live AND final games (for stats)
-          // Scheduled games don't have stats yet
-          const needsDetails = gameToShow.status === 'in_progress' || 
-                               gameToShow.status === 'halftime' || 
-                               gameToShow.status === 'final';
-          
-          if (needsDetails) {
-            try {
-              const details = await fetchGameDetails(gameToShow.id);
-              if (details && details.game) {
-                // Merge with scoreboard data to preserve season info
-                const gameWithSeasonInfo = {
-                  ...details.game,
-                  seasonType: gameToShow.seasonType,
-                  week: gameToShow.week,
-                  seasonName: gameToShow.seasonName,
-                  startTime: gameToShow.startTime || details.game.startTime,
-                  venue: gameToShow.venue || details.game.venue,
-                  broadcast: gameToShow.broadcast || details.game.broadcast,
-                };
-                setCurrentGame(gameWithSeasonInfo);
-                setGameStats(details.stats);
-              } else {
-                setCurrentGame(gameToShow);
-                setGameStats(null);
-              }
-            } catch (err) {
-              console.warn('Failed to fetch game details:', err);
+      if (gameToShow) {
+        // Fetch details for live AND final games (for stats)
+        const needsDetails = gameToShow.status === 'in_progress' || 
+                             gameToShow.status === 'halftime' || 
+                             gameToShow.status === 'final';
+        
+        if (needsDetails) {
+          try {
+            const details = await fetchGameDetails(gameToShow.id);
+            if (details && details.game) {
+              // Merge with scoreboard data to preserve season info
+              const gameWithSeasonInfo = {
+                ...details.game,
+                seasonType: gameToShow.seasonType,
+                week: gameToShow.week,
+                seasonName: gameToShow.seasonName,
+                startTime: gameToShow.startTime || details.game.startTime,
+                venue: gameToShow.venue || details.game.venue,
+                broadcast: gameToShow.broadcast || details.game.broadcast,
+              };
+              setCurrentGame(gameWithSeasonInfo);
+              setGameStats(details.stats);
+            } else {
               setCurrentGame(gameToShow);
               setGameStats(null);
             }
-          } else {
-            // For scheduled games, use scoreboard data directly (no stats available)
+          } catch (err) {
+            console.warn('Failed to fetch game details:', err);
             setCurrentGame(gameToShow);
             setGameStats(null);
           }
         } else {
-          setCurrentGame(null);
+          // For scheduled games, use scoreboard data directly
+          setCurrentGame(gameToShow);
           setGameStats(null);
         }
-      } catch (error) {
-        console.error('Error fetching game data:', error);
-        setError(error instanceof Error ? error.message : 'Failed to fetch game data');
-      } finally {
-        setLoading(false);
-        isFirstFetch.current = false;
       }
-    };
+      // Don't set null if we have a manual selection - keep showing the selected game
+    } catch (error) {
+      console.error('Error fetching game data:', error);
+      setError(error instanceof Error ? error.message : 'Failed to fetch game data');
+    } finally {
+      setLoading(false);
+      isFirstFetch.current = false;
+      isFetching.current = false;
+    }
+  }, []);
 
+  // Set up polling - only run once on mount
+  useEffect(() => {
     // Initial fetch
     fetchData();
 
-    // Determine polling interval based on game state
-    const getInterval = () => {
-      if (!currentGame) return POLLING_INTERVALS.scheduled;
-      if (currentGame.status === 'final') return POLLING_INTERVALS.final;
-      if (isLive) return POLLING_INTERVALS.live;
-      return POLLING_INTERVALS.scheduled;
+    // Set up interval with dynamic timing
+    const setupInterval = () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      
+      const { currentGame, isLive } = useGameStore.getState();
+      let interval = POLLING_INTERVALS.scheduled;
+      
+      if (currentGame?.status === 'final') {
+        interval = POLLING_INTERVALS.final;
+      } else if (isLive) {
+        interval = POLLING_INTERVALS.live;
+      }
+      
+      console.log('[useGameData] Setting poll interval:', interval, 'ms');
+      intervalRef.current = window.setInterval(fetchData, interval);
     };
-
-    // Set up interval
-    intervalRef.current = window.setInterval(fetchData, getInterval());
+    
+    setupInterval();
+    
+    // Re-setup interval when game status changes
+    const unsubscribe = useGameStore.subscribe((state, prevState) => {
+      if (state.currentGame?.status !== prevState.currentGame?.status ||
+          state.isLive !== prevState.isLive) {
+        setupInterval();
+      }
+    });
 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
+      unsubscribe();
     };
-  }, [currentGame?.status, isLive, setAvailableGames, setCurrentGame, setGameStats, setLoading, setError]);
+  }, [fetchData]);
 
   return {
-    refetch: () => {
-      // Trigger refetch by clearing and resetting interval
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    },
+    refetch: fetchData,
   };
 }
