@@ -51,20 +51,27 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // Auto-set (from polling) - respects manual selection
   setCurrentGame: (game) => {
-    const { manuallySelectedGameId } = get();
+    const { manuallySelectedGameId, currentGame: prevGame, previousScores } = get();
     
-    // If user manually selected a game, don't override it
+    // If user manually selected a game, only update if it's the same game
     if (manuallySelectedGameId && game?.id !== manuallySelectedGameId) {
+      console.log('[GameStore] Ignoring update - manually selected game differs:', manuallySelectedGameId, 'vs', game?.id);
       return;
     }
     
     const isLive = game?.status === 'in_progress' || game?.status === 'halftime';
+    
+    // Only update previousScores if this is a NEW game (different ID)
+    // This prevents celebration triggers when switching games
+    const isNewGame = !prevGame || prevGame.id !== game?.id;
+    const newPreviousScores = isNewGame && game
+      ? { home: game.homeTeam.score, away: game.awayTeam.score }
+      : previousScores;
+    
     set({ 
       currentGame: game, 
       isLive,
-      previousScores: game 
-        ? { home: game.homeTeam.score, away: game.awayTeam.score }
-        : { home: 0, away: 0 },
+      previousScores: newPreviousScores,
     });
   },
 

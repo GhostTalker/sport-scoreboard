@@ -124,9 +124,36 @@ export function MainScoreboard() {
         </div>
       )}
 
-      {/* Status Badge */}
+      {/* Status Badge - for non-live games */}
       {currentGame.status !== 'in_progress' && (
-        <StatusBadge status={currentGame.status} startTime={currentGame.startTime} />
+        <StatusBadge 
+          status={currentGame.status} 
+          startTime={currentGame.startTime}
+          venue={currentGame.venue}
+          broadcast={currentGame.broadcast}
+        />
+      )}
+
+      {/* Game Info Footer - venue/broadcast for live games */}
+      {currentGame.status === 'in_progress' && (currentGame.venue || currentGame.broadcast) && (
+        <div className="mt-2 flex items-center gap-4 text-white/40 text-sm">
+          {currentGame.venue && (
+            <span className="flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              </svg>
+              {currentGame.venue}
+            </span>
+          )}
+          {currentGame.broadcast && (
+            <span className="flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              {currentGame.broadcast}
+            </span>
+          )}
+        </div>
       )}
 
       {/* Navigation hint - very subtle */}
@@ -231,22 +258,53 @@ function NoGameState() {
   );
 }
 
-function StatusBadge({ status, startTime }: { status: string; startTime?: string }) {
+interface StatusBadgeProps {
+  status: string;
+  startTime?: string;
+  venue?: string;
+  broadcast?: string;
+}
+
+function StatusBadge({ status, startTime, venue, broadcast }: StatusBadgeProps) {
+  const isScheduled = status === 'scheduled';
+  
   const getStatusText = () => {
     switch (status) {
       case 'final': return 'FINAL';
       case 'halftime': return 'HALFTIME';
       case 'scheduled':
-        if (startTime) {
-          return new Date(startTime).toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
-            minute: '2-digit' 
-          });
-        }
-        return 'SCHEDULED';
+        return 'UPCOMING';
       case 'postponed': return 'POSTPONED';
       case 'delayed': return 'DELAYED';
       default: return status.toUpperCase();
+    }
+  };
+
+  const getFormattedDateTime = () => {
+    if (!startTime) return null;
+    const date = new Date(startTime);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const isTomorrow = date.toDateString() === tomorrow.toDateString();
+    
+    const time = date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit' 
+    });
+    
+    if (isToday) {
+      return { date: 'TODAY', time };
+    } else if (isTomorrow) {
+      return { date: 'TOMORROW', time };
+    } else {
+      const dateStr = date.toLocaleDateString('en-US', { 
+        weekday: 'short',
+        month: 'short', 
+        day: 'numeric' 
+      }).toUpperCase();
+      return { date: dateStr, time };
     }
   };
 
@@ -257,24 +315,57 @@ function StatusBadge({ status, startTime }: { status: string; startTime?: string
       case 'halftime': 
         return { bg: 'rgba(200,150,50,0.8)', glow: '200,150,50' };
       case 'scheduled':
-        return { bg: 'rgba(50,100,200,0.8)', glow: '50,100,200' };
+        return { bg: 'rgba(30,60,100,0.9)', glow: '50,100,200' };
       default: 
         return { bg: 'rgba(100,100,100,0.8)', glow: '100,100,100' };
     }
   };
 
   const style = getBadgeStyle();
+  const dateTime = getFormattedDateTime();
 
   return (
-    <div 
-      className="mt-6 px-8 py-3 rounded-xl"
-      style={{
-        background: style.bg,
-        boxShadow: `0 0 30px rgba(${style.glow},0.5)`,
-        border: '1px solid rgba(255,255,255,0.2)',
-      }}
-    >
-      <span className="text-white font-bold text-xl tracking-wider">{getStatusText()}</span>
+    <div className="mt-6 flex flex-col items-center gap-3">
+      {/* Main Status Badge */}
+      <div 
+        className="px-8 py-3 rounded-xl"
+        style={{
+          background: style.bg,
+          boxShadow: `0 0 30px rgba(${style.glow},0.5)`,
+          border: '1px solid rgba(255,255,255,0.2)',
+        }}
+      >
+        {isScheduled && dateTime ? (
+          <div className="flex flex-col items-center">
+            <span className="text-white/60 text-sm font-medium tracking-wider">{dateTime.date}</span>
+            <span className="text-white font-black text-3xl tracking-wide">{dateTime.time}</span>
+          </div>
+        ) : (
+          <span className="text-white font-bold text-xl tracking-wider">{getStatusText()}</span>
+        )}
+      </div>
+      
+      {/* Venue & Broadcast Info */}
+      {(venue || broadcast) && (
+        <div className="flex items-center gap-4 text-white/40 text-sm">
+          {venue && (
+            <span className="flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              </svg>
+              {venue}
+            </span>
+          )}
+          {broadcast && (
+            <span className="flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              {broadcast}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

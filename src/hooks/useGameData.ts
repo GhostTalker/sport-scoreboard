@@ -16,11 +16,15 @@ export function useGameData() {
   } = useGameStore();
   
   const intervalRef = useRef<number | null>(null);
+  const isFirstFetch = useRef(true);
 
   // Fetch all games and update current game
   const fetchData = useCallback(async () => {
     try {
-      setLoading(true);
+      // Only show loading on first fetch
+      if (isFirstFetch.current) {
+        setLoading(true);
+      }
       setError(null);
 
       // Fetch scoreboard (all games)
@@ -29,44 +33,69 @@ export function useGameData() {
 
       // Determine which game to show
       let gameToShow = null;
+      let gameIdToFetch: string | null = null;
 
-      // If user manually selected a game, find and update it
+      // If user manually selected a game, ALWAYS use that game from the updated list
       if (manuallySelectedGameId) {
         gameToShow = games.find((g) => g.id === manuallySelectedGameId);
+        if (gameToShow) {
+          gameIdToFetch = manuallySelectedGameId;
+        }
       }
       
       // If no manual selection or game not found, find any live game
       if (!gameToShow) {
         gameToShow = games.find((g) => g.status === 'in_progress');
+        if (gameToShow) {
+          gameIdToFetch = gameToShow.id;
+        }
       }
 
       // If still no game, show first available
       if (!gameToShow && games.length > 0) {
         gameToShow = games[0];
+        gameIdToFetch = gameToShow.id;
       }
 
-      if (gameToShow) {
-        // Fetch detailed stats for this game
+      if (gameToShow && gameIdToFetch) {
+        // Fetch detailed stats for this specific game
         try {
-          const details = await fetchGameDetails(gameToShow.id);
-          if (details) {
-            setCurrentGame(details.game);
+          const details = await fetchGameDetails(gameIdToFetch);
+          if (details && details.game) {
+            // IMPORTANT: Preserve the seasonName from scoreboard data 
+            // since game details might not have it
+            const gameWithSeasonInfo = {
+              ...details.game,
+              seasonType: gameToShow.seasonType,
+              week: gameToShow.week,
+              seasonName: gameToShow.seasonName,
+              startTime: gameToShow.startTime || details.game.startTime,
+              venue: gameToShow.venue || details.game.venue,
+              broadcast: gameToShow.broadcast || details.game.broadcast,
+            };
+            setCurrentGame(gameWithSeasonInfo);
             setGameStats(details.stats);
           } else {
+            // No details, use scoreboard data directly
             setCurrentGame(gameToShow);
+            setGameStats(null);
           }
-        } catch {
-          // If detailed fetch fails, use basic game data
+        } catch (err) {
+          console.warn('Failed to fetch game details, using scoreboard data:', err);
+          // If detailed fetch fails, use basic game data from scoreboard
           setCurrentGame(gameToShow);
+          setGameStats(null);
         }
       } else {
         setCurrentGame(null);
+        setGameStats(null);
       }
     } catch (error) {
       console.error('Error fetching game data:', error);
       setError(error instanceof Error ? error.message : 'Failed to fetch game data');
     } finally {
       setLoading(false);
+      isFirstFetch.current = false;
     }
   }, [manuallySelectedGameId, setAvailableGames, setCurrentGame, setGameStats, setLoading, setError]);
 
