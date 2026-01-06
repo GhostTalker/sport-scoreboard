@@ -19,30 +19,101 @@ export function MainScoreboard() {
     return <NoGameState />;
   }
 
+  // Determine background style based on game type
+  const isSuperBowl = currentGame.seasonName === 'SUPER BOWL';
+  const isConference = currentGame.seasonName === 'CONFERENCE CHAMPIONSHIP';
+  const isPlayoffs = currentGame.seasonName && !['GAME DAY', 'PRESEASON'].includes(currentGame.seasonName);
+  const isLive = currentGame.status === 'in_progress' || currentGame.status === 'halftime';
+  const isFinal = currentGame.status === 'final';
+
+  // Dynamic background based on game context
+  const getBackgroundStyle = () => {
+    if (isSuperBowl) {
+      return {
+        background: `
+          radial-gradient(ellipse at top left, rgba(212,175,55,0.25) 0%, transparent 50%),
+          radial-gradient(ellipse at top right, rgba(255,215,0,0.2) 0%, transparent 50%),
+          radial-gradient(ellipse at bottom, rgba(170,140,40,0.2) 0%, transparent 50%),
+          linear-gradient(135deg, #1a1410 0%, #2d2416 25%, #1a1410 50%, #2d2416 75%, #1a1410 100%)
+        `,
+      };
+    }
+    
+    if (isConference) {
+      return {
+        background: `
+          radial-gradient(ellipse at top, rgba(180,180,200,0.2) 0%, transparent 50%),
+          radial-gradient(ellipse at bottom, rgba(140,140,160,0.15) 0%, transparent 50%),
+          linear-gradient(135deg, #1a1c20 0%, #252830 25%, #1a1c20 50%, #252830 75%, #1a1c20 100%)
+        `,
+      };
+    }
+    
+    if (isLive) {
+      return {
+        background: `
+          radial-gradient(ellipse at top, rgba(220,38,38,0.3) 0%, transparent 40%),
+          radial-gradient(ellipse at bottom left, rgba(234,88,12,0.2) 0%, transparent 50%),
+          radial-gradient(ellipse at bottom right, rgba(239,68,68,0.25) 0%, transparent 50%),
+          linear-gradient(135deg, #1a0a0a 0%, #2d1212 25%, #1a0a0a 50%, #2d1212 75%, #1a0a0a 100%)
+        `,
+      };
+    }
+    
+    if (isFinal) {
+      return {
+        background: `
+          radial-gradient(ellipse at top, rgba(100,100,120,0.15) 0%, transparent 50%),
+          linear-gradient(180deg, #0a0e14 0%, #12161c 50%, #0a0e14 100%)
+        `,
+      };
+    }
+    
+    if (isPlayoffs) {
+      return {
+        background: `
+          radial-gradient(ellipse at top, rgba(59,130,246,0.3) 0%, transparent 50%),
+          radial-gradient(ellipse at bottom, rgba(37,99,235,0.25) 0%, transparent 50%),
+          linear-gradient(135deg, #0a1628 0%, #1a2f4a 25%, #0a1628 50%, #1a2f4a 75%, #0a1628 100%)
+        `,
+      };
+    }
+    
+    // Default (scheduled/regular season)
+    return {
+      background: `
+        radial-gradient(ellipse at top, #1a2744 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, #0d1f3c 0%, transparent 50%),
+        linear-gradient(180deg, #0a1628 0%, #152238 50%, #0a1628 100%)
+      `,
+    };
+  };
+
   return (
     <div 
-      className="h-full w-full flex flex-col items-center justify-center relative overflow-hidden"
-      style={{
-        background: `
-          radial-gradient(ellipse at top, #1a2744 0%, transparent 50%),
-          radial-gradient(ellipse at bottom, #0d1f3c 0%, transparent 50%),
-          linear-gradient(180deg, #0a1628 0%, #152238 50%, #0a1628 100%)
-        `,
-      }}
+      className="h-full w-full flex flex-col items-center justify-center relative overflow-hidden transition-all duration-1000"
+      style={getBackgroundStyle()}
     >
-      {/* Animated background particles/stars effect */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white/20 rounded-full animate-pulse" />
-        <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-white/30 rounded-full animate-ping" />
-        <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-white/20 rounded-full animate-pulse" />
-        <div className="absolute top-1/2 right-1/4 w-1 h-1 bg-white/25 rounded-full animate-ping" />
-      </div>
+      {/* Dynamic particle effects */}
+      {isSuperBowl && <SuperBowlParticles />}
+      {isConference && <ChampionshipParticles />}
+      {isLive && <LiveGameParticles />}
+      {isPlayoffs && !isSuperBowl && !isConference && <PlayoffParticles />}
+      {!isPlayoffs && !isLive && <DefaultParticles />}
 
-      {/* Top glow effect */}
+      {/* Top glow effect - changes with context */}
       <div 
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-32 pointer-events-none"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-40 pointer-events-none transition-all duration-1000"
         style={{
-          background: 'radial-gradient(ellipse, rgba(255,200,100,0.15) 0%, transparent 70%)',
+          background: isSuperBowl 
+            ? 'radial-gradient(ellipse, rgba(255,215,0,0.25) 0%, transparent 70%)'
+            : isConference
+            ? 'radial-gradient(ellipse, rgba(200,200,220,0.2) 0%, transparent 70%)'
+            : isLive
+            ? 'radial-gradient(ellipse, rgba(220,38,38,0.25) 0%, transparent 70%)'
+            : isPlayoffs
+            ? 'radial-gradient(ellipse, rgba(59,130,246,0.2) 0%, transparent 70%)'
+            : 'radial-gradient(ellipse, rgba(255,200,100,0.15) 0%, transparent 70%)',
         }}
       />
 
@@ -481,6 +552,105 @@ function GameHeader({ seasonName, status, startTime, venue, broadcast, hideDateT
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+// Particle effect components
+function SuperBowlParticles() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Gold confetti effect */}
+      {[...Array(20)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-2 h-2 rounded-full animate-pulse"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            backgroundColor: i % 3 === 0 ? 'rgba(255,215,0,0.4)' : i % 3 === 1 ? 'rgba(212,175,55,0.3)' : 'rgba(255,255,255,0.2)',
+            animationDelay: `${Math.random() * 2}s`,
+            animationDuration: `${2 + Math.random() * 2}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ChampionshipParticles() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Silver/platinum particles */}
+      {[...Array(15)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-1.5 h-1.5 rounded-full animate-pulse"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            backgroundColor: `rgba(${180 + Math.random() * 75}, ${180 + Math.random() * 75}, ${200 + Math.random() * 55}, ${0.2 + Math.random() * 0.2})`,
+            animationDelay: `${Math.random() * 3}s`,
+            animationDuration: `${2 + Math.random() * 3}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function LiveGameParticles() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Pulsing red energy particles */}
+      {[...Array(12)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full animate-ping"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            width: `${4 + Math.random() * 8}px`,
+            height: `${4 + Math.random() * 8}px`,
+            backgroundColor: i % 2 === 0 ? 'rgba(220,38,38,0.3)' : 'rgba(234,88,12,0.25)',
+            animationDelay: `${Math.random() * 2}s`,
+            animationDuration: `${1.5 + Math.random() * 1.5}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function PlayoffParticles() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Blue energy particles */}
+      {[...Array(15)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-2 h-2 rounded-full animate-pulse"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            backgroundColor: i % 2 === 0 ? 'rgba(59,130,246,0.3)' : 'rgba(37,99,235,0.25)',
+            animationDelay: `${Math.random() * 3}s`,
+            animationDuration: `${2 + Math.random() * 2}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function DefaultParticles() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Subtle stars */}
+      <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white/20 rounded-full animate-pulse" />
+      <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-white/30 rounded-full animate-ping" />
+      <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-white/20 rounded-full animate-pulse" />
+      <div className="absolute top-1/2 right-1/4 w-1 h-1 bg-white/25 rounded-full animate-ping" />
     </div>
   );
 }
