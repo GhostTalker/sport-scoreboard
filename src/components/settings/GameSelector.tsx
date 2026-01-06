@@ -115,22 +115,27 @@ function GameCard({ game, isSelected, onSelect }: GameCardProps) {
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const isTomorrow = date.toDateString() === tomorrow.toDateString();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday = date.toDateString() === yesterday.toDateString();
     
-    const time = date.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
+    const time = date.toLocaleTimeString('de-DE', { 
+      hour: '2-digit', 
       minute: '2-digit' 
     });
     
     if (isToday) {
-      return { date: 'Today', time };
+      return { date: 'HEUTE', time };
+    } else if (isYesterday) {
+      return { date: 'GESTERN', time };
     } else if (isTomorrow) {
-      return { date: 'Tomorrow', time };
+      return { date: 'MORGEN', time };
     } else {
-      const dateFormatted = date.toLocaleDateString('en-US', { 
+      const dateFormatted = date.toLocaleDateString('de-DE', { 
         weekday: 'short',
-        month: 'short', 
-        day: 'numeric' 
-      });
+        day: 'numeric',
+        month: 'numeric',
+      }).toUpperCase();
       return { date: dateFormatted, time };
     }
   };
@@ -188,14 +193,16 @@ function GameCard({ game, isSelected, onSelect }: GameCardProps) {
           </span>
         </div>
 
-        {/* Score / vs */}
+        {/* Score / Time */}
         <div className="flex items-center min-w-[70px] justify-center">
           {isLive || isFinal || isHalftime ? (
             <span className="text-xl font-black text-white">
               {game.awayTeam.score} - {game.homeTeam.score}
             </span>
           ) : (
-            <span className="text-lg font-bold text-white/50">@</span>
+            <span className="text-sm font-bold text-blue-400">
+              {dateTime.time}
+            </span>
           )}
         </div>
 
