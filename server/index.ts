@@ -21,10 +21,15 @@ app.use('/api', apiRouter);
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, '../dist');
+  console.log('[Server] Serving static files from:', distPath);
   app.use(express.static(distPath));
   
-  // SPA fallback
-  app.get('*', (_req, res) => {
+  // SPA fallback - but NOT for /api routes
+  app.get('*', (req, res) => {
+    // Skip API routes (they should be handled above)
+    if (req.path.startsWith('/api')) {
+      return res.status(404).json({ error: 'API endpoint not found' });
+    }
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
