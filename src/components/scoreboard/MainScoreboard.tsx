@@ -56,12 +56,14 @@ export function MainScoreboard() {
         hideDateTime={currentGame.status === 'scheduled' || currentGame.status === 'final'}
       />
 
-      {/* Main Score Display */}
-      <div className="flex items-center justify-center gap-12 w-full max-w-7xl px-8">
-        {/* Away Team */}
-        <TeamDisplay team={currentGame.awayTeam} isHome={false} />
+      {/* Main Score Display - Grid for perfect centering */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full max-w-7xl px-8 gap-12">
+        {/* Away Team - Right aligned */}
+        <div className="flex justify-end">
+          <TeamDisplay team={currentGame.awayTeam} isHome={false} />
+        </div>
 
-        {/* Center Section - Score or Start Time */}
+        {/* Center Section - Score or Start Time - Always centered */}
         {currentGame.status === 'scheduled' ? (
           // Show start time for upcoming games
           <div className="flex flex-col items-center gap-3">
@@ -193,7 +195,9 @@ export function MainScoreboard() {
         )}
 
         {/* Home Team */}
-        <TeamDisplay team={currentGame.homeTeam} isHome={true} />
+        <div className="flex justify-start">
+          <TeamDisplay team={currentGame.homeTeam} isHome={true} />
+        </div>
       </div>
 
       {/* Game Situation */}
