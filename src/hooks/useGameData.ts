@@ -51,9 +51,13 @@ export function useGameData() {
         }
 
         if (gameToShow) {
-          // For final/scheduled games, just use scoreboard data (no need for details)
-          // For live games, fetch details for stats
-          if (gameToShow.status === 'in_progress' || gameToShow.status === 'halftime') {
+          // Fetch details for live AND final games (for stats)
+          // Scheduled games don't have stats yet
+          const needsDetails = gameToShow.status === 'in_progress' || 
+                               gameToShow.status === 'halftime' || 
+                               gameToShow.status === 'final';
+          
+          if (needsDetails) {
             try {
               const details = await fetchGameDetails(gameToShow.id);
               if (details && details.game) {
@@ -79,7 +83,7 @@ export function useGameData() {
               setGameStats(null);
             }
           } else {
-            // For final/scheduled games, use scoreboard data directly
+            // For scheduled games, use scoreboard data directly (no stats available)
             setCurrentGame(gameToShow);
             setGameStats(null);
           }

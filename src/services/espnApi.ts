@@ -3,7 +3,7 @@ import type { Game, GameStatus } from '../types/game';
 import type { GameStats, TeamStats, PlayerStats } from '../types/stats';
 import { getTeamById } from '../constants/teams';
 
-// Fetch scoreboard data (all games)
+// Fetch scoreboard data (all games for current week)
 export async function fetchScoreboard(): Promise<Game[]> {
   try {
     const response = await fetch(API_ENDPOINTS.scoreboard);
@@ -11,7 +11,14 @@ export async function fetchScoreboard(): Promise<Game[]> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    return parseScoreboardResponse(data);
+    const games = parseScoreboardResponse(data);
+    
+    // Log for debugging
+    console.log('[ESPN API] Scoreboard returned', games.length, 'games:', 
+      games.map(g => `${g.awayTeam.abbreviation}@${g.homeTeam.abbreviation} (${g.status})`).join(', ')
+    );
+    
+    return games;
   } catch (error) {
     console.error('Error fetching scoreboard:', error);
     throw error;
