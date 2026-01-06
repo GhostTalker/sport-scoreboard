@@ -46,11 +46,13 @@ export function MainScoreboard() {
         }}
       />
 
-      {/* Season/Round Header with Date/Status */}
+      {/* Season/Round Header with Date/Status and Venue */}
       <GameHeader 
         seasonName={currentGame.seasonName} 
         status={currentGame.status}
         startTime={currentGame.startTime}
+        venue={currentGame.venue}
+        broadcast={currentGame.broadcast}
       />
 
       {/* Main Score Display */}
@@ -128,49 +130,7 @@ export function MainScoreboard() {
         </div>
       )}
 
-      {/* Venue/Broadcast Info for non-live games */}
-      {currentGame.status !== 'in_progress' && (currentGame.venue || currentGame.broadcast) && (
-        <div className="mt-6 flex items-center gap-4 text-white/40 text-sm">
-          {currentGame.venue && (
-            <span className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              </svg>
-              {currentGame.venue}
-            </span>
-          )}
-          {currentGame.broadcast && (
-            <span className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              {currentGame.broadcast}
-            </span>
-          )}
-        </div>
-      )}
 
-      {/* Game Info Footer - venue/broadcast for live games */}
-      {currentGame.status === 'in_progress' && (currentGame.venue || currentGame.broadcast) && (
-        <div className="mt-2 flex items-center gap-4 text-white/40 text-sm">
-          {currentGame.venue && (
-            <span className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              </svg>
-              {currentGame.venue}
-            </span>
-          )}
-          {currentGame.broadcast && (
-            <span className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              {currentGame.broadcast}
-            </span>
-          )}
-        </div>
-      )}
 
       {/* Navigation hint - very subtle */}
       <div className="absolute bottom-3 left-0 right-0 text-center text-white/20 text-xs">
@@ -278,9 +238,11 @@ interface GameHeaderProps {
   seasonName?: string;
   status: string;
   startTime?: string;
+  venue?: string;
+  broadcast?: string;
 }
 
-function GameHeader({ seasonName, status, startTime }: GameHeaderProps) {
+function GameHeader({ seasonName, status, startTime, venue, broadcast }: GameHeaderProps) {
   // Determine style based on round importance
   const isPlayoffs = seasonName && seasonName !== 'GAME DAY' && seasonName !== 'PRESEASON';
   const isSuperBowl = seasonName === 'SUPER BOWL';
@@ -328,8 +290,11 @@ function GameHeader({ seasonName, status, startTime }: GameHeaderProps) {
 
   const dateTimeDisplay = getDateTimeDisplay();
   
+  // Build venue/broadcast info line
+  const venueInfo = [broadcast, venue].filter(Boolean).join(' • ');
+  
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1">
       {/* Season/Round Name */}
       {seasonName && (
         <div 
@@ -379,29 +344,38 @@ function GameHeader({ seasonName, status, startTime }: GameHeaderProps) {
         </div>
       )}
       
-      {/* Date/Time or Status */}
-      {dateTimeDisplay && (
-        <div 
-          className={`px-4 py-1 rounded-full text-sm font-bold tracking-wider ${
-            isFinal 
-              ? 'bg-gray-600/80 text-white/90' 
-              : isLive 
-              ? 'bg-red-600/90 text-white' 
-              : 'bg-blue-600/80 text-white/90'
-          }`}
-          style={{
-            boxShadow: isLive ? '0 0 20px rgba(220,38,38,0.5)' : undefined,
-          }}
-        >
-          {isLive && (
-            <span className="inline-flex items-center gap-2">
-              <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-              {dateTimeDisplay}
-            </span>
-          )}
-          {!isLive && dateTimeDisplay}
-        </div>
-      )}
+      {/* Date/Time or Status + Venue/Broadcast */}
+      <div className="flex flex-col items-center gap-0.5">
+        {dateTimeDisplay && (
+          <div 
+            className={`px-4 py-1 rounded-full text-sm font-bold tracking-wider ${
+              isFinal 
+                ? 'bg-gray-600/80 text-white/90' 
+                : isLive 
+                ? 'bg-red-600/90 text-white' 
+                : 'bg-blue-600/80 text-white/90'
+            }`}
+            style={{
+              boxShadow: isLive ? '0 0 20px rgba(220,38,38,0.5)' : undefined,
+            }}
+          >
+            {isLive && (
+              <span className="inline-flex items-center gap-2">
+                <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                {dateTimeDisplay}
+              </span>
+            )}
+            {!isLive && dateTimeDisplay}
+          </div>
+        )}
+        
+        {/* Venue & Broadcast Info */}
+        {venueInfo && (
+          <span className="text-white/40 text-xs tracking-wide">
+            {venueInfo}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
