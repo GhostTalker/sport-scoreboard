@@ -46,8 +46,12 @@ export function MainScoreboard() {
         }}
       />
 
-      {/* Season/Round Header */}
-      <SeasonHeader seasonName={currentGame.seasonName} />
+      {/* Season/Round Header with Date/Status */}
+      <GameHeader 
+        seasonName={currentGame.seasonName} 
+        status={currentGame.status}
+        startTime={currentGame.startTime}
+      />
 
       {/* Main Score Display */}
       <div className="flex items-center justify-center gap-6 w-full max-w-6xl px-8">
@@ -124,14 +128,26 @@ export function MainScoreboard() {
         </div>
       )}
 
-      {/* Status Badge - for non-live games */}
-      {currentGame.status !== 'in_progress' && (
-        <StatusBadge 
-          status={currentGame.status} 
-          startTime={currentGame.startTime}
-          venue={currentGame.venue}
-          broadcast={currentGame.broadcast}
-        />
+      {/* Venue/Broadcast Info for non-live games */}
+      {currentGame.status !== 'in_progress' && (currentGame.venue || currentGame.broadcast) && (
+        <div className="mt-6 flex items-center gap-4 text-white/40 text-sm">
+          {currentGame.venue && (
+            <span className="flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              </svg>
+              {currentGame.venue}
+            </span>
+          )}
+          {currentGame.broadcast && (
+            <span className="flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              {currentGame.broadcast}
+            </span>
+          )}
+        </div>
       )}
 
       {/* Game Info Footer - venue/broadcast for live games */}
@@ -258,173 +274,134 @@ function NoGameState() {
   );
 }
 
-interface StatusBadgeProps {
+interface GameHeaderProps {
+  seasonName?: string;
   status: string;
   startTime?: string;
-  venue?: string;
-  broadcast?: string;
 }
 
-function StatusBadge({ status, startTime, venue, broadcast }: StatusBadgeProps) {
-  const isScheduled = status === 'scheduled';
-  
-  const getStatusText = () => {
-    switch (status) {
-      case 'final': return 'FINAL';
-      case 'halftime': return 'HALFTIME';
-      case 'scheduled':
-        return 'UPCOMING';
-      case 'postponed': return 'POSTPONED';
-      case 'delayed': return 'DELAYED';
-      default: return status.toUpperCase();
-    }
-  };
-
-  const getFormattedDateTime = () => {
-    if (!startTime) return null;
-    const date = new Date(startTime);
-    const now = new Date();
-    const isToday = date.toDateString() === now.toDateString();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const isTomorrow = date.toDateString() === tomorrow.toDateString();
-    
-    const time = date.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit' 
-    });
-    
-    if (isToday) {
-      return { date: 'TODAY', time };
-    } else if (isTomorrow) {
-      return { date: 'TOMORROW', time };
-    } else {
-      const dateStr = date.toLocaleDateString('en-US', { 
-        weekday: 'short',
-        month: 'short', 
-        day: 'numeric' 
-      }).toUpperCase();
-      return { date: dateStr, time };
-    }
-  };
-
-  const getBadgeStyle = () => {
-    switch (status) {
-      case 'final': 
-        return { bg: 'rgba(100,100,100,0.8)', glow: '100,100,100' };
-      case 'halftime': 
-        return { bg: 'rgba(200,150,50,0.8)', glow: '200,150,50' };
-      case 'scheduled':
-        return { bg: 'rgba(30,60,100,0.9)', glow: '50,100,200' };
-      default: 
-        return { bg: 'rgba(100,100,100,0.8)', glow: '100,100,100' };
-    }
-  };
-
-  const style = getBadgeStyle();
-  const dateTime = getFormattedDateTime();
-
-  return (
-    <div className="mt-6 flex flex-col items-center gap-3">
-      {/* Main Status Badge */}
-      <div 
-        className="px-8 py-3 rounded-xl"
-        style={{
-          background: style.bg,
-          boxShadow: `0 0 30px rgba(${style.glow},0.5)`,
-          border: '1px solid rgba(255,255,255,0.2)',
-        }}
-      >
-        {isScheduled && dateTime ? (
-          <div className="flex flex-col items-center">
-            <span className="text-white/60 text-sm font-medium tracking-wider">{dateTime.date}</span>
-            <span className="text-white font-black text-3xl tracking-wide">{dateTime.time}</span>
-          </div>
-        ) : (
-          <span className="text-white font-bold text-xl tracking-wider">{getStatusText()}</span>
-        )}
-      </div>
-      
-      {/* Venue & Broadcast Info */}
-      {(venue || broadcast) && (
-        <div className="flex items-center gap-4 text-white/40 text-sm">
-          {venue && (
-            <span className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              </svg>
-              {venue}
-            </span>
-          )}
-          {broadcast && (
-            <span className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              {broadcast}
-            </span>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SeasonHeader({ seasonName }: { seasonName?: string }) {
-  if (!seasonName) return null;
-  
+function GameHeader({ seasonName, status, startTime }: GameHeaderProps) {
   // Determine style based on round importance
-  const isPlayoffs = seasonName !== 'GAME DAY' && seasonName !== 'PRESEASON';
+  const isPlayoffs = seasonName && seasonName !== 'GAME DAY' && seasonName !== 'PRESEASON';
   const isSuperBowl = seasonName === 'SUPER BOWL';
   const isConference = seasonName === 'CONFERENCE CHAMPIONSHIP';
+  const isFinal = status === 'final';
+  const isLive = status === 'in_progress' || status === 'halftime';
+  const isScheduled = status === 'scheduled';
+
+  // Format date/time for display
+  const getDateTimeDisplay = () => {
+    if (isFinal) {
+      return 'FINAL';
+    }
+    if (isLive) {
+      return 'LIVE';
+    }
+    if (isScheduled && startTime) {
+      const date = new Date(startTime);
+      const now = new Date();
+      const isToday = date.toDateString() === now.toDateString();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const isTomorrow = date.toDateString() === tomorrow.toDateString();
+      
+      const time = date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit' 
+      });
+      
+      if (isToday) {
+        return `TODAY ${time}`;
+      } else if (isTomorrow) {
+        return `TOMORROW ${time}`;
+      } else {
+        const dateStr = date.toLocaleDateString('en-US', { 
+          weekday: 'short',
+          month: 'short', 
+          day: 'numeric' 
+        }).toUpperCase();
+        return `${dateStr} ${time}`;
+      }
+    }
+    return null;
+  };
+
+  const dateTimeDisplay = getDateTimeDisplay();
   
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
-      <div 
-        className="relative px-8 py-2 rounded-lg"
-        style={{
-          background: isSuperBowl 
-            ? 'linear-gradient(180deg, rgba(212,175,55,0.9) 0%, rgba(170,140,40,0.8) 100%)'
-            : isConference
-            ? 'linear-gradient(180deg, rgba(180,180,180,0.9) 0%, rgba(140,140,140,0.8) 100%)'
-            : isPlayoffs
-            ? 'linear-gradient(180deg, rgba(50,100,200,0.9) 0%, rgba(30,70,150,0.8) 100%)'
-            : 'linear-gradient(180deg, rgba(40,60,80,0.8) 0%, rgba(30,45,60,0.7) 100%)',
-          boxShadow: isSuperBowl
-            ? '0 0 40px rgba(212,175,55,0.6), inset 0 1px 0 rgba(255,255,255,0.3)'
-            : isPlayoffs
-            ? '0 0 30px rgba(50,100,200,0.5), inset 0 1px 0 rgba(255,255,255,0.2)'
-            : '0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)',
-          border: isSuperBowl
-            ? '2px solid rgba(255,215,0,0.8)'
-            : isConference
-            ? '2px solid rgba(200,200,200,0.6)'
-            : '1px solid rgba(255,255,255,0.2)',
-        }}
-      >
-        {/* Glow effect for important games */}
-        {isSuperBowl && (
-          <div 
-            className="absolute inset-0 rounded-lg animate-pulse opacity-50"
-            style={{
-              background: 'radial-gradient(circle, rgba(255,215,0,0.4) 0%, transparent 70%)',
-            }}
-          />
-        )}
-        
-        <span 
-          className={`relative text-lg font-black uppercase tracking-[0.3em] ${
-            isSuperBowl ? 'text-white' : isPlayoffs ? 'text-white' : 'text-white/80'
-          }`}
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+      {/* Season/Round Name */}
+      {seasonName && (
+        <div 
+          className="relative px-6 py-1.5 rounded-lg"
           style={{
-            textShadow: isSuperBowl 
-              ? '0 0 20px rgba(255,215,0,0.8), 0 2px 4px rgba(0,0,0,0.5)'
-              : '0 2px 4px rgba(0,0,0,0.5)',
+            background: isSuperBowl 
+              ? 'linear-gradient(180deg, rgba(212,175,55,0.9) 0%, rgba(170,140,40,0.8) 100%)'
+              : isConference
+              ? 'linear-gradient(180deg, rgba(180,180,180,0.9) 0%, rgba(140,140,140,0.8) 100%)'
+              : isPlayoffs
+              ? 'linear-gradient(180deg, rgba(50,100,200,0.9) 0%, rgba(30,70,150,0.8) 100%)'
+              : 'linear-gradient(180deg, rgba(40,60,80,0.8) 0%, rgba(30,45,60,0.7) 100%)',
+            boxShadow: isSuperBowl
+              ? '0 0 40px rgba(212,175,55,0.6), inset 0 1px 0 rgba(255,255,255,0.3)'
+              : isPlayoffs
+              ? '0 0 30px rgba(50,100,200,0.5), inset 0 1px 0 rgba(255,255,255,0.2)'
+              : '0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)',
+            border: isSuperBowl
+              ? '2px solid rgba(255,215,0,0.8)'
+              : isConference
+              ? '2px solid rgba(200,200,200,0.6)'
+              : '1px solid rgba(255,255,255,0.2)',
           }}
         >
-          {seasonName}
-        </span>
-      </div>
+          {/* Glow effect for important games */}
+          {isSuperBowl && (
+            <div 
+              className="absolute inset-0 rounded-lg animate-pulse opacity-50"
+              style={{
+                background: 'radial-gradient(circle, rgba(255,215,0,0.4) 0%, transparent 70%)',
+              }}
+            />
+          )}
+          
+          <span 
+            className={`relative text-base font-black uppercase tracking-[0.25em] ${
+              isSuperBowl ? 'text-white' : isPlayoffs ? 'text-white' : 'text-white/80'
+            }`}
+            style={{
+              textShadow: isSuperBowl 
+                ? '0 0 20px rgba(255,215,0,0.8), 0 2px 4px rgba(0,0,0,0.5)'
+                : '0 2px 4px rgba(0,0,0,0.5)',
+            }}
+          >
+            {seasonName}
+          </span>
+        </div>
+      )}
+      
+      {/* Date/Time or Status */}
+      {dateTimeDisplay && (
+        <div 
+          className={`px-4 py-1 rounded-full text-sm font-bold tracking-wider ${
+            isFinal 
+              ? 'bg-gray-600/80 text-white/90' 
+              : isLive 
+              ? 'bg-red-600/90 text-white' 
+              : 'bg-blue-600/80 text-white/90'
+          }`}
+          style={{
+            boxShadow: isLive ? '0 0 20px rgba(220,38,38,0.5)' : undefined,
+          }}
+        >
+          {isLive && (
+            <span className="inline-flex items-center gap-2">
+              <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+              {dateTimeDisplay}
+            </span>
+          )}
+          {!isLive && dateTimeDisplay}
+        </div>
+      )}
     </div>
   );
 }
