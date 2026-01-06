@@ -53,6 +53,7 @@ export function MainScoreboard() {
         startTime={currentGame.startTime}
         venue={currentGame.venue}
         broadcast={currentGame.broadcast}
+        hideDateTime={currentGame.status === 'scheduled'}
       />
 
       {/* Main Score Display */}
@@ -299,9 +300,10 @@ interface GameHeaderProps {
   startTime?: string;
   venue?: string;
   broadcast?: string;
+  hideDateTime?: boolean;
 }
 
-function GameHeader({ seasonName, status, startTime, venue, broadcast }: GameHeaderProps) {
+function GameHeader({ seasonName, status, startTime, venue, broadcast, hideDateTime }: GameHeaderProps) {
   // Determine style based on round importance
   const isPlayoffs = seasonName && seasonName !== 'GAME DAY' && seasonName !== 'PRESEASON';
   const isSuperBowl = seasonName === 'SUPER BOWL';
@@ -424,7 +426,7 @@ function GameHeader({ seasonName, status, startTime, venue, broadcast }: GameHea
       
       {/* Date/Time or Status + Venue/Broadcast */}
       <div className="flex flex-col items-center gap-0.5">
-        {dateTimeDisplay && (
+        {!hideDateTime && dateTimeDisplay && (
           <div 
             className={`px-4 py-1 rounded-full text-sm font-bold tracking-wider ${
               isFinal 
@@ -447,8 +449,8 @@ function GameHeader({ seasonName, status, startTime, venue, broadcast }: GameHea
           </div>
         )}
         
-        {/* Venue & Broadcast Info */}
-        {venueInfo && (
+        {/* Venue & Broadcast Info - only show for scheduled if hideDateTime is true */}
+        {!hideDateTime && venueInfo && (
           <span className="text-white/40 text-xs tracking-wide">
             {venueInfo}
           </span>
