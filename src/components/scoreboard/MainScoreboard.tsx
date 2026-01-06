@@ -1,7 +1,6 @@
 import { useGameStore } from '../../stores/gameStore';
 import { TeamDisplay } from './TeamDisplay';
 import { GameSituation } from './GameSituation';
-import { StadiumBackground } from '../backgrounds/StadiumBackground';
 
 export function MainScoreboard() {
   const currentGame = useGameStore((state) => state.currentGame);
@@ -27,23 +26,74 @@ export function MainScoreboard() {
   const isLive = currentGame.status === 'in_progress' || currentGame.status === 'halftime';
   const isFinal = currentGame.status === 'final';
 
-  // Get variant for stadium background  
-  const getStadiumVariant = (): 'superbowl' | 'championship' | 'playoffs' | 'live' | 'final' | 'default' => {
-    if (isSuperBowl) return 'superbowl';
-    if (isConference) return 'championship';
-    if (isLive) return 'live';
-    if (isFinal) return 'final';
-    if (isPlayoffs) return 'playoffs';
-    return 'default';
+  // Dynamic background based on game context
+  const getBackgroundStyle = () => {
+    if (isSuperBowl) {
+      return {
+        background: `
+          radial-gradient(ellipse at top left, rgba(212,175,55,0.25) 0%, transparent 50%),
+          radial-gradient(ellipse at top right, rgba(255,215,0,0.2) 0%, transparent 50%),
+          radial-gradient(ellipse at bottom, rgba(170,140,40,0.2) 0%, transparent 50%),
+          linear-gradient(135deg, #1a1410 0%, #2d2416 25%, #1a1410 50%, #2d2416 75%, #1a1410 100%)
+        `,
+      };
+    }
+    
+    if (isConference) {
+      return {
+        background: `
+          radial-gradient(ellipse at top, rgba(180,180,200,0.2) 0%, transparent 50%),
+          radial-gradient(ellipse at bottom, rgba(140,140,160,0.15) 0%, transparent 50%),
+          linear-gradient(135deg, #1a1c20 0%, #252830 25%, #1a1c20 50%, #252830 75%, #1a1c20 100%)
+        `,
+      };
+    }
+    
+    if (isLive) {
+      return {
+        background: `
+          radial-gradient(ellipse at top, rgba(220,38,38,0.3) 0%, transparent 40%),
+          radial-gradient(ellipse at bottom left, rgba(234,88,12,0.2) 0%, transparent 50%),
+          radial-gradient(ellipse at bottom right, rgba(239,68,68,0.25) 0%, transparent 50%),
+          linear-gradient(135deg, #1a0a0a 0%, #2d1212 25%, #1a0a0a 50%, #2d1212 75%, #1a0a0a 100%)
+        `,
+      };
+    }
+    
+    if (isFinal) {
+      return {
+        background: `
+          radial-gradient(ellipse at top, rgba(100,100,120,0.15) 0%, transparent 50%),
+          linear-gradient(180deg, #0a0e14 0%, #12161c 50%, #0a0e14 100%)
+        `,
+      };
+    }
+    
+    if (isPlayoffs) {
+      return {
+        background: `
+          radial-gradient(ellipse at top, rgba(59,130,246,0.3) 0%, transparent 50%),
+          radial-gradient(ellipse at bottom, rgba(37,99,235,0.25) 0%, transparent 50%),
+          linear-gradient(135deg, #0a1628 0%, #1a2f4a 25%, #0a1628 50%, #1a2f4a 75%, #0a1628 100%)
+        `,
+      };
+    }
+    
+    // Default (scheduled/regular season)
+    return {
+      background: `
+        radial-gradient(ellipse at top, #1a2744 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, #0d1f3c 0%, transparent 50%),
+        linear-gradient(180deg, #0a1628 0%, #152238 50%, #0a1628 100%)
+      `,
+    };
   };
 
   return (
     <div 
-      className="h-full w-full flex flex-col items-center justify-center relative overflow-hidden"
+      className="h-full w-full flex flex-col items-center justify-center relative overflow-hidden transition-all duration-1000"
+      style={getBackgroundStyle()}
     >
-      {/* Professional SVG Stadium Background */}
-      <StadiumBackground variant={getStadiumVariant()} />
-
       {/* Dynamic particle effects */}
       {isSuperBowl && <SuperBowlParticles />}
       {isConference && <ChampionshipParticles />}
@@ -51,19 +101,19 @@ export function MainScoreboard() {
       {isPlayoffs && !isSuperBowl && !isConference && <PlayoffParticles />}
       {!isPlayoffs && !isLive && <DefaultParticles />}
 
-      {/* Top atmospheric glow */}
+      {/* Top glow effect - changes with context */}
       <div 
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-48 pointer-events-none transition-all duration-1000"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-40 pointer-events-none transition-all duration-1000"
         style={{
           background: isSuperBowl 
-            ? 'radial-gradient(ellipse, rgba(255,215,0,0.2) 0%, transparent 70%)'
+            ? 'radial-gradient(ellipse, rgba(255,215,0,0.25) 0%, transparent 70%)'
             : isConference
-            ? 'radial-gradient(ellipse, rgba(200,200,220,0.15) 0%, transparent 70%)'
+            ? 'radial-gradient(ellipse, rgba(200,200,220,0.2) 0%, transparent 70%)'
             : isLive
-            ? 'radial-gradient(ellipse, rgba(220,38,38,0.2) 0%, transparent 70%)'
+            ? 'radial-gradient(ellipse, rgba(220,38,38,0.25) 0%, transparent 70%)'
             : isPlayoffs
-            ? 'radial-gradient(ellipse, rgba(59,130,246,0.18) 0%, transparent 70%)'
-            : 'radial-gradient(ellipse, rgba(255,255,255,0.08) 0%, transparent 70%)',
+            ? 'radial-gradient(ellipse, rgba(59,130,246,0.2) 0%, transparent 70%)'
+            : 'radial-gradient(ellipse, rgba(255,200,100,0.15) 0%, transparent 70%)',
         }}
       />
 
@@ -604,4 +654,3 @@ function DefaultParticles() {
     </div>
   );
 }
-
