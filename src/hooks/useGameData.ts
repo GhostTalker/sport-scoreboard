@@ -71,7 +71,9 @@ export function useGameData() {
         
         if (needsDetails) {
           try {
+            console.log('[useGameData] Fetching details for game:', gameToShow.id);
             const details = await fetchGameDetails(gameToShow.id);
+            console.log('[useGameData] Details received:', details ? 'Yes' : 'No', 'Has stats:', !!details?.stats);
             if (details && details.game) {
               // Merge with scoreboard data to preserve season info
               const gameWithSeasonInfo = {
@@ -85,7 +87,9 @@ export function useGameData() {
               };
               setCurrentGame(gameWithSeasonInfo);
               setGameStats(details.stats);
+              console.log('[useGameData] Set stats:', !!details.stats);
             } else {
+              console.log('[useGameData] No details returned, clearing stats');
               setCurrentGame(gameToShow);
               setGameStats(null);
             }
