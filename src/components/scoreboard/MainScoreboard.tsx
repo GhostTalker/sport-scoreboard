@@ -63,7 +63,7 @@ export function MainScoreboard() {
         {/* Center Section - Score or Start Time */}
         {currentGame.status === 'scheduled' ? (
           // Show start time for upcoming games
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-3">
             <div className="flex flex-col items-center">
               <span className="text-xs text-white/50 uppercase tracking-wider mb-2">Kickoff</span>
               <span className="text-5xl font-black text-white font-mono">
@@ -72,7 +72,50 @@ export function MainScoreboard() {
                   minute: '2-digit' 
                 }) : 'TBD'}
               </span>
+              {/* Date */}
+              {currentGame.startTime && (
+                <span className="text-sm text-white/60 mt-1">
+                  {(() => {
+                    const date = new Date(currentGame.startTime);
+                    const now = new Date();
+                    const isToday = date.toDateString() === now.toDateString();
+                    const tomorrow = new Date(now);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    const isTomorrow = date.toDateString() === tomorrow.toDateString();
+                    
+                    if (isToday) return 'HEUTE';
+                    if (isTomorrow) return 'MORGEN';
+                    return date.toLocaleDateString('de-DE', { 
+                      weekday: 'short',
+                      day: 'numeric',
+                      month: 'numeric',
+                    }).toUpperCase();
+                  })()}
+                </span>
+              )}
             </div>
+            {/* Broadcast & Venue */}
+            {(currentGame.broadcast || currentGame.venue) && (
+              <div className="flex flex-col items-center gap-1 text-sm text-white/40">
+                {currentGame.broadcast && (
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span>{currentGame.broadcast}</span>
+                  </div>
+                )}
+                {currentGame.venue && (
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="truncate max-w-md">{currentGame.venue}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           // Show score and clock for live/final games
