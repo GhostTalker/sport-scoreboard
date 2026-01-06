@@ -26,15 +26,25 @@ export function MainScoreboard() {
   const isLive = currentGame.status === 'in_progress' || currentGame.status === 'halftime';
   const isFinal = currentGame.status === 'final';
 
-  // Dynamic background based on game context
+  // Dynamic Stadium background - inspired by NFL broadcast graphics
   const getBackgroundStyle = () => {
+    // Base stadium with field grass pattern
+    const baseStadium = `
+      linear-gradient(180deg, rgba(10,15,25,0.95) 0%, rgba(15,25,35,0.9) 40%, rgba(20,40,30,0.85) 100%),
+      repeating-linear-gradient(90deg, 
+        rgba(34,139,34,0.15) 0px, 
+        rgba(34,139,34,0.15) 8px, 
+        rgba(46,125,50,0.12) 8px, 
+        rgba(46,125,50,0.12) 16px
+      ),
+      linear-gradient(180deg, #050810 0%, #0a1520 40%, #1a2e1f 70%, #1a3a1f 100%)
+    `;
+    
     if (isSuperBowl) {
       return {
         background: `
-          radial-gradient(ellipse at top left, rgba(212,175,55,0.25) 0%, transparent 50%),
-          radial-gradient(ellipse at top right, rgba(255,215,0,0.2) 0%, transparent 50%),
-          radial-gradient(ellipse at bottom, rgba(170,140,40,0.2) 0%, transparent 50%),
-          linear-gradient(135deg, #1a1410 0%, #2d2416 25%, #1a1410 50%, #2d2416 75%, #1a1410 100%)
+          radial-gradient(ellipse at top, rgba(255,215,0,0.18) 0%, transparent 60%),
+          ${baseStadium}
         `,
       };
     }
@@ -42,9 +52,8 @@ export function MainScoreboard() {
     if (isConference) {
       return {
         background: `
-          radial-gradient(ellipse at top, rgba(180,180,200,0.2) 0%, transparent 50%),
-          radial-gradient(ellipse at bottom, rgba(140,140,160,0.15) 0%, transparent 50%),
-          linear-gradient(135deg, #1a1c20 0%, #252830 25%, #1a1c20 50%, #252830 75%, #1a1c20 100%)
+          radial-gradient(ellipse at top, rgba(200,200,220,0.14) 0%, transparent 60%),
+          ${baseStadium}
         `,
       };
     }
@@ -52,10 +61,9 @@ export function MainScoreboard() {
     if (isLive) {
       return {
         background: `
-          radial-gradient(ellipse at top, rgba(220,38,38,0.3) 0%, transparent 40%),
-          radial-gradient(ellipse at bottom left, rgba(234,88,12,0.2) 0%, transparent 50%),
-          radial-gradient(ellipse at bottom right, rgba(239,68,68,0.25) 0%, transparent 50%),
-          linear-gradient(135deg, #1a0a0a 0%, #2d1212 25%, #1a0a0a 50%, #2d1212 75%, #1a0a0a 100%)
+          radial-gradient(ellipse at top, rgba(220,38,38,0.22) 0%, transparent 50%),
+          radial-gradient(ellipse at bottom, rgba(234,88,12,0.16) 0%, transparent 60%),
+          ${baseStadium}
         `,
       };
     }
@@ -63,8 +71,8 @@ export function MainScoreboard() {
     if (isFinal) {
       return {
         background: `
-          radial-gradient(ellipse at top, rgba(100,100,120,0.15) 0%, transparent 50%),
-          linear-gradient(180deg, #0a0e14 0%, #12161c 50%, #0a0e14 100%)
+          radial-gradient(ellipse at top, rgba(80,80,100,0.12) 0%, transparent 60%),
+          ${baseStadium}
         `,
       };
     }
@@ -72,20 +80,15 @@ export function MainScoreboard() {
     if (isPlayoffs) {
       return {
         background: `
-          radial-gradient(ellipse at top, rgba(59,130,246,0.3) 0%, transparent 50%),
-          radial-gradient(ellipse at bottom, rgba(37,99,235,0.25) 0%, transparent 50%),
-          linear-gradient(135deg, #0a1628 0%, #1a2f4a 25%, #0a1628 50%, #1a2f4a 75%, #0a1628 100%)
+          radial-gradient(ellipse at top, rgba(59,130,246,0.2) 0%, transparent 60%),
+          ${baseStadium}
         `,
       };
     }
     
     // Default (scheduled/regular season)
     return {
-      background: `
-        radial-gradient(ellipse at top, #1a2744 0%, transparent 50%),
-        radial-gradient(ellipse at bottom, #0d1f3c 0%, transparent 50%),
-        linear-gradient(180deg, #0a1628 0%, #152238 50%, #0a1628 100%)
-      `,
+      background: baseStadium,
     };
   };
 
@@ -94,6 +97,16 @@ export function MainScoreboard() {
       className="h-full w-full flex flex-col items-center justify-center relative overflow-hidden transition-all duration-1000"
       style={getBackgroundStyle()}
     >
+      {/* Stadium Lights - Top */}
+      <StadiumLights position="top" color={isSuperBowl ? 'gold' : isLive ? 'red' : isPlayoffs ? 'blue' : 'white'} />
+      
+      {/* Field yard lines overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-10">
+        <div className="absolute left-0 right-0 top-[65%] h-0.5 bg-white/30" />
+        <div className="absolute left-0 right-0 top-[70%] h-1 bg-white/40" />
+        <div className="absolute left-0 right-0 top-[75%] h-0.5 bg-white/30" />
+      </div>
+
       {/* Dynamic particle effects */}
       {isSuperBowl && <SuperBowlParticles />}
       {isConference && <ChampionshipParticles />}
@@ -101,19 +114,19 @@ export function MainScoreboard() {
       {isPlayoffs && !isSuperBowl && !isConference && <PlayoffParticles />}
       {!isPlayoffs && !isLive && <DefaultParticles />}
 
-      {/* Top glow effect - changes with context */}
+      {/* Top atmospheric glow */}
       <div 
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-40 pointer-events-none transition-all duration-1000"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-48 pointer-events-none transition-all duration-1000"
         style={{
           background: isSuperBowl 
-            ? 'radial-gradient(ellipse, rgba(255,215,0,0.25) 0%, transparent 70%)'
+            ? 'radial-gradient(ellipse, rgba(255,215,0,0.2) 0%, transparent 70%)'
             : isConference
-            ? 'radial-gradient(ellipse, rgba(200,200,220,0.2) 0%, transparent 70%)'
+            ? 'radial-gradient(ellipse, rgba(200,200,220,0.15) 0%, transparent 70%)'
             : isLive
-            ? 'radial-gradient(ellipse, rgba(220,38,38,0.25) 0%, transparent 70%)'
+            ? 'radial-gradient(ellipse, rgba(220,38,38,0.2) 0%, transparent 70%)'
             : isPlayoffs
-            ? 'radial-gradient(ellipse, rgba(59,130,246,0.2) 0%, transparent 70%)'
-            : 'radial-gradient(ellipse, rgba(255,200,100,0.15) 0%, transparent 70%)',
+            ? 'radial-gradient(ellipse, rgba(59,130,246,0.18) 0%, transparent 70%)'
+            : 'radial-gradient(ellipse, rgba(255,255,255,0.08) 0%, transparent 70%)',
         }}
       />
 
@@ -651,6 +664,64 @@ function DefaultParticles() {
       <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-white/30 rounded-full animate-ping" />
       <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-white/20 rounded-full animate-pulse" />
       <div className="absolute top-1/2 right-1/4 w-1 h-1 bg-white/25 rounded-full animate-ping" />
+    </div>
+  );
+}
+
+// Stadium Lights Component
+function StadiumLights({ position, color }: { position: 'top' | 'bottom'; color: 'gold' | 'red' | 'blue' | 'white' }) {
+  const lightColor = color === 'gold' ? 'rgba(255,215,0,0.8)' 
+    : color === 'red' ? 'rgba(220,38,38,0.7)'
+    : color === 'blue' ? 'rgba(59,130,246,0.7)'
+    : 'rgba(255,255,255,0.6)';
+    
+  const glowColor = color === 'gold' ? 'rgba(255,215,0,0.4)' 
+    : color === 'red' ? 'rgba(220,38,38,0.3)'
+    : color === 'blue' ? 'rgba(59,130,246,0.3)'
+    : 'rgba(255,255,255,0.2)';
+
+  return (
+    <div className={`absolute ${position === 'top' ? 'top-0' : 'bottom-0'} left-0 right-0 h-24 pointer-events-none overflow-hidden`}>
+      {/* Stadium light clusters */}
+      {[...Array(8)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-16 h-16"
+          style={{
+            left: `${(i * 12.5) + 6.25}%`,
+            top: position === 'top' ? '-8px' : 'auto',
+            bottom: position === 'bottom' ? '-8px' : 'auto',
+            transform: 'translateX(-50%)',
+          }}
+        >
+          {/* Light fixture */}
+          <div 
+            className="absolute w-12 h-12 rounded-full"
+            style={{
+              background: `radial-gradient(circle, ${lightColor} 0%, transparent 70%)`,
+              boxShadow: `0 0 40px ${glowColor}, 0 0 80px ${glowColor}`,
+              animation: 'pulse 3s ease-in-out infinite',
+              animationDelay: `${i * 0.2}s`,
+            }}
+          />
+          {/* Light beam */}
+          <div 
+            className="absolute w-32 h-64 opacity-20"
+            style={{
+              left: '50%',
+              top: position === 'top' ? '100%' : 'auto',
+              bottom: position === 'bottom' ? '100%' : 'auto',
+              transform: 'translateX(-50%)',
+              background: position === 'top' 
+                ? `linear-gradient(180deg, ${lightColor} 0%, transparent 100%)`
+                : `linear-gradient(0deg, ${lightColor} 0%, transparent 100%)`,
+              clipPath: position === 'top'
+                ? 'polygon(40% 0%, 60% 0%, 100% 100%, 0% 100%)'
+                : 'polygon(0% 0%, 100% 0%, 60% 100%, 40% 100%)',
+            }}
+          />
+        </div>
+      ))}
     </div>
   );
 }
