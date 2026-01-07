@@ -13,11 +13,6 @@ export async function fetchScoreboard(): Promise<Game[]> {
     const data = await response.json();
     let games = parseScoreboardResponse(data);
     
-    // Log for debugging
-    console.log('[ESPN API] Scoreboard returned', games.length, 'games:', 
-      games.map(g => `${g.awayTeam.abbreviation}@${g.homeTeam.abbreviation} (${g.status})`).join(', ')
-    );
-    
     // Check if we have upcoming games - if not, try to fetch next week(s)
     const hasUpcoming = games.some(g => g.status === 'scheduled');
     const hasLive = games.some(g => g.status === 'in_progress' || g.status === 'halftime');
@@ -28,7 +23,6 @@ export async function fetchScoreboard(): Promise<Game[]> {
       const currentWeek = data.week?.number || 1;
       const year = data.season?.year || new Date().getFullYear();
       
-      console.log('[ESPN API] No upcoming/live games. Season type:', seasonType, 'Week:', currentWeek, 'Year:', year);
       
       // For playoffs (seasonType 3), try to fetch upcoming rounds
       if (seasonType === 3) {
@@ -48,7 +42,6 @@ export async function fetchScoreboard(): Promise<Game[]> {
       
       // If regular season week 18 and all games final, fetch playoff week 1 (Wild Card)
       if (seasonType === 2 && currentWeek >= 18) {
-        console.log('[ESPN API] Regular season complete, fetching Wild Card games...');
         try {
           const playoffGames = await fetchScheduleWeek(year, 3, 1);
           if (playoffGames.length > 0) {
@@ -72,7 +65,6 @@ export async function fetchScoreboard(): Promise<Game[]> {
 async function fetchScheduleWeek(year: number, seasonType: number, week: number): Promise<Game[]> {
   try {
     const url = `${API_ENDPOINTS.schedule}?year=${year}&seasonType=${seasonType}&week=${week}`;
-    console.log('[ESPN API] Fetching schedule:', url);
     
     const response = await fetch(url);
     if (!response.ok) {
@@ -130,7 +122,6 @@ function parseScoreboardResponse(data: any): Game[] {
     const status = parseGameStatus(event.status);
     const seasonName = getSeasonName(eventSeasonType, eventWeek, event.season?.slug);
     
-    console.log(`[ESPN API] Game ${event.id}: seasonType=${eventSeasonType}, week=${eventWeek}, slug=${event.season?.slug}, seasonName=${seasonName}`);
     
     return {
       id: event.id,

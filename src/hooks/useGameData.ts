@@ -11,7 +11,6 @@ export function useGameData() {
   const fetchData = useCallback(async () => {
     // Prevent concurrent fetches
     if (isFetching.current) {
-      console.log('[useGameData] Skipping fetch - already in progress');
       return;
     }
     
@@ -21,7 +20,6 @@ export function useGameData() {
     const store = useGameStore.getState();
     const { manuallySelectedGameId, setAvailableGames, setCurrentGame, setGameStats, setLoading, setError } = store;
     
-    console.log('[useGameData] Fetching data, manuallySelectedGameId:', manuallySelectedGameId);
     
     try {
       if (isFirstFetch.current) {
@@ -39,13 +37,11 @@ export function useGameData() {
       // If user manually selected a game, ALWAYS use that game
       if (manuallySelectedGameId) {
         gameToShow = games.find((g) => g.id === manuallySelectedGameId);
-        console.log('[useGameData] Looking for manual selection:', manuallySelectedGameId, 'Found:', gameToShow?.id);
         
         // If manual selection not found in current games, keep showing it anyway
         if (!gameToShow) {
           const { currentGame } = useGameStore.getState();
           if (currentGame && currentGame.id === manuallySelectedGameId) {
-            console.log('[useGameData] Keeping current manually selected game');
             gameToShow = currentGame;
           }
         }
@@ -54,13 +50,11 @@ export function useGameData() {
       // If no manual selection, find any live game
       if (!gameToShow && !manuallySelectedGameId) {
         gameToShow = games.find((g) => g.status === 'in_progress');
-        console.log('[useGameData] No manual selection, looking for live game:', gameToShow?.id);
       }
 
       // If still no game, show first available (but only if no manual selection)
       if (!gameToShow && !manuallySelectedGameId && games.length > 0) {
         gameToShow = games[0];
-        console.log('[useGameData] Falling back to first game:', gameToShow?.id);
       }
 
       if (gameToShow) {
@@ -71,9 +65,7 @@ export function useGameData() {
         
         if (needsDetails) {
           try {
-            console.log('[useGameData] Fetching details for game:', gameToShow.id);
             const details = await fetchGameDetails(gameToShow.id);
-            console.log('[useGameData] Details received:', details ? 'Yes' : 'No', 'Has stats:', !!details?.stats);
             if (details && details.game) {
               // Merge with scoreboard data to preserve season info
               const gameWithSeasonInfo = {
@@ -87,9 +79,7 @@ export function useGameData() {
               };
               setCurrentGame(gameWithSeasonInfo);
               setGameStats(details.stats);
-              console.log('[useGameData] Set stats:', !!details.stats);
             } else {
-              console.log('[useGameData] No details returned, clearing stats');
               setCurrentGame(gameToShow);
               setGameStats(null);
             }
@@ -135,7 +125,6 @@ export function useGameData() {
         interval = POLLING_INTERVALS.live;
       }
       
-      console.log('[useGameData] Setting poll interval:', interval, 'ms');
       intervalRef.current = window.setInterval(fetchData, interval);
     };
     

@@ -27,7 +27,6 @@ export function useScoreChange() {
 
     // Check if this is a different game than before
     if (currentGameId.current !== currentGame.id) {
-      console.log('Game changed:', currentGameId.current, '->', currentGame.id);
       
       // New game - reset tracking, don't trigger celebration
       currentGameId.current = currentGame.id;
@@ -66,7 +65,6 @@ export function useScoreChange() {
       );
 
       if (scoreEvent) {
-        console.log('Score change detected:', scoreEvent);
 
         // Trigger celebration if we have a video for this score type
         if (scoreEvent.video) {

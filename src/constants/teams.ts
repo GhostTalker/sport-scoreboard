@@ -370,12 +370,6 @@ export const getTeamById = (id: string): NFLTeam | undefined => {
   return NFL_TEAMS[id];
 };
 
-export const getTeamByAbbreviation = (abbr: string): NFLTeam | undefined => {
-  return Object.values(NFL_TEAMS).find(
-    (team) => team.abbreviation.toLowerCase() === abbr.toLowerCase()
-  );
-};
-
 export const getAllTeams = (): NFLTeam[] => {
   return Object.values(NFL_TEAMS).sort((a, b) => 
     a.displayName.localeCompare(b.displayName)

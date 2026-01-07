@@ -55,13 +55,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     
     // If user manually selected a game, only update if it's the same game ID
     if (manuallySelectedGameId && game && game.id !== manuallySelectedGameId) {
-      console.log('[GameStore] Blocking update - manually selected:', manuallySelectedGameId, 'but got:', game.id);
       return;
     }
     
     // If game is null but we have a manual selection, don't clear
     if (!game && manuallySelectedGameId) {
-      console.log('[GameStore] Blocking null update - have manual selection:', manuallySelectedGameId);
       return;
     }
     
@@ -74,7 +72,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       ? { home: game.homeTeam.score, away: game.awayTeam.score }
       : previousScores;
     
-    console.log('[GameStore] Updating currentGame:', game?.id, 'isLive:', isLive);
     
     set({ 
       currentGame: game, 
