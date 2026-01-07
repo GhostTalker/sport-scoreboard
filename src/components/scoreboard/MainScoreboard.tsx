@@ -1,12 +1,30 @@
+import { useState, useEffect } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { TeamDisplay } from './TeamDisplay';
 import { GameSituation } from './GameSituation';
 import { getTitleGraphic } from '../../constants/titleGraphics';
+import { DebugPanel } from '../debug/DebugPanel';
 
 export function MainScoreboard() {
   const currentGame = useGameStore((state) => state.currentGame);
   const isLoading = useGameStore((state) => state.isLoading);
   const error = useGameStore((state) => state.error);
+  
+  // Debug mode state
+  const [debugMode, setDebugMode] = useState(false);
+  const [debugSeason, setDebugSeason] = useState<string | null>(null);
+  const [debugBackground, setDebugBackground] = useState<string | null>(null);
+  
+  // Toggle debug mode with 'D' key
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'd' || e.key === 'D') {
+        setDebugMode((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
 
   if (isLoading && !currentGame) {
     return <LoadingState />;
@@ -20,12 +38,15 @@ export function MainScoreboard() {
     return <NoGameState />;
   }
 
-  // Determine background style based on game type
-  const isSuperBowl = currentGame.seasonName === 'SUPER BOWL';
-  const isConference = currentGame.seasonName === 'CONFERENCE CHAMPIONSHIP';
-  const isPlayoffs = currentGame.seasonName && !['GAME DAY', 'PRESEASON'].includes(currentGame.seasonName);
-  const isLive = currentGame.status === 'in_progress' || currentGame.status === 'halftime';
-  const isFinal = currentGame.status === 'final';
+  // Use debug season if active, otherwise use actual game data
+  const effectiveSeason = debugSeason || currentGame.seasonName;
+  
+  // Determine background style based on game type (or debug override)
+  const isSuperBowl = debugBackground === 'superbowl' || effectiveSeason === 'SUPER BOWL';
+  const isConference = debugBackground === 'conference' || effectiveSeason === 'CONFERENCE CHAMPIONSHIP';
+  const isPlayoffs = debugBackground === 'playoffs' || (effectiveSeason && !['GAME DAY', 'PRESEASON'].includes(effectiveSeason));
+  const isLive = debugBackground === 'live' || currentGame.status === 'in_progress' || currentGame.status === 'halftime';
+  const isFinal = debugBackground === 'final' || currentGame.status === 'final';
 
   // Dynamic background based on game context
   const getBackgroundStyle = () => {
@@ -120,7 +141,7 @@ export function MainScoreboard() {
 
       {/* Season/Round Header with Date/Status and Venue */}
       <GameHeader 
-        seasonName={currentGame.seasonName} 
+        seasonName={effectiveSeason} 
         status={currentGame.status}
         startTime={currentGame.startTime}
         venue={currentGame.venue}
@@ -129,7 +150,7 @@ export function MainScoreboard() {
       />
 
       {/* Main Score Display - Grid for perfect centering */}
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full max-w-7xl px-8 gap-12">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full max-w-7xl px-8 gap-12 mt-24">
         {/* Away Team - Right aligned */}
         <div className="flex justify-end">
           <TeamDisplay team={currentGame.awayTeam} />
@@ -289,6 +310,14 @@ export function MainScoreboard() {
       <div className="absolute bottom-3 left-0 right-0 text-center text-white/20 text-xs">
         Arrow Keys to navigate
       </div>
+      
+      {/* Debug Panel */}
+      {debugMode && (
+        <DebugPanel
+          onSeasonChange={(season) => setDebugSeason(season)}
+          onBackgroundChange={(bg) => setDebugBackground(bg)}
+        />
+      )}
     </div>
   );
 }
@@ -479,10 +508,10 @@ function GameHeader({ seasonName, status, startTime, venue, broadcast, hideDateT
   const titleGraphic = getTitleGraphic(seasonName);
 
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1">
       {/* Season/Round Name - Title Graphic */}
       {seasonName && titleGraphic && (
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-1">
           {/* Title Graphic with Glow Effect */}
           <div className="relative">
             {/* Glow effect for important games */}
