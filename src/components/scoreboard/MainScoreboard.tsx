@@ -494,16 +494,6 @@ function GameHeader({ seasonName, status, startTime, venue, broadcast, hideDateT
   
   // Build venue/broadcast info line
   const venueInfo = [broadcast, venue].filter(Boolean).join(' • ');
-  
-  // Format date as DD.MM.YYYY
-  const getFormattedDate = () => {
-    if (!startTime) return null;
-    const date = new Date(startTime);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}.${month}.${year}`;
-  };
 
   const titleGraphic = getTitleGraphic(seasonName);
 
@@ -606,13 +596,6 @@ function GameHeader({ seasonName, status, startTime, venue, broadcast, hideDateT
               </span>
             </div>
           </div>
-          
-          {/* Date in DD.MM.YYYY format - Text only, no box */}
-          {startTime && (
-            <span className="text-3xl font-bold text-white tracking-wider -mt-8">
-              {getFormattedDate()}
-            </span>
-          )}
         </div>
       )}
       
