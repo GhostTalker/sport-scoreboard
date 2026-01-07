@@ -609,7 +609,7 @@ function GameHeader({ seasonName, status, startTime, venue, broadcast, hideDateT
           
           {/* Date in DD.MM.YYYY format - Text only, no box */}
           {startTime && (
-            <span className="text-3xl font-bold text-white tracking-wider -mt-2">
+            <span className="text-3xl font-bold text-white tracking-wider -mt-8">
               {getFormattedDate()}
             </span>
           )}
