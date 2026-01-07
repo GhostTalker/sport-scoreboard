@@ -162,7 +162,7 @@ Server läuft auf: `http://localhost:3001`
 #### Initial Setup
 ```bash
 # SSH zum Server
-ssh user@10.1.0.51
+ssh user@linux-server
 
 # Projekt klonen
 cd /srv/GhostGit
