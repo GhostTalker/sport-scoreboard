@@ -515,8 +515,10 @@ function GameHeader({ seasonName, status, startTime, venue, broadcast, hideDateT
             <img
               src={titleGraphic}
               alt={seasonName}
-              className="relative h-32 w-auto object-contain drop-shadow-2xl"
+              className="relative w-auto object-contain drop-shadow-2xl"
               style={{
+                height: '280px',
+                maxWidth: '800px',
                 filter: isSuperBowl 
                   ? 'drop-shadow(0 0 30px rgba(255,215,0,0.8)) drop-shadow(0 8px 20px rgba(0,0,0,0.9))'
                   : isPlayoffs
@@ -576,20 +578,11 @@ function GameHeader({ seasonName, status, startTime, venue, broadcast, hideDateT
             </div>
           </div>
           
-          {/* Date in DD.MM.YYYY format */}
+          {/* Date in DD.MM.YYYY format - Text only, no box */}
           {startTime && (
-            <div 
-              className="px-8 py-3 rounded-lg"
-              style={{
-                background: 'rgba(0,0,0,0.7)',
-                border: '2px solid rgba(255,255,255,0.3)',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
-              }}
-            >
-              <span className="text-3xl font-bold text-white tracking-wider">
-                {getFormattedDate()}
-              </span>
-            </div>
+            <span className="text-3xl font-bold text-white tracking-wider">
+              {getFormattedDate()}
+            </span>
           )}
         </div>
       )}
