@@ -5,6 +5,7 @@ import { StatsPanel } from './components/stats/StatsPanel';
 import { SettingsPanel } from './components/settings/SettingsPanel';
 import { VideoOverlay } from './components/celebration/VideoOverlay';
 import { useUIStore } from './stores/uiStore';
+import { useGameStore } from './stores/gameStore';
 import { useGameData } from './hooks/useGameData';
 import { useScoreChange } from './hooks/useScoreChange';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
@@ -12,6 +13,7 @@ import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
 function App() {
   const currentView = useUIStore((state) => state.currentView);
   const celebrationOverlay = useUIStore((state) => state.celebrationOverlay);
+  const currentGameId = useGameStore((state) => state.currentGame?.id);
   
   // Initialize game data polling
   useGameData();
@@ -34,7 +36,7 @@ function App() {
       <SwipeContainer>
         {/* Main Views */}
         <div className="h-full w-full relative">
-          {currentView === 'scoreboard' && <MainScoreboard />}
+          {currentView === 'scoreboard' && <MainScoreboard key={currentGameId} />}
           {currentView === 'stats' && <StatsPanel />}
           {currentView === 'settings' && <SettingsPanel />}
         </div>

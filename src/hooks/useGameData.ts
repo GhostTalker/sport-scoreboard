@@ -68,17 +68,25 @@ export function useGameData() {
         console.log('[DEBUG] Auto-selected first game:', `${gameToShow.id} ${`${gameToShow.awayTeam.abbreviation} @ ${gameToShow.homeTeam.abbreviation}`}`);
       }
 
-      console.log('[DEBUG] Final game to show:', gameToShow ? `${gameToShow.id} ${`${gameToShow.awayTeam.abbreviation} @ ${gameToShow.homeTeam.abbreviation}`} ${gameToShow.awayTeam.abbreviation}@${gameToShow.homeTeam.abbreviation}` : 'NONE');
+      console.log('[DEBUG] Final game to show:', gameToShow ? `${gameToShow.id} ${gameToShow.awayTeam.abbreviation} @ ${gameToShow.homeTeam.abbreviation}` : 'NONE');
 
       if (gameToShow) {
         // Fetch details for live AND final games (for stats)
-        const needsDetails = gameToShow.status === 'in_progress' || 
-                             gameToShow.status === 'halftime' || 
+        const needsDetails = gameToShow.status === 'in_progress' ||
+                             gameToShow.status === 'halftime' ||
                              gameToShow.status === 'final';
-        
+
         if (needsDetails) {
           try {
             const details = await fetchGameDetails(gameToShow.id);
+
+            // Re-check manual selection before updating - user may have changed selection during async fetch
+            const currentManualSelection = useGameStore.getState().manuallySelectedGameId;
+            if (currentManualSelection && currentManualSelection !== gameToShow.id) {
+              console.log('[DEBUG] Manual selection changed during fetch, skipping update');
+              return;
+            }
+
             if (details && details.game) {
               // Merge with scoreboard data to preserve season info
               const gameWithSeasonInfo = {
@@ -102,6 +110,13 @@ export function useGameData() {
             setGameStats(null);
           }
         } else {
+          // Re-check manual selection before updating
+          const currentManualSelection = useGameStore.getState().manuallySelectedGameId;
+          if (currentManualSelection && currentManualSelection !== gameToShow.id) {
+            console.log('[DEBUG] Manual selection changed, skipping update');
+            return;
+          }
+
           // For scheduled games, use scoreboard data directly
           setCurrentGame(gameToShow);
           setGameStats(null);
