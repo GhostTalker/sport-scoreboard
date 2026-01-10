@@ -9,9 +9,8 @@ export function useGameData() {
   const isFetching = useRef(false);
   const hasInitialized = useRef(false);
 
-  // CRITICAL: Clear phantom game on first mount if no manual selection was made
-  // This fixes HMR state persistence and browser cache issues
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
+    // CRITICAL: Initialize and clear phantom state FIRST (before any fetching)
     if (!hasInitialized.current) {
       hasInitialized.current = true;
       const store = useGameStore.getState();
@@ -31,21 +30,19 @@ export function useGameData() {
         });
       }
     }
-  }, []);
 
-  const fetchData = useCallback(async () => {
     // Prevent concurrent fetches
     if (isFetching.current) {
       return;
     }
-    
+
     isFetching.current = true;
-    
+
     // Get current state directly from store
     const store = useGameStore.getState();
     const { manuallySelectedGameId, setAvailableGames, setCurrentGame, setGameStats, setLoading, setError } = store;
-    
-    
+
+
     try {
       if (isFirstFetch.current) {
         setLoading(true);
