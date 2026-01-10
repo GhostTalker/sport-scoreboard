@@ -48,16 +48,21 @@ export function MainScoreboard() {
   }, []);
 
   if (isLoading && !currentGame) {
+    console.log('[MAINSCOREBOARD] Rendering LoadingState');
     return <LoadingState />;
   }
 
   if (error && !currentGame) {
+    console.log('[MAINSCOREBOARD] Rendering ErrorState:', error);
     return <ErrorState message={error} />;
   }
 
   if (!currentGame) {
+    console.log('[MAINSCOREBOARD] No currentGame - rendering NoGameState');
     return <NoGameState />;
   }
+
+  console.log('[MAINSCOREBOARD] Rendering game:', currentGame.id, `${currentGame.awayTeam.abbreviation} @ ${currentGame.homeTeam.abbreviation}`);
 
   // Use debug season if active, otherwise use actual game data
   const effectiveSeason = debugSeason || currentGame.seasonName;
@@ -329,7 +334,7 @@ export function MainScoreboard() {
 
       {/* Navigation hint - very subtle */}
       <div className="absolute bottom-3 left-0 right-0 text-center text-white/20 text-xs">
-        Arrow Keys to navigate | v2.7
+        Arrow Keys to navigate | v2.8
       </div>
       
       {/* Debug Panel */}
@@ -425,6 +430,18 @@ function NoGameState() {
   const availableGames = useGameStore((state) => state.availableGames);
   const selectGame = useGameStore((state) => state.selectGame);
 
+  console.log('[NOGAMESTATE] Rendering NoGameState, availableGames:', availableGames.length);
+
+  // Wrapped selectGame with logging
+  const handleSelectGame = (game: any, source: string) => {
+    console.log('[NOGAMESTATE] ===== BUTTON CLICKED =====');
+    console.log('[NOGAMESTATE] Source:', source);
+    console.log('[NOGAMESTATE] Game:', game.id, `${game.awayTeam.abbreviation} @ ${game.homeTeam.abbreviation}`);
+    console.log('[NOGAMESTATE] Click stack:', new Error().stack);
+    console.log('[NOGAMESTATE] ===========================');
+    selectGame(game);
+  };
+
   // Group games by status
   const liveGames = availableGames.filter(g => g.status === 'in_progress' || g.status === 'halftime');
   const scheduledGames = availableGames.filter(g => g.status === 'scheduled');
@@ -471,7 +488,7 @@ function NoGameState() {
               {liveGames.map((game) => (
                 <button
                   key={game.id}
-                  onClick={() => selectGame(game)}
+                  onClick={() => handleSelectGame(game, 'LIVE_GAME_BUTTON')}
                   className="bg-gradient-to-br from-red-900/40 to-red-800/30 hover:from-red-800/50 hover:to-red-700/40 border-2 border-red-500/50 hover:border-red-400 rounded-xl p-4 transition-all hover:scale-[1.02] text-left"
                 >
                   <div className="flex items-center justify-between mb-3">
@@ -516,7 +533,7 @@ function NoGameState() {
                 return (
                   <button
                     key={game.id}
-                    onClick={() => selectGame(game)}
+                    onClick={() => handleSelectGame(game, 'SCHEDULED_GAME_BUTTON')}
                     className="bg-slate-800/50 hover:bg-slate-700/50 border-2 border-slate-700 hover:border-blue-500 rounded-xl p-4 transition-all hover:scale-[1.02] text-left"
                   >
                     <div className="flex items-center justify-between mb-3">
@@ -554,7 +571,7 @@ function NoGameState() {
               {finishedGames.map((game) => (
                 <button
                   key={game.id}
-                  onClick={() => selectGame(game)}
+                  onClick={() => handleSelectGame(game, 'FINISHED_GAME_BUTTON')}
                   className="bg-slate-800/30 hover:bg-slate-700/30 border-2 border-slate-700/50 hover:border-gray-500 rounded-xl p-4 transition-all hover:scale-[1.02] text-left"
                 >
                   <div className="flex items-center justify-between mb-3">
