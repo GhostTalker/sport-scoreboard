@@ -9,8 +9,11 @@ apiRouter.get('/scoreboard', async (_req, res) => {
     const data = await espnProxy.fetchScoreboard();
     res.json(data);
   } catch (error) {
-    console.error('Error fetching scoreboard:', error);
-    res.status(500).json({ 
+    console.error('❌ [API Error] Scoreboard failed:', error instanceof Error ? error.message : error);
+    if (error instanceof Error && error.stack) {
+      console.error('Stack trace:', error.stack);
+    }
+    res.status(500).json({
       error: 'Failed to fetch scoreboard',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -24,8 +27,11 @@ apiRouter.get('/game/:gameId', async (req, res) => {
     const data = await espnProxy.fetchGameDetails(gameId);
     res.json(data);
   } catch (error) {
-    console.error('Error fetching game details:', error);
-    res.status(500).json({ 
+    console.error(`❌ [API Error] Game ${req.params.gameId} failed:`, error instanceof Error ? error.message : error);
+    if (error instanceof Error && error.stack) {
+      console.error('Stack trace:', error.stack);
+    }
+    res.status(500).json({
       error: 'Failed to fetch game details',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -43,8 +49,11 @@ apiRouter.get('/schedule', async (req, res) => {
     );
     res.json(data);
   } catch (error) {
-    console.error('Error fetching schedule:', error);
-    res.status(500).json({ 
+    console.error('❌ [API Error] Schedule failed:', error instanceof Error ? error.message : error);
+    if (error instanceof Error && error.stack) {
+      console.error('Stack trace:', error.stack);
+    }
+    res.status(500).json({
       error: 'Failed to fetch schedule',
       message: error instanceof Error ? error.message : 'Unknown error'
     });

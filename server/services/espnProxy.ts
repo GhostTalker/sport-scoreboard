@@ -67,7 +67,10 @@ class ESPNProxy {
     }
 
     console.log('[Cache MISS] Fetching scoreboard from ESPN...');
+    const start = Date.now();
     const data = await this.fetch(`${ESPN_BASE_URL}/scoreboard`);
+    const duration = Date.now() - start;
+    console.log(`[ESPN API] Scoreboard fetched in ${duration}ms`);
     this.setCache(cacheKey, data);
     return data;
   }
@@ -81,7 +84,10 @@ class ESPNProxy {
     }
 
     console.log(`[Cache MISS] Fetching game ${gameId} from ESPN...`);
+    const start = Date.now();
     const data = await this.fetch(`${ESPN_BASE_URL}/summary?event=${gameId}`);
+    const duration = Date.now() - start;
+    console.log(`[ESPN API] Game ${gameId} fetched in ${duration}ms`);
     this.setCache(cacheKey, data);
     return data;
   }

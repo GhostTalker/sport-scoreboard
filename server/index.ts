@@ -15,9 +15,22 @@ const PORT = Number(process.env.PORT) || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Log all requests in production for debugging
-app.use((req, _res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+// Enhanced request logging with response time
+app.use((req, res, next) => {
+  const start = Date.now();
+  const timestamp = new Date().toISOString();
+
+  // Log request
+  console.log(`[${timestamp}] → ${req.method} ${req.path}`);
+
+  // Capture response
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const status = res.statusCode;
+    const statusEmoji = status >= 500 ? '❌' : status >= 400 ? '⚠️' : '✅';
+    console.log(`[${timestamp}] ${statusEmoji} ${req.method} ${req.path} - ${status} (${duration}ms)`);
+  });
+
   next();
 });
 
