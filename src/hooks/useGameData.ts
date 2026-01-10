@@ -16,25 +16,33 @@ export function useGameData() {
     console.log('[LAYOUT-MOUNT] Checking store state:', {
       hasCurrentGame: !!store.currentGame,
       currentGameId: store.currentGame?.id,
+      userConfirmedGameId: store.userConfirmedGameId,
       manuallySelectedGameId: store.manuallySelectedGameId
     });
 
+    // Check if there's a confirmed selection
+    const hasConfirmedSelection = store.userConfirmedGameId || store.manuallySelectedGameId;
+
     // ALWAYS clear orphaned state on mount (synchronously!)
-    // Clear orphaned game (game exists but no manual selection)
-    if (store.currentGame && !store.manuallySelectedGameId) {
+    // Clear orphaned game (game exists but no selection)
+    if (store.currentGame && !hasConfirmedSelection) {
       console.log('[LAYOUT-MOUNT] SYNC clearing orphaned game state');
       useGameStore.setState({
         currentGame: null,
         isLive: false,
         gameStats: null,
+        userConfirmedGameId: null,
         manuallySelectedGameId: null
       });
     }
 
-    // Clear orphaned manual selection (manual selection exists but no game)
-    if (!store.currentGame && store.manuallySelectedGameId) {
-      console.log('[LAYOUT-MOUNT] SYNC clearing orphaned manual selection');
-      useGameStore.setState({ manuallySelectedGameId: null });
+    // Clear orphaned selection (selection exists but no game)
+    if (!store.currentGame && hasConfirmedSelection) {
+      console.log('[LAYOUT-MOUNT] SYNC clearing orphaned selection');
+      useGameStore.setState({
+        userConfirmedGameId: null,
+        manuallySelectedGameId: null
+      });
     }
   }, []); // Empty deps - only on mount
 
@@ -46,19 +54,25 @@ export function useGameData() {
     if (!hasInitialized.current) {
       hasInitialized.current = true;
       const store = useGameStore.getState();
+      const hasConfirmedSelection = store.userConfirmedGameId || store.manuallySelectedGameId;
+
       console.log('[INIT] Checking for phantom state:', {
         hasCurrentGame: !!store.currentGame,
         currentGameId: store.currentGame?.id,
+        userConfirmedGameId: store.userConfirmedGameId,
         manuallySelectedGameId: store.manuallySelectedGameId
       });
-      // If there's a currentGame but NO manual selection, it's phantom state - clear it!
-      if (store.currentGame && !store.manuallySelectedGameId) {
-        console.log('[INIT] CLEARING phantom game state - no manual selection exists!');
+
+      // If there's a currentGame but NO confirmed selection, it's phantom state - clear it!
+      if (store.currentGame && !hasConfirmedSelection) {
+        console.log('[INIT] CLEARING phantom game state - no confirmed selection exists!');
         // Use Zustand's setState directly to bypass any guards
         useGameStore.setState({
           currentGame: null,
           isLive: false,
-          gameStats: null
+          gameStats: null,
+          userConfirmedGameId: null,
+          manuallySelectedGameId: null
         });
       }
     }
@@ -72,8 +86,10 @@ export function useGameData() {
 
     // Get current state directly from store
     const store = useGameStore.getState();
-    const { manuallySelectedGameId, setAvailableGames, setCurrentGame, setGameStats, setLoading, setError } = store;
+    const { userConfirmedGameId, manuallySelectedGameId, setAvailableGames, setCurrentGame, setGameStats, setLoading, setError } = store;
 
+    // Use the NEW variable (userConfirmedGameId) as primary
+    const selectedGameId = userConfirmedGameId || manuallySelectedGameId;
 
     try {
       if (isFirstFetch.current) {
@@ -93,24 +109,26 @@ export function useGameData() {
       // Determine which game to show
       let gameToShow = null;
 
+      console.log('[DEBUG] userConfirmedGameId:', userConfirmedGameId);
       console.log('[DEBUG] manuallySelectedGameId:', manuallySelectedGameId);
+      console.log('[DEBUG] Using selectedGameId:', selectedGameId);
 
-      // If user manually selected a game, ALWAYS use that game
-      if (manuallySelectedGameId) {
-        gameToShow = games.find((g) => g.id === manuallySelectedGameId);
-        console.log('[DEBUG] Found manually selected game:', gameToShow ? `${gameToShow.id} ${`${gameToShow.awayTeam.abbreviation} @ ${gameToShow.homeTeam.abbreviation}`}` : 'NOT FOUND');
+      // If user confirmed a game, ALWAYS use that game
+      if (selectedGameId) {
+        gameToShow = games.find((g) => g.id === selectedGameId);
+        console.log('[DEBUG] Found selected game:', gameToShow ? `${gameToShow.id} ${`${gameToShow.awayTeam.abbreviation} @ ${gameToShow.homeTeam.abbreviation}`}` : 'NOT FOUND');
 
-        // If manual selection not found in current games, keep showing it anyway
+        // If selection not found in current games, keep showing it anyway
         if (!gameToShow) {
           const { currentGame } = useGameStore.getState();
-          if (currentGame && currentGame.id === manuallySelectedGameId) {
+          if (currentGame && currentGame.id === selectedGameId) {
             gameToShow = currentGame;
-            console.log('[DEBUG] Using cached manually selected game:', `${gameToShow.id} ${`${gameToShow.awayTeam.abbreviation} @ ${gameToShow.homeTeam.abbreviation}`}`);
+            console.log('[DEBUG] Using cached selected game:', `${gameToShow.id} ${`${gameToShow.awayTeam.abbreviation} @ ${gameToShow.homeTeam.abbreviation}`}`);
           }
         }
       }
 
-      // NO AUTO SELECTION - User must manually select a game
+      // NO AUTO SELECTION - User must select a game
       console.log('[DEBUG] Final game to show:', gameToShow ? `${gameToShow.id} ${gameToShow.awayTeam.abbreviation} @ ${gameToShow.homeTeam.abbreviation}` : 'NONE - User must select a game');
 
       if (gameToShow) {
@@ -172,13 +190,15 @@ export function useGameData() {
           currentGame: null,
           isLive: false,
           gameStats: null,
-          manuallySelectedGameId: null, // Clear this too!
+          userConfirmedGameId: null, // NEW: Clear user confirmation
+          manuallySelectedGameId: null, // Legacy: Clear this too
         });
 
         // VERIFY the clear worked
         const afterClear = useGameStore.getState();
         console.log('[DEBUG] After setState clear:', {
           currentGame: afterClear.currentGame,
+          userConfirmedGameId: afterClear.userConfirmedGameId,
           manuallySelectedGameId: afterClear.manuallySelectedGameId
         });
       }

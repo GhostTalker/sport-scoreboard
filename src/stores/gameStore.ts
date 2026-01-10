@@ -11,10 +11,13 @@ interface GameState {
   // Current Game
   currentGame: Game | null;
   isLive: boolean;
-  
-  // Manually selected game ID (prevents auto-override)
+
+  // User confirmed game selection (NEW - only set by explicit UI button click)
+  userConfirmedGameId: string | null;
+
+  // Legacy variable (keeping for now, will be removed)
   manuallySelectedGameId: string | null;
-  
+
   // All available games (for game selector)
   availableGames: Game[];
   
@@ -31,17 +34,20 @@ interface GameState {
   // Actions
   setCurrentGame: (game: Game | null) => void;
   selectGame: (game: Game | null) => void; // Manual selection
+  confirmGameSelection: (game: Game) => void; // NEW - explicit user confirmation
   setAvailableGames: (games: Game[]) => void;
   updateScores: (home: number, away: number) => void;
   setGameStats: (stats: GameStats | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearManualSelection: () => void;
+  clearUserConfirmation: () => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
   currentGame: null,
   isLive: false,
+  userConfirmedGameId: null,
   manuallySelectedGameId: null,
   availableGames: [],
   previousScores: { home: 0, away: 0 },
@@ -118,4 +124,23 @@ export const useGameStore = create<GameState>((set, get) => ({
   setError: (error) => set({ error }),
 
   clearManualSelection: () => set({ manuallySelectedGameId: null }),
+
+  // NEW: Explicit user confirmation - ONLY way to set userConfirmedGameId
+  confirmGameSelection: (game) => {
+    console.log('[CONFIRM-GAME] ==========================================');
+    console.log('[CONFIRM-GAME] User explicitly confirmed game:', game.id);
+    console.log('[CONFIRM-GAME] Teams:', `${game.awayTeam.abbreviation} @ ${game.homeTeam.abbreviation}`);
+    console.log('[CONFIRM-GAME] ==========================================');
+
+    const isLive = game.status === 'in_progress' || game.status === 'halftime';
+    set({
+      currentGame: game,
+      isLive,
+      userConfirmedGameId: game.id,
+      manuallySelectedGameId: game.id, // Keep legacy in sync
+      previousScores: { home: game.homeTeam.score, away: game.awayTeam.score },
+    });
+  },
+
+  clearUserConfirmation: () => set({ userConfirmedGameId: null }),
 }));
