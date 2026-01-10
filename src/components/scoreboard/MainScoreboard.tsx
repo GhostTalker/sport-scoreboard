@@ -10,27 +10,6 @@ export function MainScoreboard() {
   const isLoading = useGameStore((state) => state.isLoading);
   const error = useGameStore((state) => state.error);
 
-  // Debug logging for displayed game
-  useEffect(() => {
-    if (currentGame) {
-      console.log('[DEBUG DISPLAY] Current game being displayed:', {
-        id: currentGame.id,
-        awayTeam: {
-          id: currentGame.awayTeam.id,
-          name: currentGame.awayTeam.name,
-          abbr: currentGame.awayTeam.abbreviation,
-          logo: currentGame.awayTeam.logo
-        },
-        homeTeam: {
-          id: currentGame.homeTeam.id,
-          name: currentGame.homeTeam.name,
-          abbr: currentGame.homeTeam.abbreviation,
-          logo: currentGame.homeTeam.logo
-        }
-      });
-    }
-  }, [currentGame]);
-
   // Debug mode state
   const [debugMode, setDebugMode] = useState(false);
   const [debugSeason, setDebugSeason] = useState<string | null>(null);
@@ -48,21 +27,16 @@ export function MainScoreboard() {
   }, []);
 
   if (isLoading && !currentGame) {
-    console.log('[MAINSCOREBOARD] Rendering LoadingState');
     return <LoadingState />;
   }
 
   if (error && !currentGame) {
-    console.log('[MAINSCOREBOARD] Rendering ErrorState:', error);
     return <ErrorState message={error} />;
   }
 
   if (!currentGame) {
-    console.log('[MAINSCOREBOARD] No currentGame - rendering NoGameState');
     return <NoGameState />;
   }
-
-  console.log('[MAINSCOREBOARD] Rendering game:', currentGame.id, `${currentGame.awayTeam.abbreviation} @ ${currentGame.homeTeam.abbreviation}`);
 
   // Use debug season if active, otherwise use actual game data
   const effectiveSeason = debugSeason || currentGame.seasonName;
@@ -334,7 +308,7 @@ export function MainScoreboard() {
 
       {/* Navigation hint - very subtle */}
       <div className="absolute bottom-3 left-0 right-0 text-center text-white/20 text-xs">
-        Arrow Keys to navigate | v3.5
+        Arrow Keys to navigate | v4.0
       </div>
       
       {/* Debug Panel */}
@@ -430,15 +404,7 @@ function NoGameState() {
   const availableGames = useGameStore((state) => state.availableGames);
   const confirmGameSelection = useGameStore((state) => state.confirmGameSelection);
 
-  console.log('[NOGAMESTATE] Rendering NoGameState, availableGames:', availableGames.length);
-
-  // Simple handler - uses NEW confirmGameSelection function
-  const handleSelectGame = (game: any, source: string) => {
-    console.log('[NOGAMESTATE] ===== USER CONFIRMED GAME SELECTION =====');
-    console.log('[NOGAMESTATE] Source:', source);
-    console.log('[NOGAMESTATE] Game:', game.id, `${game.awayTeam.abbreviation} @ ${game.homeTeam.abbreviation}`);
-    console.log('[NOGAMESTATE] Using NEW confirmGameSelection function');
-    console.log('[NOGAMESTATE] =========================================');
+  const handleSelectGame = (game: any) => {
     confirmGameSelection(game);
   };
 
@@ -488,7 +454,7 @@ function NoGameState() {
               {liveGames.map((game) => (
                 <button
                   key={game.id}
-                  onClick={() => handleSelectGame(game, 'LIVE_GAME_BUTTON')}
+                  onClick={() => handleSelectGame(game)}
                   className="bg-gradient-to-br from-red-900/40 to-red-800/30 hover:from-red-800/50 hover:to-red-700/40 border-2 border-red-500/50 hover:border-red-400 rounded-xl p-4 transition-all hover:scale-[1.02] text-left"
                 >
                   <div className="flex items-center justify-between mb-3">
@@ -533,7 +499,7 @@ function NoGameState() {
                 return (
                   <button
                     key={game.id}
-                    onClick={() => handleSelectGame(game, 'SCHEDULED_GAME_BUTTON')}
+                    onClick={() => handleSelectGame(game)}
                     className="bg-slate-800/50 hover:bg-slate-700/50 border-2 border-slate-700 hover:border-blue-500 rounded-xl p-4 transition-all hover:scale-[1.02] text-left"
                   >
                     <div className="flex items-center justify-between mb-3">
@@ -571,7 +537,7 @@ function NoGameState() {
               {finishedGames.map((game) => (
                 <button
                   key={game.id}
-                  onClick={() => handleSelectGame(game, 'FINISHED_GAME_BUTTON')}
+                  onClick={() => handleSelectGame(game)}
                   className="bg-slate-800/30 hover:bg-slate-700/30 border-2 border-slate-700/50 hover:border-gray-500 rounded-xl p-4 transition-all hover:scale-[1.02] text-left"
                 >
                   <div className="flex items-center justify-between mb-3">

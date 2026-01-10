@@ -5,11 +5,11 @@ import type { Game } from '../../types/game';
 export function GameSelector() {
   const availableGames = useGameStore((state) => state.availableGames);
   const currentGame = useGameStore((state) => state.currentGame);
-  const selectGame = useGameStore((state) => state.selectGame);
+  const confirmGameSelection = useGameStore((state) => state.confirmGameSelection);
   const setView = useUIStore((state) => state.setView);
 
   const handleSelectGame = (game: Game) => {
-    selectGame(game);
+    confirmGameSelection(game);
     setView('scoreboard');
   };
 

@@ -9,70 +9,44 @@ export function useGameData() {
   const isFetching = useRef(false);
   const hasInitialized = useRef(false);
 
-  // ALFRED'S FIX: useLayoutEffect for SYNCHRONOUS reset BEFORE any rendering
+  // useLayoutEffect for SYNCHRONOUS reset BEFORE any rendering
   // This prevents Zustand store from keeping state between StrictMode mounts
   useLayoutEffect(() => {
     const store = useGameStore.getState();
-    console.log('[LAYOUT-MOUNT] Checking store state:', {
-      hasCurrentGame: !!store.currentGame,
-      currentGameId: store.currentGame?.id,
-      userConfirmedGameId: store.userConfirmedGameId,
-      manuallySelectedGameId: store.manuallySelectedGameId
-    });
+    const hasConfirmedSelection = !!store.userConfirmedGameId;
 
-    // Check if there's a confirmed selection
-    const hasConfirmedSelection = store.userConfirmedGameId || store.manuallySelectedGameId;
-
-    // ALWAYS clear orphaned state on mount (synchronously!)
     // Clear orphaned game (game exists but no selection)
     if (store.currentGame && !hasConfirmedSelection) {
-      console.log('[LAYOUT-MOUNT] SYNC clearing orphaned game state');
       useGameStore.setState({
         currentGame: null,
         isLive: false,
         gameStats: null,
         userConfirmedGameId: null,
-        manuallySelectedGameId: null
       });
     }
 
     // Clear orphaned selection (selection exists but no game)
     if (!store.currentGame && hasConfirmedSelection) {
-      console.log('[LAYOUT-MOUNT] SYNC clearing orphaned selection');
       useGameStore.setState({
         userConfirmedGameId: null,
-        manuallySelectedGameId: null
       });
     }
-  }, []); // Empty deps - only on mount
+  }, []);
 
   const fetchData = useCallback(async () => {
-    const fetchId = Math.random().toString(36).substring(7);
-    console.log(`[FETCH-START ${fetchId}] Beginning fetch...`);
-
-    // CRITICAL: Initialize and clear phantom state FIRST (before any fetching)
+    // Initialize and clear phantom state on first fetch
     if (!hasInitialized.current) {
       hasInitialized.current = true;
       const store = useGameStore.getState();
-      const hasConfirmedSelection = store.userConfirmedGameId || store.manuallySelectedGameId;
-
-      console.log('[INIT] Checking for phantom state:', {
-        hasCurrentGame: !!store.currentGame,
-        currentGameId: store.currentGame?.id,
-        userConfirmedGameId: store.userConfirmedGameId,
-        manuallySelectedGameId: store.manuallySelectedGameId
-      });
+      const hasConfirmedSelection = !!store.userConfirmedGameId;
 
       // If there's a currentGame but NO confirmed selection, it's phantom state - clear it!
       if (store.currentGame && !hasConfirmedSelection) {
-        console.log('[INIT] CLEARING phantom game state - no confirmed selection exists!');
-        // Use Zustand's setState directly to bypass any guards
         useGameStore.setState({
           currentGame: null,
           isLive: false,
           gameStats: null,
           userConfirmedGameId: null,
-          manuallySelectedGameId: null
         });
       }
     }
@@ -84,12 +58,8 @@ export function useGameData() {
 
     isFetching.current = true;
 
-    // Get current state directly from store
     const store = useGameStore.getState();
-    const { userConfirmedGameId, manuallySelectedGameId, setAvailableGames, setCurrentGame, setGameStats, setLoading, setError } = store;
-
-    // Use the NEW variable (userConfirmedGameId) as primary
-    const selectedGameId = userConfirmedGameId || manuallySelectedGameId;
+    const { userConfirmedGameId, setAvailableGames, setCurrentGame, setGameStats, setLoading, setError } = store;
 
     try {
       if (isFirstFetch.current) {
@@ -99,37 +69,23 @@ export function useGameData() {
 
       // Fetch scoreboard (all games)
       const games = await fetchScoreboard();
-      console.log('[DEBUG] Fetched games:', games.map(g => ({
-        id: g.id,
-        name: `${g.awayTeam.abbreviation} @ ${g.homeTeam.abbreviation}`,
-        status: g.status
-      })));
       setAvailableGames(games);
 
       // Determine which game to show
       let gameToShow = null;
 
-      console.log('[DEBUG] userConfirmedGameId:', userConfirmedGameId);
-      console.log('[DEBUG] manuallySelectedGameId:', manuallySelectedGameId);
-      console.log('[DEBUG] Using selectedGameId:', selectedGameId);
+      // If user confirmed a game, use that game
+      if (userConfirmedGameId) {
+        gameToShow = games.find((g) => g.id === userConfirmedGameId);
 
-      // If user confirmed a game, ALWAYS use that game
-      if (selectedGameId) {
-        gameToShow = games.find((g) => g.id === selectedGameId);
-        console.log('[DEBUG] Found selected game:', gameToShow ? `${gameToShow.id} ${`${gameToShow.awayTeam.abbreviation} @ ${gameToShow.homeTeam.abbreviation}`}` : 'NOT FOUND');
-
-        // If selection not found in current games, keep showing it anyway
+        // If selection not found in current games, keep showing cached game
         if (!gameToShow) {
           const { currentGame } = useGameStore.getState();
-          if (currentGame && currentGame.id === selectedGameId) {
+          if (currentGame && currentGame.id === userConfirmedGameId) {
             gameToShow = currentGame;
-            console.log('[DEBUG] Using cached selected game:', `${gameToShow.id} ${`${gameToShow.awayTeam.abbreviation} @ ${gameToShow.homeTeam.abbreviation}`}`);
           }
         }
       }
-
-      // NO AUTO SELECTION - User must select a game
-      console.log('[DEBUG] Final game to show:', gameToShow ? `${gameToShow.id} ${gameToShow.awayTeam.abbreviation} @ ${gameToShow.homeTeam.abbreviation} (status: ${gameToShow.status})` : 'NONE - User must select a game');
 
       if (gameToShow) {
         // Fetch details for live AND final games (for stats)
@@ -141,28 +97,21 @@ export function useGameData() {
           try {
             const details = await fetchGameDetails(gameToShow.id);
 
-            // Re-check manual selection before updating - user may have changed selection during async fetch
-            const currentManualSelection = useGameStore.getState().manuallySelectedGameId;
-            if (currentManualSelection && currentManualSelection !== gameToShow.id) {
-              console.log('[DEBUG] Manual selection changed during fetch, skipping update');
+            // Re-check selection before updating - user may have changed selection during async fetch
+            const currentSelection = useGameStore.getState().userConfirmedGameId;
+            if (currentSelection && currentSelection !== gameToShow.id) {
               return;
             }
 
             if (details && details.game) {
-              console.log('[DEBUG] Game details fetched:', {
-                scoreboardStatus: gameToShow.status,
-                detailsStatus: details.game.status,
-                scoreboardScore: `${gameToShow.awayTeam.score}-${gameToShow.homeTeam.score}`,
-                detailsScore: `${details.game.awayTeam.score}-${details.game.homeTeam.score}`,
-              });
               // Merge with scoreboard data to preserve season info AND correct status
               // The details API sometimes returns wrong status (scheduled instead of in_progress)
               // and missing clock data when it thinks the game is scheduled
               const gameWithSeasonInfo = {
                 ...details.game,
-                status: gameToShow.status,  // CRITICAL: Use scoreboard status, not details status!
-                clock: gameToShow.clock,    // CRITICAL: Use scoreboard clock data!
-                situation: gameToShow.situation || details.game.situation,  // Prefer scoreboard situation
+                status: gameToShow.status,  // Use scoreboard status
+                clock: gameToShow.clock,    // Use scoreboard clock data
+                situation: gameToShow.situation || details.game.situation,
                 seasonType: gameToShow.seasonType,
                 week: gameToShow.week,
                 seasonName: gameToShow.seasonName,
@@ -170,7 +119,6 @@ export function useGameData() {
                 venue: gameToShow.venue || details.game.venue,
                 broadcast: gameToShow.broadcast || details.game.broadcast,
               };
-              console.log('[DEBUG] Setting currentGame with status:', gameWithSeasonInfo.status);
               setCurrentGame(gameWithSeasonInfo);
               setGameStats(details.stats);
             } else {
@@ -183,10 +131,9 @@ export function useGameData() {
             setGameStats(null);
           }
         } else {
-          // Re-check manual selection before updating
-          const currentManualSelection = useGameStore.getState().manuallySelectedGameId;
-          if (currentManualSelection && currentManualSelection !== gameToShow.id) {
-            console.log('[DEBUG] Manual selection changed, skipping update');
+          // Re-check selection before updating
+          const currentSelection = useGameStore.getState().userConfirmedGameId;
+          if (currentSelection && currentSelection !== gameToShow.id) {
             return;
           }
 
@@ -196,22 +143,11 @@ export function useGameData() {
         }
       } else {
         // No game selected - clear current game to show picker
-        console.log('[DEBUG] No game selected, clearing currentGame');
-        // CRITICAL: Use setState directly to bypass guards in setCurrentGame
         useGameStore.setState({
           currentGame: null,
           isLive: false,
           gameStats: null,
-          userConfirmedGameId: null, // NEW: Clear user confirmation
-          manuallySelectedGameId: null, // Legacy: Clear this too
-        });
-
-        // VERIFY the clear worked
-        const afterClear = useGameStore.getState();
-        console.log('[DEBUG] After setState clear:', {
-          currentGame: afterClear.currentGame,
-          userConfirmedGameId: afterClear.userConfirmedGameId,
-          manuallySelectedGameId: afterClear.manuallySelectedGameId
+          userConfirmedGameId: null,
         });
       }
     } catch (error) {
@@ -221,35 +157,32 @@ export function useGameData() {
       setLoading(false);
       isFirstFetch.current = false;
       isFetching.current = false;
-      console.log(`[FETCH-END ${fetchId}] Fetch complete`);
     }
   }, []);
 
   // Set up polling - only run once on mount
   useEffect(() => {
-    // Initial fetch
     fetchData();
 
-    // Set up interval with dynamic timing
     const setupInterval = () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
-      
+
       const { currentGame, isLive } = useGameStore.getState();
       let interval = POLLING_INTERVALS.scheduled;
-      
+
       if (currentGame?.status === 'final') {
         interval = POLLING_INTERVALS.final;
       } else if (isLive) {
         interval = POLLING_INTERVALS.live;
       }
-      
+
       intervalRef.current = window.setInterval(fetchData, interval);
     };
-    
+
     setupInterval();
-    
+
     // Re-setup interval when game status changes
     const unsubscribe = useGameStore.subscribe((state, prevState) => {
       if (state.currentGame?.status !== prevState.currentGame?.status ||
@@ -263,7 +196,7 @@ export function useGameData() {
         clearInterval(intervalRef.current);
       }
       unsubscribe();
-      hasInitialized.current = false; // FIX 1: Reset on unmount to fix StrictMode double-mount
+      hasInitialized.current = false;
     };
   }, [fetchData]);
 
