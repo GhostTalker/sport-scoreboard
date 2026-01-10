@@ -157,9 +157,12 @@ export function useGameData() {
               });
               // Merge with scoreboard data to preserve season info AND correct status
               // The details API sometimes returns wrong status (scheduled instead of in_progress)
+              // and missing clock data when it thinks the game is scheduled
               const gameWithSeasonInfo = {
                 ...details.game,
                 status: gameToShow.status,  // CRITICAL: Use scoreboard status, not details status!
+                clock: gameToShow.clock,    // CRITICAL: Use scoreboard clock data!
+                situation: gameToShow.situation || details.game.situation,  // Prefer scoreboard situation
                 seasonType: gameToShow.seasonType,
                 week: gameToShow.week,
                 seasonName: gameToShow.seasonName,
