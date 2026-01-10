@@ -334,7 +334,7 @@ export function MainScoreboard() {
 
       {/* Navigation hint - very subtle */}
       <div className="absolute bottom-3 left-0 right-0 text-center text-white/20 text-xs">
-        Arrow Keys to navigate | v3.3
+        Arrow Keys to navigate | v3.4
       </div>
       
       {/* Debug Panel */}

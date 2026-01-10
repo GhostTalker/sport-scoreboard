@@ -155,9 +155,11 @@ export function useGameData() {
                 scoreboardScore: `${gameToShow.awayTeam.score}-${gameToShow.homeTeam.score}`,
                 detailsScore: `${details.game.awayTeam.score}-${details.game.homeTeam.score}`,
               });
-              // Merge with scoreboard data to preserve season info
+              // Merge with scoreboard data to preserve season info AND correct status
+              // The details API sometimes returns wrong status (scheduled instead of in_progress)
               const gameWithSeasonInfo = {
                 ...details.game,
+                status: gameToShow.status,  // CRITICAL: Use scoreboard status, not details status!
                 seasonType: gameToShow.seasonType,
                 week: gameToShow.week,
                 seasonName: gameToShow.seasonName,
