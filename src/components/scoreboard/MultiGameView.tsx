@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { getTitleGraphic } from '../../constants/titleGraphics';
-import type { Game } from '../../types/game';
+import type { Game, Team } from '../../types/game';
 
 // Track games with recent score changes (game ID -> timestamp)
 type ScoreChangeMap = Map<string, number>;
@@ -106,15 +106,15 @@ export function MultiGameView() {
         `,
       }}
     >
-      {/* Title Graphic Header */}
-      <div className="flex-shrink-0 pt-4 pb-2 flex justify-center">
+      {/* Title Graphic Header - Larger */}
+      <div className="flex-shrink-0 pt-6 pb-4 flex justify-center">
         {titleGraphic && (
           <img
             src={titleGraphic}
             alt={seasonName}
-            className="h-24 w-auto object-contain drop-shadow-2xl"
+            className="h-36 w-auto object-contain drop-shadow-2xl"
             style={{
-              filter: 'drop-shadow(0 6px 15px rgba(0,0,0,0.7))',
+              filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.8))',
             }}
           />
         )}
@@ -246,18 +246,9 @@ function GameCard({ game, onSelect, hasScoreChange }: GameCardProps) {
       </div>
 
       {/* Teams and Score - Centered Layout */}
-      <div className="flex items-center justify-center gap-6">
+      <div className="flex items-center justify-center gap-4">
         {/* Away Team */}
-        <div className="flex flex-col items-center">
-          <img
-            src={game.awayTeam.logo}
-            alt={game.awayTeam.abbreviation}
-            className="w-20 h-20 object-contain mb-2"
-          />
-          <span className="text-white font-bold text-lg">
-            {game.awayTeam.abbreviation}
-          </span>
-        </div>
+        <TeamBadge team={game.awayTeam} isFinal={isFinal} isWinner={game.awayTeam.score > game.homeTeam.score} />
 
         {/* Score Display - Centered */}
         <div className="flex items-center gap-3">
@@ -307,16 +298,7 @@ function GameCard({ game, onSelect, hasScoreChange }: GameCardProps) {
         </div>
 
         {/* Home Team */}
-        <div className="flex flex-col items-center">
-          <img
-            src={game.homeTeam.logo}
-            alt={game.homeTeam.abbreviation}
-            className="w-20 h-20 object-contain mb-2"
-          />
-          <span className="text-white font-bold text-lg">
-            {game.homeTeam.abbreviation}
-          </span>
-        </div>
+        <TeamBadge team={game.homeTeam} isFinal={isFinal} isWinner={game.homeTeam.score > game.awayTeam.score} />
       </div>
 
       {/* Venue for scheduled games */}
@@ -326,5 +308,94 @@ function GameCard({ game, onSelect, hasScoreChange }: GameCardProps) {
         </div>
       )}
     </button>
+  );
+}
+
+interface TeamBadgeProps {
+  team: Team;
+  isFinal: boolean;
+  isWinner: boolean;
+}
+
+function TeamBadge({ team, isFinal, isWinner }: TeamBadgeProps) {
+  // Check if the primary color is too dark (for glow visibility)
+  const hexToRgbSum = (hex: string) => {
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    return r + g + b;
+  };
+
+  const primaryColor = team.color;
+  const altColor = team.alternateColor || 'ffffff';
+  const isPrimaryDark = hexToRgbSum(primaryColor) < 180;
+  const glowColor = isPrimaryDark ? altColor : primaryColor;
+
+  // Dim everything for losing team in final games
+  const opacity = isFinal && !isWinner ? 0.5 : 1;
+
+  return (
+    <div className="flex flex-col items-center gap-2" style={{ opacity }}>
+      {/* Team Logo with Glow Effect */}
+      <div
+        className="relative w-20 h-20 rounded-full flex items-center justify-center"
+        style={{
+          background: `radial-gradient(circle, #${glowColor}40 0%, #${glowColor}15 50%, transparent 70%)`,
+          boxShadow: `
+            0 0 30px #${glowColor}40,
+            0 0 50px #${glowColor}20
+          `,
+        }}
+      >
+        {/* Outer ring */}
+        <div
+          className="absolute inset-1 rounded-full"
+          style={{
+            border: `3px solid #${primaryColor}`,
+            boxShadow: `
+              0 0 15px #${glowColor}60,
+              inset 0 0 15px #${glowColor}30
+            `,
+          }}
+        />
+
+        <img
+          src={team.logo}
+          alt={team.abbreviation}
+          className="w-14 h-14 object-contain relative z-10"
+          style={{
+            filter: `drop-shadow(0 0 10px #${glowColor}80)`,
+          }}
+        />
+      </div>
+
+      {/* Team Name Box */}
+      <div className="relative">
+        {/* Glow background */}
+        <div
+          className="absolute inset-0 blur-lg opacity-50 rounded-lg"
+          style={{ backgroundColor: `#${team.color}` }}
+        />
+
+        {/* Name container */}
+        <div
+          className="relative px-3 py-1 rounded-lg border"
+          style={{
+            background: `linear-gradient(180deg, #${team.color}cc 0%, #${team.color}88 100%)`,
+            borderColor: `#${team.alternateColor || team.color}`,
+            boxShadow: `0 2px 15px #${team.color}50`,
+          }}
+        >
+          <span
+            className="text-sm font-black text-white uppercase tracking-wider"
+            style={{
+              textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+            }}
+          >
+            {team.abbreviation}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }
