@@ -204,7 +204,7 @@ function GameCard({ game, onSelect, hasScoreChange }: GameCardProps) {
   return (
     <button
       onClick={() => onSelect(game)}
-      className={`rounded-2xl p-4 transition-all duration-300 hover:scale-[1.02] text-left h-[180px] flex flex-col ${
+      className={`rounded-2xl p-4 transition-all duration-300 hover:scale-[1.02] text-left h-[200px] flex flex-col ${
         hasScoreChange ? 'animate-pulse' : ''
       }`}
       style={getCardStyle()}
@@ -329,23 +329,23 @@ function TeamBadge({ team, isFinal, isWinner }: TeamBadgeProps) {
     <div className="flex flex-col items-center gap-1" style={{ opacity }}>
       {/* Team Logo with Glow Effect */}
       <div
-        className="relative w-16 h-16 rounded-full flex items-center justify-center"
+        className="relative w-20 h-20 rounded-full flex items-center justify-center"
         style={{
           background: `radial-gradient(circle, #${glowColor}40 0%, #${glowColor}15 50%, transparent 70%)`,
           boxShadow: `
-            0 0 25px #${glowColor}40,
-            0 0 40px #${glowColor}20
+            0 0 30px #${glowColor}40,
+            0 0 50px #${glowColor}20
           `,
         }}
       >
         {/* Outer ring */}
         <div
-          className="absolute inset-0.5 rounded-full"
+          className="absolute inset-1 rounded-full"
           style={{
-            border: `2px solid #${primaryColor}`,
+            border: `3px solid #${primaryColor}`,
             boxShadow: `
-              0 0 12px #${glowColor}60,
-              inset 0 0 12px #${glowColor}30
+              0 0 15px #${glowColor}60,
+              inset 0 0 15px #${glowColor}30
             `,
           }}
         />
@@ -353,9 +353,9 @@ function TeamBadge({ team, isFinal, isWinner }: TeamBadgeProps) {
         <img
           src={team.logo}
           alt={team.abbreviation}
-          className="w-11 h-11 object-contain relative z-10"
+          className="w-14 h-14 object-contain relative z-10"
           style={{
-            filter: `drop-shadow(0 0 8px #${glowColor}80)`,
+            filter: `drop-shadow(0 0 10px #${glowColor}80)`,
           }}
         />
       </div>
@@ -370,7 +370,7 @@ function TeamBadge({ team, isFinal, isWinner }: TeamBadgeProps) {
 
         {/* Name container */}
         <div
-          className="relative px-2 py-0.5 rounded border"
+          className="relative px-3 py-0.5 rounded border"
           style={{
             background: `linear-gradient(180deg, #${team.color}cc 0%, #${team.color}88 100%)`,
             borderColor: `#${team.alternateColor || team.color}`,
@@ -378,12 +378,12 @@ function TeamBadge({ team, isFinal, isWinner }: TeamBadgeProps) {
           }}
         >
           <span
-            className="text-xs font-black text-white uppercase tracking-wider"
+            className="text-xs font-bold text-white uppercase tracking-wide"
             style={{
               textShadow: '0 1px 3px rgba(0,0,0,0.5)',
             }}
           >
-            {team.abbreviation}
+            {team.shortDisplayName}
           </span>
         </div>
       </div>
