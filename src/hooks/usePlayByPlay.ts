@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { useUIStore } from '../stores/uiStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import { API_ENDPOINTS, POLLING_INTERVALS } from '../constants/api';
 import type { CelebrationType } from '../types/game';
 
@@ -48,6 +49,7 @@ export function usePlayByPlay() {
   const isLive = useGameStore((state) => state.isLive);
   const showCelebration = useUIStore((state) => state.showCelebration);
   const celebrationOverlay = useUIStore((state) => state.celebrationOverlay);
+  const isCelebrationEnabled = useSettingsStore((state) => state.isCelebrationEnabled);
 
   // Track last seen play to avoid duplicate celebrations
   const lastSeenPlayId = useRef<string | null>(null);
@@ -150,7 +152,8 @@ export function usePlayByPlay() {
 
       if (playData && isMounted) {
         const celebration = detectCelebrationPlay(playData);
-        if (celebration) {
+        // Only show celebration if this type is enabled in settings
+        if (celebration && isCelebrationEnabled(celebration)) {
           showCelebration(celebration);
         }
       }
@@ -170,5 +173,5 @@ export function usePlayByPlay() {
         clearTimeout(timeoutId);
       }
     };
-  }, [currentGame?.id, isLive, celebrationOverlay.visible, fetchPlays, detectCelebrationPlay, showCelebration]);
+  }, [currentGame?.id, isLive, celebrationOverlay.visible, fetchPlays, detectCelebrationPlay, showCelebration, isCelebrationEnabled]);
 }

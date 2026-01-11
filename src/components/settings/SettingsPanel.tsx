@@ -2,6 +2,7 @@ import { useSettingsStore } from '../../stores/settingsStore';
 import { useUIStore } from '../../stores/uiStore';
 import { GameSelector } from './GameSelector';
 import { DebugControls } from './DebugControls';
+import { CelebrationSettings } from './CelebrationSettings';
 
 export function SettingsPanel() {
   const soundEffectsEnabled = useSettingsStore((state) => state.soundEffectsEnabled);
@@ -51,6 +52,9 @@ export function SettingsPanel() {
             </button>
           </div>
         </section>
+
+        {/* Celebration Videos */}
+        <CelebrationSettings />
 
         {/* Debug Mode */}
         <section className="bg-slate-800 rounded-xl p-6">

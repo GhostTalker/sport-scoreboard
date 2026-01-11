@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { useUIStore } from '../stores/uiStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import { detectScoreChange } from '../services/scoreDetector';
 
 export function useScoreChange() {
   const currentGame = useGameStore((state) => state.currentGame);
   const updateScores = useGameStore((state) => state.updateScores);
   const showCelebration = useUIStore((state) => state.showCelebration);
+  const isCelebrationEnabled = useSettingsStore((state) => state.isCelebrationEnabled);
   
   // Track the current game ID to detect game changes
   const currentGameId = useRef<string | null>(null);
@@ -65,9 +67,8 @@ export function useScoreChange() {
       );
 
       if (scoreEvent) {
-
-        // Trigger celebration if we have a video for this score type
-        if (scoreEvent.video) {
+        // Trigger celebration if we have a video for this score type AND it's enabled
+        if (scoreEvent.video && isCelebrationEnabled(scoreEvent.video)) {
           showCelebration(scoreEvent.video);
         }
       }
