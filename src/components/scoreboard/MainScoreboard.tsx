@@ -4,6 +4,7 @@ import { TeamDisplay } from './TeamDisplay';
 import { GameSituation } from './GameSituation';
 import { getTitleGraphic } from '../../constants/titleGraphics';
 import { DebugPanel } from '../debug/DebugPanel';
+import { version } from '../../../package.json';
 
 export function MainScoreboard() {
   const currentGame = useGameStore((state) => state.currentGame);
@@ -348,7 +349,7 @@ export function MainScoreboard() {
 
       {/* Navigation hint - very subtle */}
       <div className="absolute bottom-3 left-0 right-0 text-center text-white/20 text-xs">
-        Arrow Keys to navigate | v4.1
+        Arrow Keys to navigate | v{version}
       </div>
       
       {/* Debug Panel */}
