@@ -11,15 +11,17 @@ export function GameSituation({ situation, homeTeam, awayTeam }: GameSituationPr
   
   // Format down and distance
   const getDownText = () => {
-    if (!situation.down) return '';
-    
+    // Validate down value (must be 1-4)
+    if (!situation.down || situation.down < 1 || situation.down > 4) return '';
+
     const downNames = ['', '1st', '2nd', '3rd', '4th'];
-    const down = downNames[situation.down] || `${situation.down}th`;
-    
+    const down = downNames[situation.down];
+
+    // Show "Goal" when distance is 0 or very close to end zone
     if (situation.distance === 0) {
       return `${down} & Goal`;
     }
-    
+
     return `${down} & ${situation.distance}`;
   };
 
