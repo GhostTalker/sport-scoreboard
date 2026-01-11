@@ -11,18 +11,25 @@ export function GameSituation({ situation, homeTeam, awayTeam }: GameSituationPr
   
   // Format down and distance
   const getDownText = () => {
-    // Validate down value (must be 1-4)
-    if (!situation.down || situation.down < 1 || situation.down > 4) return '';
+    // Valid down (1-4): show formatted down & distance
+    if (situation.down >= 1 && situation.down <= 4) {
+      const downNames = ['', '1st', '2nd', '3rd', '4th'];
+      const down = downNames[situation.down];
 
-    const downNames = ['', '1st', '2nd', '3rd', '4th'];
-    const down = downNames[situation.down];
+      // Show "Goal" when distance is 0
+      if (situation.distance === 0) {
+        return `${down} & Goal`;
+      }
 
-    // Show "Goal" when distance is 0 or very close to end zone
-    if (situation.distance === 0) {
-      return `${down} & Goal`;
+      return `${down} & ${situation.distance}`;
     }
 
-    return `${down} & ${situation.distance}`;
+    // Fallback to ESPN's shortDownDistanceText (e.g., "Kickoff", "PAT", "2PT")
+    if (situation.shortDownDistanceText) {
+      return situation.shortDownDistanceText;
+    }
+
+    return '';
   };
 
   // Format field position

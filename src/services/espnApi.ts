@@ -221,15 +221,16 @@ function getPeriodName(period: number): string {
 
 function parseSituation(situation: any) {
   if (!situation) return undefined;
-  
+
   const possessionId = situation.possession;
-  
+
   return {
     down: situation.down || 0,
     distance: situation.distance || 0,
     yardLine: situation.yardLine || 0,
     possession: possessionId || '',
     isRedZone: situation.isRedZone || false,
+    shortDownDistanceText: situation.shortDownDistanceText || situation.downDistanceText || '',
   };
 }
 

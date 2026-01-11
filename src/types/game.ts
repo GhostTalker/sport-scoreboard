@@ -16,6 +16,7 @@ export interface GameSituation {
   yardLine: number;
   possession: string; // Team ID
   isRedZone: boolean;
+  shortDownDistanceText?: string; // "1st & 10", "Kickoff", "PAT", etc.
 }
 
 export interface GameClock {
