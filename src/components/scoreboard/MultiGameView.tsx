@@ -1,12 +1,67 @@
+import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { getTitleGraphic } from '../../constants/titleGraphics';
 import type { Game } from '../../types/game';
 
+// Track games with recent score changes (game ID -> timestamp)
+type ScoreChangeMap = Map<string, number>;
+
 export function MultiGameView() {
   const availableGames = useGameStore((state) => state.availableGames);
   const confirmGameSelection = useGameStore((state) => state.confirmGameSelection);
   const setViewMode = useSettingsStore((state) => state.setViewMode);
+
+  // Track previous scores to detect changes
+  const previousScoresRef = useRef<Map<string, { home: number; away: number }>>(new Map());
+  const [recentScoreChanges, setRecentScoreChanges] = useState<ScoreChangeMap>(new Map());
+
+  // Detect score changes
+  useEffect(() => {
+    const now = Date.now();
+    const newChanges = new Map(recentScoreChanges);
+    let hasNewChange = false;
+
+    availableGames.forEach((game) => {
+      const prev = previousScoresRef.current.get(game.id);
+      if (prev) {
+        // Check if score changed
+        if (prev.home !== game.homeTeam.score || prev.away !== game.awayTeam.score) {
+          newChanges.set(game.id, now);
+          hasNewChange = true;
+        }
+      }
+      // Update previous scores
+      previousScoresRef.current.set(game.id, {
+        home: game.homeTeam.score,
+        away: game.awayTeam.score,
+      });
+    });
+
+    if (hasNewChange) {
+      setRecentScoreChanges(newChanges);
+    }
+  }, [availableGames]);
+
+  // Clean up old score changes (older than 30 seconds)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const thirtySecondsAgo = now - 30000;
+
+      setRecentScoreChanges((prev) => {
+        const filtered = new Map<string, number>();
+        prev.forEach((timestamp, gameId) => {
+          if (timestamp > thirtySecondsAgo) {
+            filtered.set(gameId, timestamp);
+          }
+        });
+        return filtered;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Group games by status
   const liveGames = availableGames.filter(g => g.status === 'in_progress' || g.status === 'halftime');
@@ -23,6 +78,13 @@ export function MultiGameView() {
   const handleSelectGame = (game: Game) => {
     confirmGameSelection(game);
     setViewMode('single');
+  };
+
+  // Check if a game has a recent score change
+  const hasRecentScoreChange = (gameId: string): boolean => {
+    const changeTime = recentScoreChanges.get(gameId);
+    if (!changeTime) return false;
+    return Date.now() - changeTime < 30000;
   };
 
   if (allGames.length === 0) {
@@ -62,7 +124,12 @@ export function MultiGameView() {
       <div className="flex-1 overflow-y-auto px-6 pb-6">
         <div className="grid grid-cols-2 gap-6 max-w-6xl mx-auto">
           {allGames.map((game) => (
-            <GameCard key={game.id} game={game} onSelect={handleSelectGame} />
+            <GameCard
+              key={game.id}
+              game={game}
+              onSelect={handleSelectGame}
+              hasScoreChange={hasRecentScoreChange(game.id)}
+            />
           ))}
         </div>
       </div>
@@ -73,9 +140,10 @@ export function MultiGameView() {
 interface GameCardProps {
   game: Game;
   onSelect: (game: Game) => void;
+  hasScoreChange: boolean;
 }
 
-function GameCard({ game, onSelect }: GameCardProps) {
+function GameCard({ game, onSelect, hasScoreChange }: GameCardProps) {
   const isLive = game.status === 'in_progress' || game.status === 'halftime';
   const isFinal = game.status === 'final';
   const isScheduled = game.status === 'scheduled';
@@ -107,35 +175,38 @@ function GameCard({ game, onSelect }: GameCardProps) {
 
   // Get background style based on game status
   const getCardStyle = () => {
-    if (isLive) {
-      return {
-        background: `
-          radial-gradient(ellipse at top, rgba(220,38,38,0.3) 0%, transparent 60%),
-          linear-gradient(180deg, rgba(30,15,15,0.95) 0%, rgba(20,10,10,0.98) 100%)
-        `,
-        border: '2px solid rgba(220,38,38,0.5)',
-        boxShadow: '0 0 40px rgba(220,38,38,0.2), 0 8px 32px rgba(0,0,0,0.4)',
-      };
-    }
-    if (isFinal) {
-      return {
-        background: 'linear-gradient(180deg, rgba(30,35,45,0.95) 0%, rgba(20,25,35,0.98) 100%)',
-        border: '2px solid rgba(100,100,120,0.3)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-      };
-    }
-    // Scheduled
-    return {
-      background: 'linear-gradient(180deg, rgba(25,35,55,0.95) 0%, rgba(15,25,45,0.98) 100%)',
-      border: '2px solid rgba(59,130,246,0.3)',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+    const baseStyle = {
+      background: '',
+      border: '',
+      boxShadow: '',
     };
+
+    if (isFinal) {
+      baseStyle.background = 'linear-gradient(180deg, rgba(30,35,45,0.95) 0%, rgba(20,25,35,0.98) 100%)';
+      baseStyle.border = '2px solid rgba(100,100,120,0.3)';
+      baseStyle.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
+    } else {
+      // Live and Scheduled both use blue
+      baseStyle.background = 'linear-gradient(180deg, rgba(25,35,55,0.95) 0%, rgba(15,25,45,0.98) 100%)';
+      baseStyle.border = '2px solid rgba(59,130,246,0.3)';
+      baseStyle.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
+    }
+
+    // Add red glow for score changes
+    if (hasScoreChange) {
+      baseStyle.boxShadow = '0 0 40px rgba(220,38,38,0.6), 0 0 80px rgba(220,38,38,0.3), 0 8px 32px rgba(0,0,0,0.4)';
+      baseStyle.border = '2px solid rgba(220,38,38,0.7)';
+    }
+
+    return baseStyle;
   };
 
   return (
     <button
       onClick={() => onSelect(game)}
-      className="rounded-2xl p-5 transition-all duration-200 hover:scale-[1.02] text-left"
+      className={`rounded-2xl p-5 transition-all duration-300 hover:scale-[1.02] text-left ${
+        hasScoreChange ? 'animate-pulse' : ''
+      }`}
       style={getCardStyle()}
     >
       {/* Status Badge */}
@@ -174,74 +245,77 @@ function GameCard({ game, onSelect }: GameCardProps) {
         )}
       </div>
 
-      {/* Teams and Score */}
-      <div className="flex items-center justify-between gap-4">
+      {/* Teams and Score - Centered Layout */}
+      <div className="flex items-center justify-center gap-6">
         {/* Away Team */}
-        <div className="flex-1 flex flex-col items-center">
+        <div className="flex flex-col items-center">
           <img
             src={game.awayTeam.logo}
             alt={game.awayTeam.abbreviation}
-            className="w-16 h-16 object-contain mb-2"
+            className="w-20 h-20 object-contain mb-2"
           />
           <span className="text-white font-bold text-lg">
             {game.awayTeam.abbreviation}
           </span>
-          {!isScheduled && (
-            <span
-              className={`text-4xl font-black mt-1 ${
-                isFinal && game.awayTeam.score > game.homeTeam.score
-                  ? 'text-white'
-                  : isFinal
-                  ? 'text-white/50'
-                  : 'text-white'
-              }`}
-              style={{
-                textShadow: `0 0 20px #${game.awayTeam.color}80`,
-              }}
-            >
-              {game.awayTeam.score}
-            </span>
-          )}
         </div>
 
-        {/* VS / Score Separator */}
-        <div className="flex flex-col items-center gap-2">
-          {isScheduled ? (
-            <span className="text-white/30 text-2xl font-bold">@</span>
-          ) : (
+        {/* Score Display - Centered */}
+        <div className="flex items-center gap-3">
+          {!isScheduled ? (
             <>
-              <div className="w-2 h-2 rounded-full bg-white/30" />
-              <div className="w-2 h-2 rounded-full bg-white/30" />
+              {/* Away Score */}
+              <span
+                className={`text-5xl font-black min-w-[60px] text-right ${
+                  isFinal && game.awayTeam.score > game.homeTeam.score
+                    ? 'text-white'
+                    : isFinal
+                    ? 'text-white/50'
+                    : 'text-white'
+                }`}
+                style={{
+                  textShadow: `0 0 20px #${game.awayTeam.color}80`,
+                }}
+              >
+                {game.awayTeam.score}
+              </span>
+
+              {/* Separator Dots */}
+              <div className="flex flex-col items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-white/40" />
+                <div className="w-2.5 h-2.5 rounded-full bg-white/40" />
+              </div>
+
+              {/* Home Score */}
+              <span
+                className={`text-5xl font-black min-w-[60px] text-left ${
+                  isFinal && game.homeTeam.score > game.awayTeam.score
+                    ? 'text-white'
+                    : isFinal
+                    ? 'text-white/50'
+                    : 'text-white'
+                }`}
+                style={{
+                  textShadow: `0 0 20px #${game.homeTeam.color}80`,
+                }}
+              >
+                {game.homeTeam.score}
+              </span>
             </>
+          ) : (
+            <span className="text-white/30 text-3xl font-bold">@</span>
           )}
         </div>
 
         {/* Home Team */}
-        <div className="flex-1 flex flex-col items-center">
+        <div className="flex flex-col items-center">
           <img
             src={game.homeTeam.logo}
             alt={game.homeTeam.abbreviation}
-            className="w-16 h-16 object-contain mb-2"
+            className="w-20 h-20 object-contain mb-2"
           />
           <span className="text-white font-bold text-lg">
             {game.homeTeam.abbreviation}
           </span>
-          {!isScheduled && (
-            <span
-              className={`text-4xl font-black mt-1 ${
-                isFinal && game.homeTeam.score > game.awayTeam.score
-                  ? 'text-white'
-                  : isFinal
-                  ? 'text-white/50'
-                  : 'text-white'
-              }`}
-              style={{
-                textShadow: `0 0 20px #${game.homeTeam.color}80`,
-              }}
-            >
-              {game.homeTeam.score}
-            </span>
-          )}
         </div>
       </div>
 
