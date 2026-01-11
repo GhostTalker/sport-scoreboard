@@ -7,6 +7,8 @@ import { CelebrationSettings } from './CelebrationSettings';
 export function SettingsPanel() {
   const soundEffectsEnabled = useSettingsStore((state) => state.soundEffectsEnabled);
   const toggleSoundEffects = useSettingsStore((state) => state.toggleSoundEffects);
+  const viewMode = useSettingsStore((state) => state.viewMode);
+  const setViewMode = useSettingsStore((state) => state.setViewMode);
   const debugMode = useUIStore((state) => state.debugMode);
   const toggleDebugMode = useUIStore((state) => state.toggleDebugMode);
 
@@ -19,6 +21,37 @@ export function SettingsPanel() {
       </div>
 
       <div className="max-w-2xl mx-auto space-y-6">
+        {/* View Mode Toggle */}
+        <section className="bg-slate-800 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">View Mode</h3>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setViewMode('single')}
+              className={`
+                flex-1 py-3 px-4 rounded-lg font-medium transition-all
+                ${viewMode === 'single'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-700 text-white/70 hover:bg-slate-600'}
+              `}
+            >
+              <div className="text-lg">Single Game</div>
+              <div className="text-xs opacity-70 mt-1">Show one game detailed</div>
+            </button>
+            <button
+              onClick={() => setViewMode('multi')}
+              className={`
+                flex-1 py-3 px-4 rounded-lg font-medium transition-all
+                ${viewMode === 'multi'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-700 text-white/70 hover:bg-slate-600'}
+              `}
+            >
+              <div className="text-lg">All Games</div>
+              <div className="text-xs opacity-70 mt-1">Overview of all games</div>
+            </button>
+          </div>
+        </section>
+
         {/* Game Selection - Now the primary control */}
         <section className="bg-slate-800 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Select Game</h3>

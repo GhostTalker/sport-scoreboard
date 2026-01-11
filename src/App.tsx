@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { SwipeContainer } from './components/layout/SwipeContainer';
 import { MainScoreboard } from './components/scoreboard/MainScoreboard';
+import { MultiGameView } from './components/scoreboard/MultiGameView';
 import { StatsPanel } from './components/stats/StatsPanel';
 import { SettingsPanel } from './components/settings/SettingsPanel';
 import { VideoOverlay } from './components/celebration/VideoOverlay';
 import { useUIStore } from './stores/uiStore';
+import { useSettingsStore } from './stores/settingsStore';
 import { useGameData } from './hooks/useGameData';
 import { useScoreChange } from './hooks/useScoreChange';
 import { usePlayByPlay } from './hooks/usePlayByPlay';
@@ -14,6 +16,7 @@ import { useVideoPreloader } from './hooks/useVideoPreloader';
 function App() {
   const currentView = useUIStore((state) => state.currentView);
   const celebrationOverlay = useUIStore((state) => state.celebrationOverlay);
+  const viewMode = useSettingsStore((state) => state.viewMode);
 
   // Preload celebration videos at app start
   const { isPreloading, progress } = useVideoPreloader();
@@ -42,7 +45,8 @@ function App() {
       <SwipeContainer>
         {/* Main Views */}
         <div className="h-full w-full relative">
-          {currentView === 'scoreboard' && <MainScoreboard />}
+          {currentView === 'scoreboard' && viewMode === 'single' && <MainScoreboard />}
+          {currentView === 'scoreboard' && viewMode === 'multi' && <MultiGameView />}
           {currentView === 'stats' && <StatsPanel />}
           {currentView === 'settings' && <SettingsPanel />}
         </div>

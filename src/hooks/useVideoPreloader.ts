@@ -21,7 +21,6 @@ async function preloadVideo(src: string): Promise<string | null> {
     const blob = await response.blob();
     const blobUrl = URL.createObjectURL(blob);
     videoCache.set(src, blobUrl);
-    console.log(`[VideoPreloader] Preloaded: ${src}`);
     return blobUrl;
   } catch (error) {
     console.warn(`[VideoPreloader] Failed to preload ${src}:`, error);
@@ -40,8 +39,6 @@ async function preloadAllVideos(onProgress?: (loaded: number, total: number) => 
   let loaded = 0;
   let successful = 0;
 
-  console.log(`[VideoPreloader] Starting preload of ${localSources.length} videos...`);
-
   // Preload all local videos
   for (const src of localSources) {
     const result = await preloadVideo(src);
@@ -51,7 +48,6 @@ async function preloadAllVideos(onProgress?: (loaded: number, total: number) => 
   }
 
   preloadComplete = true;
-  console.log(`[VideoPreloader] Preload complete! ${successful}/${localSources.length} videos cached.`);
 }
 
 // Get cached blob URL for a video source

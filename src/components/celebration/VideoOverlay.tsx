@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useUIStore } from '../../stores/uiStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { VIDEOS } from '../../constants/videos';
-import { getCachedVideoUrl, isVideoCached } from '../../hooks/useVideoPreloader';
+import { getCachedVideoUrl } from '../../hooks/useVideoPreloader';
 import type { CelebrationType } from '../../types/game';
 
 interface VideoOverlayProps {
@@ -23,13 +23,11 @@ export function VideoOverlay({ type }: VideoOverlayProps) {
 
     // Use cached video URL if available, otherwise use original source
     const localVideoSrc = getCachedVideoUrl(videoConfig.src);
-    const isLocalCached = isVideoCached(videoConfig.src);
 
-    // Try to play local video, fallback to placeholder
+    // Try to play local video
     video.src = localVideoSrc;
 
     video.onerror = () => {
-      console.warn(`[VideoOverlay] Video failed to load: ${type}`);
       // Close immediately if video fails - don't show white screen
       hideCelebration();
     };
@@ -47,10 +45,8 @@ export function VideoOverlay({ type }: VideoOverlayProps) {
           video.volume = videoVolume;
           video.muted = false;
         }
-        console.log(`[VideoOverlay] Playing ${type} video (cached: ${isLocalCached})`);
       })
-      .catch((err) => {
-        console.error('Video playback failed:', err);
+      .catch(() => {
         // Auto-close after duration if video fails
         timeoutRef.current = window.setTimeout(hideCelebration, videoConfig.duration);
       });

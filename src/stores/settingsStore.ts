@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Settings } from '../types/settings';
+import type { Settings, ViewMode } from '../types/settings';
 import { DEFAULT_SETTINGS, DEFAULT_CELEBRATION_SETTINGS } from '../types/settings';
 import type { CelebrationType } from '../types/game';
 
@@ -11,6 +11,7 @@ interface SettingsState extends Settings {
   setVideoVolume: (volume: number) => void;
   toggleCelebrationVideo: (type: CelebrationType) => void;
   isCelebrationEnabled: (type: CelebrationType) => boolean;
+  setViewMode: (mode: ViewMode) => void;
   resetSettings: () => void;
 }
 
@@ -42,18 +43,23 @@ export const useSettingsStore = create<SettingsState>()(
         return state.celebrationVideos[type] ?? true;
       },
 
+      setViewMode: (mode) => set({ viewMode: mode }),
+
       resetSettings: () => set(DEFAULT_SETTINGS),
     }),
     {
       name: 'scoreboard-settings',
-      // Migration for existing users without celebrationVideos
+      // Migration for existing users
       migrate: (persistedState: any, _version: number) => {
         if (!persistedState.celebrationVideos) {
           persistedState.celebrationVideos = DEFAULT_CELEBRATION_SETTINGS;
         }
+        if (!persistedState.viewMode) {
+          persistedState.viewMode = 'single';
+        }
         return persistedState;
       },
-      version: 1,
+      version: 2,
     }
   )
 );
