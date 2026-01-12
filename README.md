@@ -29,10 +29,15 @@ A modern, responsive web application for displaying live NFL games with dynamic 
 
 ## 🖼 Screenshots
 
-### SingleView - Live Game
-Detailed view of an ongoing game with live indicator, game clock, and game situation.
+### SingleView - Upcoming Game
+Detailed view of an upcoming game with scheduled time and venue information.
 
 ![SingleView - Upcoming Game](public/screenshots/singleview_upcomming.png)
+
+### SingleView - Live Game
+Live game view with pulsing indicator, game clock, quarter information, and current game situation.
+
+![SingleView - Live Game](public/screenshots/singleview_live.png)
 
 ### SingleView - Final Game
 Final result with winner highlighting and summary.
