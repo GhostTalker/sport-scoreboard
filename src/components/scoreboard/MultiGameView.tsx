@@ -106,23 +106,23 @@ export function MultiGameView() {
         `,
       }}
     >
-      {/* Title Graphic Header - Larger */}
-      <div className="flex-shrink-0 pt-6 pb-4 flex justify-center">
+      {/* Title Graphic Header */}
+      <div className="flex-shrink-0 pt-4 pb-2 flex justify-center">
         {titleGraphic && (
           <img
             src={titleGraphic}
             alt={seasonName}
-            className="h-36 w-auto object-contain drop-shadow-2xl"
+            className="h-24 w-auto object-contain drop-shadow-2xl"
             style={{
-              filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.8))',
+              filter: 'drop-shadow(0 6px 15px rgba(0,0,0,0.7))',
             }}
           />
         )}
       </div>
 
       {/* Games Grid - 2 columns */}
-      <div className="flex-1 overflow-y-auto px-6 pb-6">
-        <div className="grid grid-cols-2 gap-6 max-w-6xl mx-auto">
+      <div className="flex-1 overflow-y-auto px-4 pb-4">
+        <div className="grid grid-cols-2 gap-4 max-w-6xl mx-auto">
           {allGames.map((game) => (
             <GameCard
               key={game.id}
@@ -204,57 +204,57 @@ function GameCard({ game, onSelect, hasScoreChange }: GameCardProps) {
   return (
     <button
       onClick={() => onSelect(game)}
-      className={`rounded-2xl px-3 pt-2 pb-3 transition-all duration-300 hover:scale-[1.02] text-left h-[165px] flex flex-col ${
+      className={`rounded-xl px-2 pt-1 pb-2 transition-all duration-300 hover:scale-[1.02] text-left h-[135px] flex flex-col ${
         hasScoreChange ? 'animate-pulse' : ''
       }`}
       style={getCardStyle()}
     >
       {/* Status Badge */}
-      <div className="flex justify-center mb-1">
+      <div className="flex justify-center mb-0.5">
         {isLive && !isHalftime && (
           <div
-            className="px-4 py-1.5 rounded-full text-sm font-bold tracking-wider bg-red-600/90 text-white"
-            style={{ boxShadow: '0 0 20px rgba(220,38,38,0.5)' }}
+            className="px-3 py-1 rounded-full text-xs font-bold tracking-wide bg-red-600/90 text-white"
+            style={{ boxShadow: '0 0 15px rgba(220,38,38,0.5)' }}
           >
-            <span className="inline-flex items-center gap-2">
-              <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
               {game.clock.periodName} {game.clock.displayValue}
             </span>
           </div>
         )}
         {isHalftime && (
           <div
-            className="px-4 py-1.5 rounded-full text-sm font-bold tracking-wider"
+            className="px-3 py-1 rounded-full text-xs font-bold tracking-wide"
             style={{
               background: 'linear-gradient(180deg, rgba(234,179,8,0.8) 0%, rgba(202,138,4,0.6) 100%)',
-              boxShadow: '0 0 15px rgba(234,179,8,0.3)',
+              boxShadow: '0 0 12px rgba(234,179,8,0.3)',
             }}
           >
             <span className="text-white">HALFTIME</span>
           </div>
         )}
         {isFinal && (
-          <div className="px-4 py-1.5 rounded-full text-sm font-bold tracking-wider bg-gray-600/80 text-white/90">
+          <div className="px-3 py-1 rounded-full text-xs font-bold tracking-wide bg-gray-600/80 text-white/90">
             FINAL
           </div>
         )}
         {isScheduled && (
-          <div className="px-4 py-1.5 rounded-full text-sm font-bold tracking-wider bg-blue-600/80 text-white/90">
+          <div className="px-3 py-1 rounded-full text-xs font-bold tracking-wide bg-blue-600/80 text-white/90">
             {formatDate(game.startTime)} {formatTime(game.startTime)}
           </div>
         )}
       </div>
 
       {/* Teams and Score - Centered Layout */}
-      <div className="flex items-center justify-center gap-4">
+      <div className="flex items-center justify-center gap-3">
         {/* Away Team */}
         <TeamBadge team={game.awayTeam} isFinal={isFinal} isWinner={game.awayTeam.score > game.homeTeam.score} />
 
         {/* Score Display - Centered - Fixed width for consistency */}
-        <div className="flex items-center justify-center gap-2 min-w-[140px]">
+        <div className="flex items-center justify-center gap-1.5 min-w-[120px]">
           {/* Away Score */}
           <span
-            className={`text-4xl font-black min-w-[50px] text-right ${
+            className={`text-3xl font-black min-w-[45px] text-right ${
               isFinal && game.awayTeam.score > game.homeTeam.score
                 ? 'text-white'
                 : isFinal
@@ -271,14 +271,14 @@ function GameCard({ game, onSelect, hasScoreChange }: GameCardProps) {
           </span>
 
           {/* Separator Dots */}
-          <div className="flex flex-col items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-white/40" />
-            <div className="w-2 h-2 rounded-full bg-white/40" />
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
+            <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
           </div>
 
           {/* Home Score */}
           <span
-            className={`text-4xl font-black min-w-[50px] text-left ${
+            className={`text-3xl font-black min-w-[45px] text-left ${
               isFinal && game.homeTeam.score > game.awayTeam.score
                 ? 'text-white'
                 : isFinal
@@ -326,26 +326,26 @@ function TeamBadge({ team, isFinal, isWinner }: TeamBadgeProps) {
   const opacity = isFinal && !isWinner ? 0.5 : 1;
 
   return (
-    <div className="flex flex-col items-center gap-1.5 w-24" style={{ opacity }}>
+    <div className="flex flex-col items-center gap-1 w-20" style={{ opacity }}>
       {/* Team Logo with Glow Effect */}
       <div
-        className="relative w-20 h-20 rounded-full flex items-center justify-center"
+        className="relative w-16 h-16 rounded-full flex items-center justify-center"
         style={{
           background: `radial-gradient(circle, #${glowColor}40 0%, #${glowColor}15 50%, transparent 70%)`,
           boxShadow: `
-            0 0 30px #${glowColor}40,
-            0 0 50px #${glowColor}20
+            0 0 25px #${glowColor}40,
+            0 0 40px #${glowColor}20
           `,
         }}
       >
         {/* Outer ring */}
         <div
-          className="absolute inset-1 rounded-full"
+          className="absolute inset-0.5 rounded-full"
           style={{
-            border: `3px solid #${primaryColor}`,
+            border: `2px solid #${primaryColor}`,
             boxShadow: `
-              0 0 15px #${glowColor}60,
-              inset 0 0 15px #${glowColor}30
+              0 0 12px #${glowColor}60,
+              inset 0 0 12px #${glowColor}30
             `,
           }}
         />
@@ -353,9 +353,9 @@ function TeamBadge({ team, isFinal, isWinner }: TeamBadgeProps) {
         <img
           src={team.logo}
           alt={team.abbreviation}
-          className="w-14 h-14 object-contain relative z-10"
+          className="w-11 h-11 object-contain relative z-10"
           style={{
-            filter: `drop-shadow(0 0 10px #${glowColor}80)`,
+            filter: `drop-shadow(0 0 8px #${glowColor}80)`,
           }}
         />
       </div>
@@ -364,23 +364,23 @@ function TeamBadge({ team, isFinal, isWinner }: TeamBadgeProps) {
       <div className="relative w-full">
         {/* Glow background */}
         <div
-          className="absolute inset-0 blur-md opacity-50 rounded"
+          className="absolute inset-0 blur-sm opacity-50 rounded"
           style={{ backgroundColor: `#${team.color}` }}
         />
 
         {/* Name container */}
         <div
-          className="relative px-2 py-1 rounded border w-full"
+          className="relative px-1.5 py-0.5 rounded border w-full"
           style={{
             background: `linear-gradient(180deg, #${team.color}cc 0%, #${team.color}88 100%)`,
             borderColor: `#${team.alternateColor || team.color}`,
-            boxShadow: `0 2px 10px #${team.color}50`,
+            boxShadow: `0 1px 8px #${team.color}50`,
           }}
         >
           <span
-            className="text-xs font-bold text-white uppercase tracking-tight block text-center truncate"
+            className="text-[10px] font-bold text-white uppercase tracking-tight block text-center truncate leading-tight"
             style={{
-              textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
             }}
           >
             {team.shortDisplayName}
