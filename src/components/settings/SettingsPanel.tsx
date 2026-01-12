@@ -12,12 +12,12 @@ export function SettingsPanel() {
   const setViewMode = useSettingsStore((state) => state.setViewMode);
   const debugMode = useUIStore((state) => state.debugMode);
   const toggleDebugMode = useUIStore((state) => state.toggleDebugMode);
-  const setCurrentView = useUIStore((state) => state.setCurrentView);
+  const setView = useUIStore((state) => state.setView);
 
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode);
     // Auto-close settings and show scoreboard when changing view mode
-    setCurrentView('scoreboard');
+    setView('scoreboard');
   };
 
   return (
