@@ -17,6 +17,11 @@ export function MultiGameView() {
   const previousScoresRef = useRef<Map<string, { home: number; away: number }>>(new Map());
   const [recentScoreChanges, setRecentScoreChanges] = useState<ScoreChangeMap>(new Map());
 
+  // Filter state
+  const [showLive, setShowLive] = useState(true);
+  const [showUpcoming, setShowUpcoming] = useState(true);
+  const [showFinal, setShowFinal] = useState(true);
+
   // Detect score changes
   useEffect(() => {
     const now = Date.now();
@@ -69,8 +74,15 @@ export function MultiGameView() {
   const scheduledGames = availableGames.filter(g => g.status === 'scheduled');
   const finishedGames = availableGames.filter(g => g.status === 'final');
 
+  // Apply filters
+  const filteredGames = [
+    ...(showLive ? liveGames : []),
+    ...(showUpcoming ? scheduledGames : []),
+    ...(showFinal ? finishedGames : []),
+  ];
+
   // Combine all games with live first, then scheduled, then finished
-  const allGames = [...liveGames, ...scheduledGames, ...finishedGames];
+  const allGames = filteredGames;
 
   // Get the season name from the first game for the header
   const seasonName = allGames[0]?.seasonName || 'GAME DAY';
@@ -108,17 +120,57 @@ export function MultiGameView() {
       }}
     >
       {/* Title Graphic Header */}
-      <div className="flex-shrink-0 pt-4 pb-2 flex justify-center">
+      <div className="flex-shrink-0 pt-4 pb-3 flex justify-center">
         {titleGraphic && (
           <img
             src={titleGraphic}
             alt={seasonName}
-            className="h-24 w-auto object-contain drop-shadow-2xl"
+            className="h-32 w-auto object-contain drop-shadow-2xl"
             style={{
-              filter: 'drop-shadow(0 6px 15px rgba(0,0,0,0.7))',
+              filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.8))',
             }}
           />
         )}
+      </div>
+
+      {/* Filter Options */}
+      <div className="flex-shrink-0 px-4 pb-3 flex justify-center gap-6">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showLive}
+            onChange={(e) => setShowLive(e.target.checked)}
+            className="w-4 h-4 rounded border-2 border-red-500 bg-slate-800 checked:bg-red-600 focus:ring-2 focus:ring-red-500 cursor-pointer"
+          />
+          <span className="text-sm font-bold text-white flex items-center gap-1.5">
+            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+            Live
+          </span>
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showUpcoming}
+            onChange={(e) => setShowUpcoming(e.target.checked)}
+            className="w-4 h-4 rounded border-2 border-blue-500 bg-slate-800 checked:bg-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          />
+          <span className="text-sm font-bold text-blue-400">
+            Upcoming
+          </span>
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showFinal}
+            onChange={(e) => setShowFinal(e.target.checked)}
+            className="w-4 h-4 rounded border-2 border-gray-500 bg-slate-800 checked:bg-gray-600 focus:ring-2 focus:ring-gray-500 cursor-pointer"
+          />
+          <span className="text-sm font-bold text-gray-400">
+            Final
+          </span>
+        </label>
       </div>
 
       {/* Games Grid - 2 columns */}
