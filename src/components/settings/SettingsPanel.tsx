@@ -3,6 +3,7 @@ import { useUIStore } from '../../stores/uiStore';
 import { GameSelector } from './GameSelector';
 import { DebugControls } from './DebugControls';
 import { CelebrationSettings } from './CelebrationSettings';
+import type { ViewMode } from '../../types/settings';
 
 export function SettingsPanel() {
   const soundEffectsEnabled = useSettingsStore((state) => state.soundEffectsEnabled);
@@ -11,6 +12,13 @@ export function SettingsPanel() {
   const setViewMode = useSettingsStore((state) => state.setViewMode);
   const debugMode = useUIStore((state) => state.debugMode);
   const toggleDebugMode = useUIStore((state) => state.toggleDebugMode);
+  const setCurrentView = useUIStore((state) => state.setCurrentView);
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    // Auto-close settings and show scoreboard when changing view mode
+    setCurrentView('scoreboard');
+  };
 
   return (
     <div className="h-full w-full bg-slate-900 p-6 overflow-y-auto">
@@ -26,7 +34,7 @@ export function SettingsPanel() {
           <h3 className="text-lg font-semibold text-white mb-4">View Mode</h3>
           <div className="flex gap-3">
             <button
-              onClick={() => setViewMode('single')}
+              onClick={() => handleViewModeChange('single')}
               className={`
                 flex-1 py-3 px-4 rounded-lg font-medium transition-all
                 ${viewMode === 'single'
@@ -38,7 +46,7 @@ export function SettingsPanel() {
               <div className="text-xs opacity-70 mt-1">Show one game detailed</div>
             </button>
             <button
-              onClick={() => setViewMode('multi')}
+              onClick={() => handleViewModeChange('multi')}
               className={`
                 flex-1 py-3 px-4 rounded-lg font-medium transition-all
                 ${viewMode === 'multi'

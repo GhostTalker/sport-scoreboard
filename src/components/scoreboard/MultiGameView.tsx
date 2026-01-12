@@ -3,6 +3,7 @@ import { useGameStore } from '../../stores/gameStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { getTitleGraphic } from '../../constants/titleGraphics';
 import type { Game, Team } from '../../types/game';
+import { version } from '../../../package.json';
 
 // Track games with recent score changes (game ID -> timestamp)
 type ScoreChangeMap = Map<string, number>;
@@ -132,6 +133,11 @@ export function MultiGameView() {
             />
           ))}
         </div>
+      </div>
+
+      {/* Navigation hint - Footer */}
+      <div className="flex-shrink-0 pb-2 text-center text-white/20 text-xs">
+        Arrow Keys to navigate | v{version}
       </div>
     </div>
   );
