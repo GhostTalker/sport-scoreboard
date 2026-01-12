@@ -213,6 +213,19 @@ The app is designed to run on a Linux server:
 3. `NODE_ENV=production npm run start:prod`
 4. Access via `http://<server-ip>:3001` from iPad/browser
 
+### SSH Deployment Credentials
+
+**IMPORTANT**: When deploying to the production server, use these SSH credentials:
+
+- **User**: `root`
+- **Host**: `10.1.0.51`
+- **SSH Key**: `C:\Users\Pit\OneDrive\Dokumente\Security\SSH Keys\MadClusterNet\id_rsa`
+
+**Deployment Command**:
+```bash
+ssh -i "C:\Users\Pit\OneDrive\Dokumente\Security\SSH Keys\MadClusterNet\id_rsa" root@10.1.0.51 "cd /srv/GhostGit/nfl-scoreboard && ./deploy.sh"
+```
+
 For persistent deployment, use PM2:
 ```bash
 pm2 start npm --name "nfl-scoreboard" -- run start:prod
