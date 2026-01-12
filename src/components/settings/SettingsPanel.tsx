@@ -88,7 +88,7 @@ export function SettingsPanel() {
                   : 'bg-slate-700 text-white/70 hover:bg-slate-600'}
               `}
             >
-              <div className="text-lg">Single Game</div>
+              <div className="text-lg">SingleView</div>
               <div className="text-xs opacity-70 mt-1">Show one game detailed</div>
             </button>
             <button
