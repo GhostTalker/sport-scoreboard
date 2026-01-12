@@ -1,7 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '../stores/gameStore';
-import { fetchScoreboard, fetchGameDetails } from '../services/espnApi';
+import { useSettingsStore } from '../stores/settingsStore';
+import { getSportAdapter } from '../adapters';
 import { POLLING_INTERVALS } from '../constants/api';
+import { isNFLGame, isBundesligaGame } from '../types/game';
 
 export function useGameData() {
   const intervalRef = useRef<number | null>(null);
@@ -61,14 +63,18 @@ export function useGameData() {
     const store = useGameStore.getState();
     const { userConfirmedGameId, setAvailableGames, setCurrentGame, setGameStats, setLoading, setError } = store;
 
+    // Get current sport and adapter
+    const currentSport = useSettingsStore.getState().currentSport;
+    const adapter = getSportAdapter(currentSport);
+
     try {
       if (isFirstFetch.current) {
         setLoading(true);
       }
       setError(null);
 
-      // Fetch scoreboard (all games)
-      const games = await fetchScoreboard();
+      // Fetch scoreboard (all games) using sport adapter
+      const games = await adapter.fetchScoreboard();
       setAvailableGames(games);
 
       // Determine which game to show
@@ -95,7 +101,7 @@ export function useGameData() {
 
         if (needsDetails) {
           try {
-            const details = await fetchGameDetails(gameToShow.id);
+            const details = await adapter.fetchGameDetails(gameToShow.id);
 
             // Re-check selection before updating - user may have changed selection during async fetch
             const currentSelection = useGameStore.getState().userConfirmedGameId;
@@ -104,22 +110,40 @@ export function useGameData() {
             }
 
             if (details && details.game) {
-              // Merge with scoreboard data to preserve season info AND correct status
-              // The details API sometimes returns wrong status (scheduled instead of in_progress)
-              // and missing clock data when it thinks the game is scheduled
-              const gameWithSeasonInfo = {
-                ...details.game,
-                status: gameToShow.status,  // Use scoreboard status
-                clock: gameToShow.clock,    // Use scoreboard clock data
-                situation: gameToShow.situation || details.game.situation,
-                seasonType: gameToShow.seasonType,
-                week: gameToShow.week,
-                seasonName: gameToShow.seasonName,
-                startTime: gameToShow.startTime || details.game.startTime,
-                venue: gameToShow.venue || details.game.venue,
-                broadcast: gameToShow.broadcast || details.game.broadcast,
-              };
-              setCurrentGame(gameWithSeasonInfo);
+              // Merge with scoreboard data to preserve important info
+              // For NFL: preserve season info, correct status, clock data
+              // For Bundesliga: preserve matchday and current state
+
+              // Preserve sport-specific fields
+              if (isNFLGame(gameToShow) && isNFLGame(details.game)) {
+                const mergedNFLGame = {
+                  ...details.game,
+                  status: gameToShow.status,
+                  clock: gameToShow.clock,
+                  seasonType: gameToShow.seasonType,
+                  week: gameToShow.week,
+                  seasonName: gameToShow.seasonName,
+                  startTime: gameToShow.startTime || details.game.startTime,
+                  venue: gameToShow.venue || details.game.venue,
+                  broadcast: gameToShow.broadcast || details.game.broadcast,
+                };
+                setCurrentGame(mergedNFLGame);
+              } else if (isBundesligaGame(gameToShow) && isBundesligaGame(details.game)) {
+                const mergedBLGame = {
+                  ...details.game,
+                  status: gameToShow.status,
+                  clock: gameToShow.clock,
+                  matchday: gameToShow.matchday,
+                  startTime: gameToShow.startTime || details.game.startTime,
+                  venue: gameToShow.venue || details.game.venue,
+                  broadcast: gameToShow.broadcast || details.game.broadcast,
+                };
+                setCurrentGame(mergedBLGame);
+              } else {
+                // Fallback: just use details game
+                setCurrentGame(details.game);
+              }
+
               setGameStats(details.stats);
             } else {
               setCurrentGame(gameToShow);
@@ -160,7 +184,7 @@ export function useGameData() {
     }
   }, []);
 
-  // Set up polling - only run once on mount
+  // Set up polling - refetch when sport changes
   useEffect(() => {
     fetchData();
 
@@ -191,11 +215,28 @@ export function useGameData() {
       }
     });
 
+    // Re-fetch when sport changes
+    const unsubscribeSport = useSettingsStore.subscribe((state, prevState) => {
+      if (state.currentSport !== prevState.currentSport) {
+        // Clear current game when sport changes
+        useGameStore.setState({
+          currentGame: null,
+          isLive: false,
+          gameStats: null,
+          userConfirmedGameId: null,
+          availableGames: [],
+        });
+        // Fetch new sport's games
+        fetchData();
+      }
+    });
+
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
       unsubscribe();
+      unsubscribeSport();
       hasInitialized.current = false;
     };
   }, [fetchData]);

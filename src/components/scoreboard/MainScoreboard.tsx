@@ -5,6 +5,7 @@ import { GameSituation } from './GameSituation';
 import { getTitleGraphic } from '../../constants/titleGraphics';
 import { DebugPanel } from '../debug/DebugPanel';
 import { version } from '../../../package.json';
+import { isNFLGame } from '../../types/game';
 
 export function MainScoreboard() {
   const currentGame = useGameStore((state) => state.currentGame);
@@ -53,7 +54,7 @@ export function MainScoreboard() {
   }
 
   // Use debug season if active, otherwise use actual game data
-  const effectiveSeason = debugSeason || currentGame.seasonName;
+  const effectiveSeason = debugSeason || (isNFLGame(currentGame) ? currentGame.seasonName : undefined);
   
   // Determine background style based on game type (or debug override)
   const isSuperBowl = debugBackground === 'superbowl' || effectiveSeason === 'SUPER BOWL';
@@ -291,7 +292,7 @@ export function MainScoreboard() {
                 <div className="flex flex-col items-center">
                   <span className="text-xs text-white/50 uppercase tracking-wider">Quarter</span>
                   <span className="text-3xl font-black text-white">
-                    {currentGame.clock.periodName || '-'}
+                    {(isNFLGame(currentGame) && currentGame.clock.periodName) || '-'}
                   </span>
                 </div>
 
@@ -328,7 +329,7 @@ export function MainScoreboard() {
       </div>
 
       {/* Game Situation */}
-      {currentGame.situation && currentGame.status === 'in_progress' && (
+      {isNFLGame(currentGame) && currentGame.situation && currentGame.status === 'in_progress' && (
         <div className="mt-6">
           <GameSituation
             situation={currentGame.situation}
@@ -532,8 +533,8 @@ function NoGameState() {
                   className="bg-gradient-to-br from-red-900/40 to-red-800/30 hover:from-red-800/50 hover:to-red-700/40 border-2 border-red-500/50 hover:border-red-400 rounded-xl p-4 transition-all hover:scale-[1.02] text-left"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-red-400 text-sm font-bold">{game.clock.periodName} {game.clock.displayValue}</span>
-                    <span className="text-xs text-white/40">{game.seasonName}</span>
+                    <span className="text-red-400 text-sm font-bold">{isNFLGame(game) && game.clock.periodName} {game.clock.displayValue}</span>
+                    <span className="text-xs text-white/40">{isNFLGame(game) && game.seasonName}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">
@@ -578,7 +579,7 @@ function NoGameState() {
                   >
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-blue-400 text-sm font-bold">{dateTime.date} {dateTime.time}</span>
-                      <span className="text-xs text-white/40">{game.seasonName}</span>
+                      <span className="text-xs text-white/40">{isNFLGame(game) && game.seasonName}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -616,7 +617,7 @@ function NoGameState() {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-gray-400 text-sm font-bold">FINAL</span>
-                    <span className="text-xs text-white/40">{game.seasonName}</span>
+                    <span className="text-xs text-white/40">{isNFLGame(game) && game.seasonName}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { espnProxy } from '../services/espnProxy';
+import { openligadbProxy } from '../services/openligadbProxy';
 
 // Force stdout/stderr for PM2
 const logError = (msg: string, ...args: any[]) => {
@@ -95,11 +96,83 @@ apiRouter.get('/team/:teamId', async (req, res) => {
   }
 });
 
+// Bundesliga endpoints (OpenLigaDB)
+
+// GET /api/bundesliga/current-group - Get current matchday info
+apiRouter.get('/bundesliga/current-group', async (req, res) => {
+  try {
+    const { league = 'bl1' } = req.query;
+    const data = await openligadbProxy.fetchCurrentGroup(league as string);
+    res.json(data);
+  } catch (error) {
+    logError('❌ [API Error] Bundesliga current group failed:', error instanceof Error ? error.message : error);
+    if (error instanceof Error && error.stack) {
+      logError('Stack trace:', error.stack);
+    }
+    res.status(500).json({
+      error: 'Failed to fetch current matchday',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/bundesliga/matchday/:matchday - Get all matches for a matchday
+apiRouter.get('/bundesliga/matchday/:matchday', async (req, res) => {
+  try {
+    const { matchday } = req.params;
+    const { league = 'bl1', season } = req.query;
+
+    // If season not provided, fetch current group first
+    let seasonYear = season as string;
+    if (!seasonYear) {
+      const currentGroup = await openligadbProxy.fetchCurrentGroup(league as string);
+      seasonYear = currentGroup.GroupYear || new Date().getFullYear().toString();
+    }
+
+    const data = await openligadbProxy.fetchMatchday(
+      league as string,
+      seasonYear,
+      parseInt(matchday)
+    );
+    res.json(data);
+  } catch (error) {
+    logError(`❌ [API Error] Bundesliga matchday ${req.params.matchday} failed:`, error instanceof Error ? error.message : error);
+    if (error instanceof Error && error.stack) {
+      logError('Stack trace:', error.stack);
+    }
+    res.status(500).json({
+      error: 'Failed to fetch matchday',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/bundesliga/match/:matchId - Get single match details
+apiRouter.get('/bundesliga/match/:matchId', async (req, res) => {
+  try {
+    const { matchId } = req.params;
+    const data = await openligadbProxy.fetchMatch(matchId);
+    res.json(data);
+  } catch (error) {
+    logError(`❌ [API Error] Bundesliga match ${req.params.matchId} failed:`, error instanceof Error ? error.message : error);
+    if (error instanceof Error && error.stack) {
+      logError('Stack trace:', error.stack);
+    }
+    res.status(500).json({
+      error: 'Failed to fetch match',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // GET /api/health - Health check
 apiRouter.get('/health', (_req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
-    cache: espnProxy.getCacheStats()
+    cache: {
+      nfl: espnProxy.getCacheStats(),
+      bundesliga: openligadbProxy.getCacheStats()
+    }
   });
 });

@@ -4,10 +4,16 @@ export const API_BASE_URL = import.meta.env.PROD
   : 'http://localhost:3001/api';
 
 export const API_ENDPOINTS = {
+  // NFL endpoints (ESPN proxy)
   scoreboard: `${API_BASE_URL}/scoreboard`,
   game: (gameId: string) => `${API_BASE_URL}/game/${gameId}`,
   plays: (gameId: string) => `${API_BASE_URL}/plays/${gameId}`,
   schedule: `${API_BASE_URL}/schedule`,
+
+  // Bundesliga endpoints (OpenLigaDB proxy)
+  bundesligaCurrentGroup: `${API_BASE_URL}/bundesliga/current-group`,
+  bundesligaMatchday: (matchday: number) => `${API_BASE_URL}/bundesliga/matchday/${matchday}`,
+  bundesligaMatch: (matchId: string) => `${API_BASE_URL}/bundesliga/match/${matchId}`,
 };
 
 // Polling Intervals (in ms)

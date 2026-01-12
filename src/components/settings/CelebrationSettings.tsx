@@ -1,5 +1,6 @@
 import { useSettingsStore } from '../../stores/settingsStore';
 import type { CelebrationType } from '../../types/game';
+import type { SportType } from '../../types/base';
 
 interface CelebrationOption {
   type: CelebrationType;
@@ -8,7 +9,7 @@ interface CelebrationOption {
   color: string;
 }
 
-const CELEBRATION_OPTIONS: CelebrationOption[] = [
+const NFL_CELEBRATIONS: CelebrationOption[] = [
   {
     type: 'touchdown',
     label: 'Touchdown',
@@ -47,9 +48,49 @@ const CELEBRATION_OPTIONS: CelebrationOption[] = [
   },
 ];
 
+const BUNDESLIGA_CELEBRATIONS: CelebrationOption[] = [
+  {
+    type: 'goal',
+    label: 'Tor',
+    description: 'Bei regulärem Tor',
+    color: 'bg-green-600',
+  },
+  {
+    type: 'penalty',
+    label: 'Elfmeter',
+    description: 'Bei Tor durch Elfmeter',
+    color: 'bg-blue-600',
+  },
+  {
+    type: 'own_goal',
+    label: 'Eigentor',
+    description: 'Bei Eigentor',
+    color: 'bg-orange-600',
+  },
+  {
+    type: 'red_card',
+    label: 'Rote Karte',
+    description: 'Bei direkter Roter Karte',
+    color: 'bg-red-600',
+  },
+  {
+    type: 'yellow_red_card',
+    label: 'Gelb-Rote Karte',
+    description: 'Bei zweiter Gelber Karte',
+    color: 'bg-yellow-600',
+  },
+];
+
+function getCelebrationOptions(sport: SportType): CelebrationOption[] {
+  return sport === 'nfl' ? NFL_CELEBRATIONS : BUNDESLIGA_CELEBRATIONS;
+}
+
 export function CelebrationSettings() {
+  const currentSport = useSettingsStore((state) => state.currentSport);
   const celebrationVideos = useSettingsStore((state) => state.celebrationVideos);
   const toggleCelebrationVideo = useSettingsStore((state) => state.toggleCelebrationVideo);
+
+  const celebrationOptions = getCelebrationOptions(currentSport);
 
   return (
     <section className="bg-slate-800 rounded-xl p-6">
@@ -59,7 +100,7 @@ export function CelebrationSettings() {
       </p>
 
       <div className="space-y-3">
-        {CELEBRATION_OPTIONS.map(({ type, label, description, color }) => {
+        {celebrationOptions.map(({ type, label, description, color }) => {
           const isEnabled = celebrationVideos?.[type] ?? true;
 
           return (

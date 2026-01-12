@@ -3,6 +3,7 @@ import { useGameStore } from '../../stores/gameStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { getTitleGraphic } from '../../constants/titleGraphics';
 import type { Game, Team } from '../../types/game';
+import { isNFLGame } from '../../types/game';
 import { version } from '../../../package.json';
 
 // Track games with recent score changes (game ID -> { timestamp, scoringTeam })
@@ -92,7 +93,7 @@ export function MultiGameView() {
   const allGames = filteredGames;
 
   // Get the season name from the first game for the header
-  const seasonName = allGames[0]?.seasonName || 'GAME DAY';
+  const seasonName = (allGames[0] && isNFLGame(allGames[0]) && allGames[0].seasonName) || 'GAME DAY';
   const titleGraphic = getTitleGraphic(seasonName);
 
   // Calculate dynamic sizing based on number of games
@@ -303,7 +304,7 @@ function GameCard({ game, onSelect, hasScoreChange, scoringTeam, layoutConfig }:
           >
             <span className="inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-              {game.clock.periodName} {game.clock.displayValue}
+              {isNFLGame(game) && game.clock.periodName} {game.clock.displayValue}
             </span>
           </div>
         )}

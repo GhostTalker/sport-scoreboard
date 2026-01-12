@@ -3,6 +3,7 @@ import { useUIStore } from '../../stores/uiStore';
 import { GameSelector } from './GameSelector';
 import { DebugControls } from './DebugControls';
 import { CelebrationSettings } from './CelebrationSettings';
+import { SportSelector } from './SportSelector';
 import type { ViewMode } from '../../types/settings';
 
 function MultiViewFilters() {
@@ -75,6 +76,9 @@ export function SettingsPanel() {
       </div>
 
       <div className="max-w-2xl mx-auto space-y-6">
+        {/* Sport & Competition Selector */}
+        <SportSelector />
+
         {/* View Mode Toggle */}
         <section className="bg-slate-800 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-white mb-4">View Mode</h3>

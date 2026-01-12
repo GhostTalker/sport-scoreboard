@@ -119,6 +119,8 @@ function parseScoreboardResponse(data: any): Game[] {
     
     return {
       id: event.id,
+      sport: 'nfl',
+      competition: 'nfl',
       status,
       homeTeam: parseTeam(homeCompetitor),
       awayTeam: parseTeam(awayCompetitor),
@@ -249,6 +251,8 @@ function parseGameDetailsResponse(data: any): { game: Game; stats: GameStats } |
 
   const game: Game = {
     id: header.id,
+    sport: 'nfl',
+    competition: 'nfl',
     status: parseGameStatus(header.status),
     homeTeam: parseTeam(homeCompetitor),
     awayTeam: parseTeam(awayCompetitor),

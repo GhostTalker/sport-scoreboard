@@ -1,4 +1,4 @@
-import type { ScoreEvent, ScoreType, CelebrationType } from '../types/game';
+import type { ScoreEvent, ScoreType, NFLCelebrationType } from '../types/game';
 
 /**
  * Detects the type of score based on point differential
@@ -72,7 +72,7 @@ function getScoreType(diff: number): ScoreType {
   }
 }
 
-function getVideoType(diff: number): CelebrationType | null {
+function getVideoType(diff: number): NFLCelebrationType | null {
   // Touchdown scenarios: 6, 7, 8 points
   if (diff >= 6) {
     return 'touchdown';

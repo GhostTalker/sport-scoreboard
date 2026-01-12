@@ -1,6 +1,7 @@
 import { useUIStore } from '../../stores/uiStore';
 import { useGameStore } from '../../stores/gameStore';
 import type { CelebrationType } from '../../types/game';
+import { isNFLGame } from '../../types/game';
 
 const CELEBRATION_BUTTONS: Array<{ type: CelebrationType; label: string; color: string }> = [
   { type: 'touchdown', label: 'Touchdown', color: 'bg-green-600 hover:bg-green-700' },
@@ -45,7 +46,7 @@ export function DebugControls() {
               <p>Status: {currentGame.status}</p>
               <p>Home: {currentGame.homeTeam.abbreviation} ({currentGame.homeTeam.score})</p>
               <p>Away: {currentGame.awayTeam.abbreviation} ({currentGame.awayTeam.score})</p>
-              <p>Period: {currentGame.clock.periodName}</p>
+              <p>Period: {isNFLGame(currentGame) && currentGame.clock.periodName}</p>
               <p>Time: {currentGame.clock.displayValue}</p>
             </div>
           </div>

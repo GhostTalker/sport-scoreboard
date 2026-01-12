@@ -3,9 +3,12 @@ import { persist } from 'zustand/middleware';
 import type { Settings, ViewMode, MultiViewFilters } from '../types/settings';
 import { DEFAULT_SETTINGS, DEFAULT_CELEBRATION_SETTINGS, DEFAULT_MULTI_VIEW_FILTERS } from '../types/settings';
 import type { CelebrationType } from '../types/game';
+import type { SportType, CompetitionType } from '../types/base';
 
 interface SettingsState extends Settings {
   // Actions
+  setSport: (sport: SportType) => void;
+  setCompetition: (competition: CompetitionType) => void;
   setPrimaryTeam: (teamId: string) => void;
   toggleSoundEffects: () => void;
   setVideoVolume: (volume: number) => void;
@@ -20,6 +23,18 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set, get) => ({
       ...DEFAULT_SETTINGS,
+
+      setSport: (sport) => {
+        set({ currentSport: sport });
+        // Reset competition when sport changes
+        if (sport === 'nfl') {
+          set({ currentCompetition: 'nfl' });
+        } else {
+          set({ currentCompetition: 'bundesliga' });
+        }
+      },
+
+      setCompetition: (competition) => set({ currentCompetition: competition }),
 
       setPrimaryTeam: (teamId) => set({ primaryTeamId: teamId }),
 
@@ -69,9 +84,32 @@ export const useSettingsStore = create<SettingsState>()(
         if (!persistedState.multiViewFilters) {
           persistedState.multiViewFilters = DEFAULT_MULTI_VIEW_FILTERS;
         }
+        // Version 2.0 - Add sport selection
+        if (!persistedState.currentSport) {
+          persistedState.currentSport = 'nfl';
+          persistedState.currentCompetition = 'nfl';
+        }
+        // Add Bundesliga celebration settings
+        if (persistedState.celebrationVideos) {
+          if (persistedState.celebrationVideos.goal === undefined) {
+            persistedState.celebrationVideos.goal = true;
+          }
+          if (persistedState.celebrationVideos.penalty === undefined) {
+            persistedState.celebrationVideos.penalty = true;
+          }
+          if (persistedState.celebrationVideos.own_goal === undefined) {
+            persistedState.celebrationVideos.own_goal = true;
+          }
+          if (persistedState.celebrationVideos.red_card === undefined) {
+            persistedState.celebrationVideos.red_card = true;
+          }
+          if (persistedState.celebrationVideos.yellow_red_card === undefined) {
+            persistedState.celebrationVideos.yellow_red_card = true;
+          }
+        }
         return persistedState;
       },
-      version: 3,
+      version: 4,
     }
   )
 );
