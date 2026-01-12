@@ -42,7 +42,7 @@ export function GameSelector() {
             <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
             <span className="text-red-400 text-sm font-bold uppercase tracking-wider">Live</span>
           </div>
-          <div className={`grid gap-2 ${filteredLiveGames.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          <div className="grid gap-2 grid-cols-2">
             {filteredLiveGames.map((game) => (
               <GameCard
                 key={game.id}
@@ -64,7 +64,7 @@ export function GameSelector() {
             </svg>
             <span className="text-blue-400 text-sm font-bold uppercase tracking-wider">Upcoming</span>
           </div>
-          <div className={`grid gap-2 ${filteredScheduledGames.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          <div className="grid gap-2 grid-cols-2">
             {filteredScheduledGames.map((game) => (
               <GameCard
                 key={game.id}
@@ -86,7 +86,7 @@ export function GameSelector() {
             </svg>
             <span className="text-gray-400 text-sm font-bold uppercase tracking-wider">Final</span>
           </div>
-          <div className={`grid gap-2 ${filteredFinishedGames.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          <div className="grid gap-2 grid-cols-2">
             {filteredFinishedGames.map((game) => (
               <GameCard
                 key={game.id}
