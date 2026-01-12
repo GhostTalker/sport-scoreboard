@@ -5,7 +5,7 @@
 A modern, responsive web application for displaying live NFL games with dynamic backgrounds, team logos, statistics, celebration videos, and German localization.
 
 ![Status](https://img.shields.io/badge/Status-Production-green)
-![Version](https://img.shields.io/badge/Version-1.5.0-blue)
+![Version](https://img.shields.io/badge/Version-2.0.0-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ---
@@ -709,6 +709,29 @@ This project is licensed under the **MIT License**.
 ---
 
 ## 📝 Changelog
+
+### v2.0.0 (2025-01-13)
+- 🌍 **Multi-Sport Support**
+  - ✅ Complete multi-sport architecture with NFL and Bundesliga support
+  - ✅ Two-tier sport selection: Sport (NFL/Bundesliga) → Competition (Bundesliga/DFB-Pokal)
+  - ✅ Polymorphic type system with discriminated unions (NFLGame | BundesligaGame)
+  - ✅ Sport adapter pattern for clean abstraction
+  - ✅ 100% NFL functionality preserved - parallel operation
+- ⚽ **Bundesliga Integration**
+  - ✅ OpenLigaDB API integration with 15-second caching
+  - ✅ Live matchday data for Bundesliga and DFB-Pokal
+  - ✅ All 18 Bundesliga teams with authentic team colors
+  - ✅ Soccer-specific features: matchday structure, goals tracking, cards
+  - ✅ Extended celebration types: goals, penalties, own goals, red/yellow cards
+- 🎨 **UI Enhancements**
+  - ✅ New SportSelector component for sport/competition switching
+  - ✅ Dynamic celebration settings that adapt to selected sport
+  - ✅ Sport-aware data fetching with automatic state clearing on switch
+- 🏗️ **Architecture**
+  - ✅ Created 10 new files (adapters, types, components, services)
+  - ✅ Modified 15 existing files with type guards and sport awareness
+  - ✅ Backend multi-sport routing with separate proxy services
+  - ✅ Enhanced health endpoint with cache stats for both sports
 
 ### v1.5.0 (2025-01-12)
 - 🎬 **Celebration Updates**
