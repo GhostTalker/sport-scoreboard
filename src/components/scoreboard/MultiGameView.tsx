@@ -162,7 +162,7 @@ export function MultiGameView() {
           <img
             src={titleGraphic}
             alt={seasonName}
-            className="h-40 w-auto object-contain drop-shadow-2xl"
+            className="h-48 w-auto object-contain drop-shadow-2xl"
             style={{
               filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.8))',
             }}

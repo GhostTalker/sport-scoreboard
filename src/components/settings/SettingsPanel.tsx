@@ -105,8 +105,8 @@ export function SettingsPanel() {
             </button>
           </div>
 
-          {/* Multi-View Filters - shown directly below MultiView button */}
-          {viewMode === 'multi' && <MultiViewFilters />}
+          {/* Multi-View Filters - always visible */}
+          <MultiViewFilters />
         </section>
 
         {/* Game Selection - Now the primary control */}
