@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Settings, ViewMode } from '../types/settings';
-import { DEFAULT_SETTINGS, DEFAULT_CELEBRATION_SETTINGS } from '../types/settings';
+import type { Settings, ViewMode, MultiViewFilters } from '../types/settings';
+import { DEFAULT_SETTINGS, DEFAULT_CELEBRATION_SETTINGS, DEFAULT_MULTI_VIEW_FILTERS } from '../types/settings';
 import type { CelebrationType } from '../types/game';
 
 interface SettingsState extends Settings {
@@ -12,6 +12,7 @@ interface SettingsState extends Settings {
   toggleCelebrationVideo: (type: CelebrationType) => void;
   isCelebrationEnabled: (type: CelebrationType) => boolean;
   setViewMode: (mode: ViewMode) => void;
+  setMultiViewFilter: (key: keyof MultiViewFilters, value: boolean) => void;
   resetSettings: () => void;
 }
 
@@ -45,6 +46,14 @@ export const useSettingsStore = create<SettingsState>()(
 
       setViewMode: (mode) => set({ viewMode: mode }),
 
+      setMultiViewFilter: (key, value) =>
+        set((state) => ({
+          multiViewFilters: {
+            ...state.multiViewFilters,
+            [key]: value,
+          },
+        })),
+
       resetSettings: () => set(DEFAULT_SETTINGS),
     }),
     {
@@ -57,9 +66,12 @@ export const useSettingsStore = create<SettingsState>()(
         if (!persistedState.viewMode) {
           persistedState.viewMode = 'single';
         }
+        if (!persistedState.multiViewFilters) {
+          persistedState.multiViewFilters = DEFAULT_MULTI_VIEW_FILTERS;
+        }
         return persistedState;
       },
-      version: 2,
+      version: 3,
     }
   )
 );

@@ -12,15 +12,11 @@ export function MultiGameView() {
   const availableGames = useGameStore((state) => state.availableGames);
   const confirmGameSelection = useGameStore((state) => state.confirmGameSelection);
   const setViewMode = useSettingsStore((state) => state.setViewMode);
+  const multiViewFilters = useSettingsStore((state) => state.multiViewFilters);
 
   // Track previous scores to detect changes
   const previousScoresRef = useRef<Map<string, { home: number; away: number }>>(new Map());
   const [recentScoreChanges, setRecentScoreChanges] = useState<ScoreChangeMap>(new Map());
-
-  // Filter state
-  const [showLive, setShowLive] = useState(true);
-  const [showUpcoming, setShowUpcoming] = useState(true);
-  const [showFinal, setShowFinal] = useState(true);
 
   // Detect score changes
   useEffect(() => {
@@ -74,11 +70,11 @@ export function MultiGameView() {
   const scheduledGames = availableGames.filter(g => g.status === 'scheduled');
   const finishedGames = availableGames.filter(g => g.status === 'final');
 
-  // Apply filters
+  // Apply filters from settings
   const filteredGames = [
-    ...(showLive ? liveGames : []),
-    ...(showUpcoming ? scheduledGames : []),
-    ...(showFinal ? finishedGames : []),
+    ...(multiViewFilters.showLive ? liveGames : []),
+    ...(multiViewFilters.showUpcoming ? scheduledGames : []),
+    ...(multiViewFilters.showFinal ? finishedGames : []),
   ];
 
   // Combine all games with live first, then scheduled, then finished
@@ -87,6 +83,47 @@ export function MultiGameView() {
   // Get the season name from the first game for the header
   const seasonName = allGames[0]?.seasonName || 'GAME DAY';
   const titleGraphic = getTitleGraphic(seasonName);
+
+  // Calculate dynamic sizing based on number of games
+  const getLayoutConfig = (gameCount: number) => {
+    if (gameCount <= 6) {
+      return {
+        cardHeight: 'h-[165px]',
+        logoSize: 'w-20 h-20',
+        logoInner: 'w-14 h-14',
+        scoreSize: 'text-4xl',
+        scoreMinW: 'min-w-[50px]',
+        teamBoxWidth: 'w-24',
+        badgeText: 'text-sm',
+        gridGap: 'gap-5',
+      };
+    } else if (gameCount <= 10) {
+      return {
+        cardHeight: 'h-[150px]',
+        logoSize: 'w-18 h-18',
+        logoInner: 'w-12 h-12',
+        scoreSize: 'text-4xl',
+        scoreMinW: 'min-w-[48px]',
+        teamBoxWidth: 'w-22',
+        badgeText: 'text-xs',
+        gridGap: 'gap-4',
+      };
+    } else {
+      // 11+ games - compact mode
+      return {
+        cardHeight: 'h-[135px]',
+        logoSize: 'w-16 h-16',
+        logoInner: 'w-11 h-11',
+        scoreSize: 'text-3xl',
+        scoreMinW: 'min-w-[45px]',
+        teamBoxWidth: 'w-20',
+        badgeText: 'text-xs',
+        gridGap: 'gap-4',
+      };
+    }
+  };
+
+  const layoutConfig = getLayoutConfig(allGames.length);
 
   const handleSelectGame = (game: Game) => {
     confirmGameSelection(game);
@@ -133,55 +170,16 @@ export function MultiGameView() {
         )}
       </div>
 
-      {/* Filter Options */}
-      <div className="flex-shrink-0 px-4 pb-3 flex justify-center gap-6">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={showLive}
-            onChange={(e) => setShowLive(e.target.checked)}
-            className="w-4 h-4 rounded border-2 border-red-500 bg-slate-800 checked:bg-red-600 focus:ring-2 focus:ring-red-500 cursor-pointer"
-          />
-          <span className="text-sm font-bold text-white flex items-center gap-1.5">
-            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            Live
-          </span>
-        </label>
-
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={showUpcoming}
-            onChange={(e) => setShowUpcoming(e.target.checked)}
-            className="w-4 h-4 rounded border-2 border-blue-500 bg-slate-800 checked:bg-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
-          />
-          <span className="text-sm font-bold text-blue-400">
-            Upcoming
-          </span>
-        </label>
-
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={showFinal}
-            onChange={(e) => setShowFinal(e.target.checked)}
-            className="w-4 h-4 rounded border-2 border-gray-500 bg-slate-800 checked:bg-gray-600 focus:ring-2 focus:ring-gray-500 cursor-pointer"
-          />
-          <span className="text-sm font-bold text-gray-400">
-            Final
-          </span>
-        </label>
-      </div>
-
       {/* Games Grid - 2 columns */}
       <div className="flex-1 overflow-y-auto px-4 pb-4">
-        <div className="grid grid-cols-2 gap-4 max-w-6xl mx-auto">
+        <div className={`grid grid-cols-2 ${layoutConfig.gridGap} max-w-6xl mx-auto`}>
           {allGames.map((game) => (
             <GameCard
               key={game.id}
               game={game}
               onSelect={handleSelectGame}
               hasScoreChange={hasRecentScoreChange(game.id)}
+              layoutConfig={layoutConfig}
             />
           ))}
         </div>
@@ -195,13 +193,25 @@ export function MultiGameView() {
   );
 }
 
+interface LayoutConfig {
+  cardHeight: string;
+  logoSize: string;
+  logoInner: string;
+  scoreSize: string;
+  scoreMinW: string;
+  teamBoxWidth: string;
+  badgeText: string;
+  gridGap: string;
+}
+
 interface GameCardProps {
   game: Game;
   onSelect: (game: Game) => void;
   hasScoreChange: boolean;
+  layoutConfig: LayoutConfig;
 }
 
-function GameCard({ game, onSelect, hasScoreChange }: GameCardProps) {
+function GameCard({ game, onSelect, hasScoreChange, layoutConfig }: GameCardProps) {
   const isLive = game.status === 'in_progress' || game.status === 'halftime';
   const isFinal = game.status === 'final';
   const isScheduled = game.status === 'scheduled';
@@ -262,7 +272,7 @@ function GameCard({ game, onSelect, hasScoreChange }: GameCardProps) {
   return (
     <button
       onClick={() => onSelect(game)}
-      className={`rounded-xl px-2 pt-1 pb-2 transition-all duration-300 hover:scale-[1.02] text-left h-[135px] flex flex-col ${
+      className={`rounded-xl px-2 pt-1 pb-2 transition-all duration-300 hover:scale-[1.02] text-left ${layoutConfig.cardHeight} flex flex-col ${
         hasScoreChange ? 'animate-pulse' : ''
       }`}
       style={getCardStyle()}
@@ -271,7 +281,7 @@ function GameCard({ game, onSelect, hasScoreChange }: GameCardProps) {
       <div className="flex justify-center mb-0.5">
         {isLive && !isHalftime && (
           <div
-            className="px-3 py-1 rounded-full text-xs font-bold tracking-wide bg-red-600/90 text-white"
+            className={`px-3 py-1 rounded-full ${layoutConfig.badgeText} font-bold tracking-wide bg-red-600/90 text-white`}
             style={{ boxShadow: '0 0 15px rgba(220,38,38,0.5)' }}
           >
             <span className="inline-flex items-center gap-1.5">
@@ -282,7 +292,7 @@ function GameCard({ game, onSelect, hasScoreChange }: GameCardProps) {
         )}
         {isHalftime && (
           <div
-            className="px-3 py-1 rounded-full text-xs font-bold tracking-wide"
+            className={`px-3 py-1 rounded-full ${layoutConfig.badgeText} font-bold tracking-wide`}
             style={{
               background: 'linear-gradient(180deg, rgba(234,179,8,0.8) 0%, rgba(202,138,4,0.6) 100%)',
               boxShadow: '0 0 12px rgba(234,179,8,0.3)',
@@ -292,12 +302,12 @@ function GameCard({ game, onSelect, hasScoreChange }: GameCardProps) {
           </div>
         )}
         {isFinal && (
-          <div className="px-3 py-1 rounded-full text-xs font-bold tracking-wide bg-gray-600/80 text-white/90">
+          <div className={`px-3 py-1 rounded-full ${layoutConfig.badgeText} font-bold tracking-wide bg-gray-600/80 text-white/90`}>
             FINAL
           </div>
         )}
         {isScheduled && (
-          <div className="px-3 py-1 rounded-full text-xs font-bold tracking-wide bg-blue-600/80 text-white/90">
+          <div className={`px-3 py-1 rounded-full ${layoutConfig.badgeText} font-bold tracking-wide bg-blue-600/80 text-white/90`}>
             {formatDate(game.startTime)} {formatTime(game.startTime)}
           </div>
         )}
@@ -306,13 +316,13 @@ function GameCard({ game, onSelect, hasScoreChange }: GameCardProps) {
       {/* Teams and Score - Centered Layout */}
       <div className="flex items-center justify-center gap-3">
         {/* Away Team */}
-        <TeamBadge team={game.awayTeam} isFinal={isFinal} isWinner={game.awayTeam.score > game.homeTeam.score} />
+        <TeamBadge team={game.awayTeam} isFinal={isFinal} isWinner={game.awayTeam.score > game.homeTeam.score} layoutConfig={layoutConfig} />
 
         {/* Score Display - Centered - Fixed width for consistency */}
         <div className="flex items-center justify-center gap-1.5 min-w-[120px]">
           {/* Away Score */}
           <span
-            className={`text-3xl font-black min-w-[45px] text-right ${
+            className={`${layoutConfig.scoreSize} font-black ${layoutConfig.scoreMinW} text-right ${
               isFinal && game.awayTeam.score > game.homeTeam.score
                 ? 'text-white'
                 : isFinal
@@ -336,7 +346,7 @@ function GameCard({ game, onSelect, hasScoreChange }: GameCardProps) {
 
           {/* Home Score */}
           <span
-            className={`text-3xl font-black min-w-[45px] text-left ${
+            className={`${layoutConfig.scoreSize} font-black ${layoutConfig.scoreMinW} text-left ${
               isFinal && game.homeTeam.score > game.awayTeam.score
                 ? 'text-white'
                 : isFinal
@@ -354,7 +364,7 @@ function GameCard({ game, onSelect, hasScoreChange }: GameCardProps) {
         </div>
 
         {/* Home Team */}
-        <TeamBadge team={game.homeTeam} isFinal={isFinal} isWinner={game.homeTeam.score > game.awayTeam.score} />
+        <TeamBadge team={game.homeTeam} isFinal={isFinal} isWinner={game.homeTeam.score > game.awayTeam.score} layoutConfig={layoutConfig} />
       </div>
     </button>
   );
@@ -364,9 +374,10 @@ interface TeamBadgeProps {
   team: Team;
   isFinal: boolean;
   isWinner: boolean;
+  layoutConfig: LayoutConfig;
 }
 
-function TeamBadge({ team, isFinal, isWinner }: TeamBadgeProps) {
+function TeamBadge({ team, isFinal, isWinner, layoutConfig }: TeamBadgeProps) {
   // Check if the primary color is too dark (for glow visibility)
   const hexToRgbSum = (hex: string) => {
     const r = parseInt(hex.slice(0, 2), 16);
@@ -384,10 +395,10 @@ function TeamBadge({ team, isFinal, isWinner }: TeamBadgeProps) {
   const opacity = isFinal && !isWinner ? 0.5 : 1;
 
   return (
-    <div className="flex flex-col items-center gap-1 w-20" style={{ opacity }}>
+    <div className={`flex flex-col items-center gap-1 ${layoutConfig.teamBoxWidth}`} style={{ opacity }}>
       {/* Team Logo with Glow Effect */}
       <div
-        className="relative w-16 h-16 rounded-full flex items-center justify-center"
+        className={`relative ${layoutConfig.logoSize} rounded-full flex items-center justify-center`}
         style={{
           background: `radial-gradient(circle, #${glowColor}40 0%, #${glowColor}15 50%, transparent 70%)`,
           boxShadow: `
@@ -411,7 +422,7 @@ function TeamBadge({ team, isFinal, isWinner }: TeamBadgeProps) {
         <img
           src={team.logo}
           alt={team.abbreviation}
-          className="w-11 h-11 object-contain relative z-10"
+          className={`${layoutConfig.logoInner} object-contain relative z-10`}
           style={{
             filter: `drop-shadow(0 0 8px #${glowColor}80)`,
           }}
