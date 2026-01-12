@@ -34,7 +34,7 @@ export function GameSelector() {
   const filteredFinishedGames = multiViewFilters.showFinal ? finishedGames : [];
 
   return (
-    <div className="space-y-4 max-h-96 overflow-y-auto">
+    <div className="space-y-4 max-h-96 overflow-y-auto overflow-x-hidden">
       {/* Live Games */}
       {filteredLiveGames.length > 0 && (
         <div>
@@ -49,7 +49,6 @@ export function GameSelector() {
                 game={game}
                 isSelected={currentGame?.id === game.id}
                 onSelect={handleSelectGame}
-                isSingleInCategory={filteredLiveGames.length === 1}
               />
             ))}
           </div>
@@ -72,7 +71,6 @@ export function GameSelector() {
                 game={game}
                 isSelected={currentGame?.id === game.id}
                 onSelect={handleSelectGame}
-                isSingleInCategory={filteredScheduledGames.length === 1}
               />
             ))}
           </div>
@@ -95,7 +93,6 @@ export function GameSelector() {
                 game={game}
                 isSelected={currentGame?.id === game.id}
                 onSelect={handleSelectGame}
-                isSingleInCategory={filteredFinishedGames.length === 1}
               />
             ))}
           </div>
@@ -109,10 +106,9 @@ interface GameCardProps {
   game: Game;
   isSelected: boolean;
   onSelect: (game: Game) => void;
-  isSingleInCategory: boolean;
 }
 
-function GameCard({ game, isSelected, onSelect, isSingleInCategory }: GameCardProps) {
+function GameCard({ game, isSelected, onSelect }: GameCardProps) {
   const isLive = game.status === 'in_progress';
   const isHalftime = game.status === 'halftime';
   const isFinal = game.status === 'final';
@@ -157,7 +153,7 @@ function GameCard({ game, isSelected, onSelect, isSingleInCategory }: GameCardPr
     <button
       onClick={() => onSelect(game)}
       className={`
-        ${isSingleInCategory ? 'max-w-md' : 'w-full'} flex flex-col gap-2 p-3 rounded-lg transition-all text-left relative
+        w-full flex flex-col gap-2 p-3 rounded-lg transition-all text-left relative
         ${isSelected
           ? 'bg-blue-600 ring-2 ring-blue-400'
           : isLive
