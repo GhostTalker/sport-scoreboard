@@ -306,11 +306,13 @@ export function MainScoreboard() {
                   border: '1px solid rgba(255,255,255,0.1)',
                 }}
               >
-                {/* Quarter */}
+                {/* Period / Quarter / Halbzeit */}
                 <div className="flex flex-col items-center">
-                  <span className="text-xs text-white/50 uppercase tracking-wider">Quarter</span>
+                  <span className="text-xs text-white/50 uppercase tracking-wider">
+                    {isNFLGame(currentGame) ? 'Quarter' : 'Spielabschnitt'}
+                  </span>
                   <span className="text-3xl font-black text-white">
-                    {(isNFLGame(currentGame) && currentGame.clock.periodName) || '-'}
+                    {currentGame.clock?.periodName || '-'}
                   </span>
                 </div>
 
@@ -554,7 +556,7 @@ function NoGameState() {
                   className="bg-gradient-to-br from-red-900/40 to-red-800/30 hover:from-red-800/50 hover:to-red-700/40 border-2 border-red-500/50 hover:border-red-400 rounded-xl p-4 transition-all hover:scale-[1.02] text-left"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-red-400 text-sm font-bold">{isNFLGame(game) && game.clock.periodName} {game.clock.displayValue}</span>
+                    <span className="text-red-400 text-sm font-bold">{game.clock?.periodName} {game.clock?.displayValue}</span>
                     <span className="text-xs text-white/40">{isNFLGame(game) && game.seasonName}</span>
                   </div>
                   <div className="flex items-center justify-between">

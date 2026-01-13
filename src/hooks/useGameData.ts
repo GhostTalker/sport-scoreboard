@@ -200,8 +200,13 @@ export function useGameData() {
     }
   }, [adapter]);
 
-  // Set up polling - refetch when sport changes
+  // Set up polling - refetch when sport changes OR when adapter becomes available
   useEffect(() => {
+    // Only fetch if adapter is available
+    if (!adapter) {
+      return; // Wait for plugin to load
+    }
+
     fetchData();
 
     const setupInterval = () => {
@@ -245,8 +250,8 @@ export function useGameData() {
           userConfirmedGameId: null,
           availableGames: [],
         });
-        // Fetch new data
-        fetchData();
+        // fetchData will be triggered automatically by useEffect when adapter changes
+        // No need to call it here - this prevents the 30s delay bug
       }
     });
 

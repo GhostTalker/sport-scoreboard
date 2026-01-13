@@ -2,7 +2,6 @@ import { useGameStore } from '../../stores/gameStore';
 import { useUIStore } from '../../stores/uiStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import type { Game } from '../../types/game';
-import { isNFLGame } from '../../types/game';
 
 export function GameSelector() {
   const availableGames = useGameStore((state) => state.availableGames);
@@ -173,7 +172,7 @@ function GameCard({ game, isSelected, onSelect }: GameCardProps) {
         {isLive && (
           <span className="flex items-center gap-1 text-[10px] text-red-400 font-bold">
             <span className="w-1 h-1 bg-red-500 rounded-full animate-pulse"></span>
-            {isNFLGame(game) && game.clock.periodName} {game.clock.displayValue}
+            {game.clock?.periodName} {game.clock?.displayValue}
           </span>
         )}
         {isHalftime && (

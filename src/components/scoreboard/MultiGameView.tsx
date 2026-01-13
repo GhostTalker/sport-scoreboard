@@ -320,7 +320,7 @@ function GameCard({ game, onSelect, hasScoreChange, scoringTeam, layoutConfig }:
           >
             <span className="inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-              {isNFLGame(game) && game.clock.periodName} {game.clock.displayValue}
+              {game.clock?.periodName} {game.clock?.displayValue}
             </span>
           </div>
         )}

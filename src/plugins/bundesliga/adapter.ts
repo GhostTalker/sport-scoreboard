@@ -254,6 +254,7 @@ export class BundesligaAdapter implements SportAdapter {
     return {
       matchMinute,
       period,
+      periodName: this.getPeriodName(period),
       displayValue: `${matchMinute}'`,
     };
   }

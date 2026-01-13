@@ -15,6 +15,7 @@ export interface BundesligaGame extends BaseGame {
 export interface SoccerClock {
   matchMinute: number;
   period: 'first_half' | 'second_half' | 'halftime' | 'extra_time';
+  periodName?: string; // "1. Halbzeit", "2. Halbzeit", "Halbzeit", "Verlängerung"
   displayValue: string; // "45'", "90+3'"
 }
 

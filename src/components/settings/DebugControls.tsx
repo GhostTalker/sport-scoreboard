@@ -2,7 +2,6 @@ import { useUIStore } from '../../stores/uiStore';
 import { useGameStore } from '../../stores/gameStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import type { CelebrationType } from '../../types/game';
-import { isNFLGame, isBundesligaGame } from '../../types/game';
 
 // NFL celebration button configuration
 const NFL_CELEBRATION_BUTTONS: Array<{ type: CelebrationType; label: string; color: string }> = [
@@ -67,7 +66,7 @@ export function DebugControls() {
               <p>Status: {currentGame.status}</p>
               <p>Home: {currentGame.homeTeam.abbreviation} ({currentGame.homeTeam.score})</p>
               <p>Away: {currentGame.awayTeam.abbreviation} ({currentGame.awayTeam.score})</p>
-              <p>Period: {isNFLGame(currentGame) ? currentGame.clock.periodName : isBundesligaGame(currentGame) ? currentGame.clock.period : 'N/A'}</p>
+              <p>Period: {currentGame.clock?.periodName || currentGame.clock?.period || 'N/A'}</p>
               <p>Time: {currentGame.clock.displayValue}</p>
             </div>
           </div>
