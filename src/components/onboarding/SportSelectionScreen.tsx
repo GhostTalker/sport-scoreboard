@@ -20,8 +20,8 @@ export function SportSelectionScreen() {
     <div className="h-full w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-8">
       <div className="max-w-4xl w-full">
         {/* Header with Scoreboard Logo */}
-        <div className="text-center mb-8">
-          <div className="mb-4 flex justify-center">
+        <div className="text-center mb-6">
+          <div className="-mb-8 flex justify-center">
             <img
               src="/title/scoreboard-logo.png"
               alt="Sport-Scoreboard"
