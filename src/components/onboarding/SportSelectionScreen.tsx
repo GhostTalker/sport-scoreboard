@@ -9,9 +9,11 @@ export function SportSelectionScreen() {
   const handleSportSelection = (sport: SportType) => {
     // Set the sport and mark initial selection as complete
     setInitialSportSelection(sport);
-    // Navigate to scoreboard to show games immediately
-    // (Settings can be accessed via arrow keys or swipe)
-    setView('scoreboard');
+    // Small delay to allow useGameData subscriber to trigger and start fetching
+    // This prevents showing empty state before games are loaded
+    setTimeout(() => {
+      setView('scoreboard');
+    }, 100);
   };
 
   return (
@@ -23,7 +25,7 @@ export function SportSelectionScreen() {
             <img
               src="/title/scoreboard-logo.png"
               alt="Sport-Scoreboard"
-              className="h-32 w-auto object-contain"
+              className="h-96 w-auto object-contain"
               style={{
                 filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))',
               }}

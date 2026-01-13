@@ -429,6 +429,9 @@ interface TeamBadgeProps {
 }
 
 function TeamBadge({ team, isFinal, isWinner, layoutConfig, hasScored }: TeamBadgeProps) {
+  // Special rendering for RB Leipzig - white box with red text
+  const isLeipzig = team.name.includes('Leipzig');
+
   // Check if the primary color is too dark (for glow visibility)
   const hexToRgbSum = (hex: string) => {
     const r = parseInt(hex.slice(0, 2), 16);
@@ -501,7 +504,7 @@ function TeamBadge({ team, isFinal, isWinner, layoutConfig, hasScored }: TeamBad
         <div
           className="absolute inset-0 blur-sm rounded"
           style={{
-            backgroundColor: `#${team.color}`,
+            backgroundColor: isLeipzig ? '#DD0741' : `#${team.color}`,
             opacity: hasScored ? 0.9 : 0.5,
           }}
         />
@@ -510,27 +513,31 @@ function TeamBadge({ team, isFinal, isWinner, layoutConfig, hasScored }: TeamBad
         <div
           className="relative px-1.5 py-0.5 rounded border w-full"
           style={{
-            background: hasScored
+            background: isLeipzig
+              ? 'linear-gradient(180deg, #FFFFFF 0%, #F5F5F5 100%)'
+              : hasScored
               ? `linear-gradient(180deg, #${team.color} 0%, #${team.color}cc 100%)`
               : `linear-gradient(180deg, #${team.color}cc 0%, #${team.color}88 100%)`,
-            borderColor: `#${team.alternateColor || team.color}`,
+            borderColor: isLeipzig ? '#DD0741' : `#${team.alternateColor || team.color}`,
             boxShadow: hasScored
-              ? `
-                  0 0 15px #${team.color},
-                  0 0 25px #${team.color}80,
-                  0 1px 8px #${team.color}50
-                `
+              ? isLeipzig
+                ? '0 0 15px #DD0741, 0 0 25px #DD074180, 0 1px 8px #DD074150'
+                : `0 0 15px #${team.color}, 0 0 25px #${team.color}80, 0 1px 8px #${team.color}50`
+              : isLeipzig
+              ? '0 1px 8px #DD074150'
               : `0 1px 8px #${team.color}50`,
           }}
         >
           <span
-            className="text-[10px] font-bold text-white uppercase tracking-tight block text-center truncate leading-tight"
+            className="text-[10px] font-bold uppercase tracking-tight block text-center truncate leading-tight"
             style={{
-              textShadow: hasScored
-                ? `
-                    0 0 8px #${glowColor},
-                    0 1px 2px rgba(0,0,0,0.5)
-                  `
+              color: isLeipzig ? '#DD0741' : '#FFFFFF',
+              textShadow: isLeipzig
+                ? hasScored
+                  ? '0 0 8px #DD0741, 0 1px 2px rgba(0,0,0,0.2)'
+                  : '0 1px 2px rgba(0,0,0,0.2)'
+                : hasScored
+                ? `0 0 8px #${glowColor}, 0 1px 2px rgba(0,0,0,0.5)`
                 : '0 1px 2px rgba(0,0,0,0.5)',
             }}
           >

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../../stores/gameStore';
+import { useSettingsStore } from '../../stores/settingsStore';
 import { TeamDisplay } from './TeamDisplay';
 import { GameSituation } from './GameSituation';
 import { getTitleGraphic } from '../../constants/titleGraphics';
@@ -495,6 +496,7 @@ function ErrorState({ message }: { message: string }) {
 function NoGameState() {
   const availableGames = useGameStore((state) => state.availableGames);
   const confirmGameSelection = useGameStore((state) => state.confirmGameSelection);
+  const currentSport = useSettingsStore((state) => state.currentSport);
 
   const handleSelectGame = (game: any) => {
     confirmGameSelection(game);
@@ -531,7 +533,9 @@ function NoGameState() {
       <div className="w-full max-w-4xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-white mb-2">🏈 NFL Scoreboard</h1>
+          <h1 className="text-4xl font-black text-white mb-2">
+            {currentSport === 'nfl' ? '🏈 NFL Scoreboard' : '⚽ Bundesliga Scoreboard'}
+          </h1>
           <p className="text-white/60 text-lg">Wählen Sie ein Spiel aus</p>
         </div>
 
