@@ -8,7 +8,7 @@ const plugin: SportPlugin = {
     name: 'Bundesliga Plugin',
     displayName: 'Bundesliga',
     description: 'Deutscher Fußball',
-    icon: '/title/bundesliga-logo.png',
+    icon: '/logos/Logo_Bundesliga.png',
     hasStats: false,
     celebrationTypes: ['goal', 'penalty', 'own_goal', 'red_card', 'yellow_red_card'],
     competitions: ['bundesliga', 'dfb-pokal'],

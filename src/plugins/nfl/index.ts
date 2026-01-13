@@ -8,7 +8,7 @@ const plugin: SportPlugin = {
     name: 'NFL Plugin',
     displayName: 'NFL',
     description: 'American Football',
-    icon: '/title/nfl-logo.png',
+    icon: '/logos/Logo_NFL.png',
     hasStats: true,
     celebrationTypes: ['touchdown', 'fieldgoal', 'interception', 'sack', 'fumble', 'safety'],
     competitions: ['nfl'],

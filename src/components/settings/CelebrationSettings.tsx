@@ -1,5 +1,6 @@
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useCurrentPlugin } from '../../hooks/usePlugin';
+import { useTranslation } from '../../i18n/useTranslation';
 import type { CelebrationType } from '../../types/game';
 
 interface CelebrationOption {
@@ -42,12 +43,13 @@ export function CelebrationSettings() {
   const plugin = useCurrentPlugin();
   const celebrationVideos = useSettingsStore((state) => state.celebrationVideos);
   const toggleCelebrationVideo = useSettingsStore((state) => state.toggleCelebrationVideo);
+  const { t } = useTranslation();
 
   if (!plugin) {
     return (
       <section className="bg-slate-800 rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-white mb-2">Celebration Videos</h3>
-        <p className="text-white/50 text-sm">Loading...</p>
+        <h3 className="text-lg font-semibold text-white mb-2">{t.settings.celebration.title}</h3>
+        <p className="text-white/50 text-sm">{t.scoreboard.loading}</p>
       </section>
     );
   }
@@ -56,9 +58,9 @@ export function CelebrationSettings() {
 
   return (
     <section className="bg-slate-800 rounded-xl p-6">
-      <h3 className="text-lg font-semibold text-white mb-2">Celebration Videos</h3>
+      <h3 className="text-lg font-semibold text-white mb-2">{t.settings.celebration.title}</h3>
       <p className="text-white/50 text-sm mb-4">
-        Welche Videos sollen bei Events angezeigt werden?
+        {t.settings.celebration.subtitle}
       </p>
 
       <div className="space-y-3">

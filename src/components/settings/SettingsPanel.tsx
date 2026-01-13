@@ -2,15 +2,17 @@ import { useSettingsStore } from '../../stores/settingsStore';
 import { useUIStore } from '../../stores/uiStore';
 import { GameSelector } from './GameSelector';
 import { DebugControls } from './DebugControls';
-import { CelebrationSettings } from './CelebrationSettings';
 import { CompetitionSelector } from './CompetitionSelector';
 import { SportTabs } from './SportTabs';
 import { SettingsSidebar } from './SettingsSidebar';
+import { LanguageSelector } from './LanguageSelector';
+import { useTranslation } from '../../i18n/useTranslation';
 import type { ViewMode } from '../../types/settings';
 
 function MultiViewFilters() {
   const multiViewFilters = useSettingsStore((state) => state.multiViewFilters);
   const setMultiViewFilter = useSettingsStore((state) => state.setMultiViewFilter);
+  const { t } = useTranslation();
 
   return (
     <div className="flex justify-center gap-6 mt-4">
@@ -23,7 +25,7 @@ function MultiViewFilters() {
         />
         <span className="text-sm font-bold text-white flex items-center gap-1.5">
           <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-          Live
+          {t.settings.multiViewFilters.live}
         </span>
       </label>
 
@@ -35,7 +37,7 @@ function MultiViewFilters() {
           className="w-4 h-4 rounded border-2 border-blue-500 bg-slate-700 checked:bg-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
         />
         <span className="text-sm font-bold text-blue-400">
-          Upcoming
+          {t.settings.multiViewFilters.upcoming}
         </span>
       </label>
 
@@ -47,7 +49,7 @@ function MultiViewFilters() {
           className="w-4 h-4 rounded border-2 border-gray-500 bg-slate-700 checked:bg-gray-600 focus:ring-2 focus:ring-gray-500 cursor-pointer"
         />
         <span className="text-sm font-bold text-gray-400">
-          Final
+          {t.settings.multiViewFilters.final}
         </span>
       </label>
     </div>
@@ -55,12 +57,11 @@ function MultiViewFilters() {
 }
 
 export function SettingsPanel() {
-  const soundEffectsEnabled = useSettingsStore((state) => state.soundEffectsEnabled);
-  const toggleSoundEffects = useSettingsStore((state) => state.toggleSoundEffects);
   const viewMode = useSettingsStore((state) => state.viewMode);
   const setViewMode = useSettingsStore((state) => state.setViewMode);
   const debugMode = useUIStore((state) => state.debugMode);
   const setView = useUIStore((state) => state.setView);
+  const { t } = useTranslation();
 
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode);
@@ -72,8 +73,8 @@ export function SettingsPanel() {
     <div className="h-full w-full bg-slate-900 flex flex-col">
       {/* Header */}
       <div className="text-center py-6 border-b border-slate-700">
-        <h2 className="text-2xl font-bold text-white">Settings</h2>
-        <p className="text-white/50">Configure your scoreboard</p>
+        <h2 className="text-2xl font-bold text-white">{t.settings.title}</h2>
+        <p className="text-white/50">{t.settings.subtitle}</p>
       </div>
 
       {/* Sport Tabs */}
@@ -91,7 +92,7 @@ export function SettingsPanel() {
 
             {/* View Mode Toggle */}
             <section className="bg-slate-800 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">View Mode</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">{t.settings.viewMode.title}</h3>
               <div className="flex gap-3">
                 <button
                   onClick={() => handleViewModeChange('single')}
@@ -102,8 +103,8 @@ export function SettingsPanel() {
                       : 'bg-slate-700 text-white/70 hover:bg-slate-600'}
                   `}
                 >
-                  <div className="text-lg">SingleView</div>
-                  <div className="text-xs opacity-70 mt-1">Show one game detailed</div>
+                  <div className="text-lg">{t.settings.viewMode.singleView}</div>
+                  <div className="text-xs opacity-70 mt-1">{t.settings.viewMode.singleViewDesc}</div>
                 </button>
                 <button
                   onClick={() => handleViewModeChange('multi')}
@@ -114,8 +115,8 @@ export function SettingsPanel() {
                       : 'bg-slate-700 text-white/70 hover:bg-slate-600'}
                   `}
                 >
-                  <div className="text-lg">MultiView</div>
-                  <div className="text-xs opacity-70 mt-1">Overview of all games</div>
+                  <div className="text-lg">{t.settings.viewMode.multiView}</div>
+                  <div className="text-xs opacity-70 mt-1">{t.settings.viewMode.multiViewDesc}</div>
                 </button>
               </div>
 
@@ -125,45 +126,20 @@ export function SettingsPanel() {
 
             {/* Game Selection */}
             <section className="bg-slate-800 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Select Game</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">{t.settings.gameSelection.title}</h3>
               <p className="text-white/50 text-sm mb-4">
-                Choose which game to display on the scoreboard
+                {t.settings.gameSelection.subtitle}
               </p>
               <GameSelector />
             </section>
 
-            {/* Sound Settings */}
-            <section className="bg-slate-800 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Sound</h3>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white">Sound Effects</p>
-                  <p className="text-white/50 text-sm">Play sounds on touchdowns and field goals</p>
-                </div>
-                <button
-                  onClick={toggleSoundEffects}
-                  className={`
-                    relative inline-flex h-8 w-14 items-center rounded-full transition-colors
-                    ${soundEffectsEnabled ? 'bg-green-600' : 'bg-slate-600'}
-                  `}
-                >
-                  <span
-                    className={`
-                      inline-block h-6 w-6 transform rounded-full bg-white transition-transform
-                      ${soundEffectsEnabled ? 'translate-x-7' : 'translate-x-1'}
-                    `}
-                  />
-                </button>
-              </div>
-            </section>
-
-            {/* Celebration Videos */}
-            <CelebrationSettings />
+            {/* Language Selector */}
+            <LanguageSelector />
 
             {/* Debug Controls - only show when debug mode is active */}
             {debugMode && (
               <section className="bg-slate-800 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Debug Controls</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">{t.settings.debug.title}</h3>
                 <DebugControls />
               </section>
             )}
@@ -171,12 +147,12 @@ export function SettingsPanel() {
 
           {/* Navigation hint */}
           <div className="text-center mt-8 text-white/30 text-sm">
-            Press Arrow Right or Escape to return
+            {t.settings.navigation.hint}
           </div>
         </div>
 
-        {/* Right Sidebar */}
-        <div className="w-48 border-l border-slate-700 p-4 bg-slate-800/50">
+        {/* Right Sidebar - Closer to main content */}
+        <div className="w-40 border-l border-slate-700 p-3 bg-slate-800/50">
           <SettingsSidebar />
         </div>
       </div>

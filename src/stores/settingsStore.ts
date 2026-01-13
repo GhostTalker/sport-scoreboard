@@ -4,6 +4,7 @@ import type { Settings, ViewMode, MultiViewFilters } from '../types/settings';
 import { DEFAULT_SETTINGS, DEFAULT_CELEBRATION_SETTINGS, DEFAULT_MULTI_VIEW_FILTERS } from '../types/settings';
 import type { CelebrationType } from '../types/game';
 import type { SportType, CompetitionType } from '../types/base';
+import type { Language } from '../i18n/translations';
 
 interface SettingsState extends Settings {
   // Actions
@@ -23,6 +24,9 @@ interface SettingsState extends Settings {
   togglePlugin: (pluginId: string) => void;
   isPluginEnabled: (pluginId: string) => boolean;
   setEnabledPlugins: (pluginIds: string[]) => void;
+
+  // Language
+  setLanguage: (language: Language) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -105,6 +109,9 @@ export const useSettingsStore = create<SettingsState>()(
       },
 
       setEnabledPlugins: (pluginIds) => set({ enabledPlugins: pluginIds }),
+
+      // Language action
+      setLanguage: (language) => set({ language }),
     }),
     {
       name: 'scoreboard-settings',
@@ -156,9 +163,15 @@ export const useSettingsStore = create<SettingsState>()(
             persistedState.celebrationVideos.yellow_red_card = true;
           }
         }
+        // Version 3.0.1 - Add language support
+        if (!persistedState.language) {
+          // Auto-detect browser language
+          const browserLang = navigator.language.toLowerCase();
+          persistedState.language = browserLang.startsWith('de') ? 'de' : 'en';
+        }
         return persistedState;
       },
-      version: 12, // Incremented for plugin management feature
+      version: 13, // Incremented for language support feature
     }
   )
 );

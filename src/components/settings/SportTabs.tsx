@@ -18,7 +18,7 @@ export function SportTabs() {
   }
 
   return (
-    <div className="flex gap-2 border-b border-slate-700">
+    <div className="flex gap-2 border-b border-slate-700 justify-center">
       {enabledPlugins.map((plugin) => {
         const isActive = currentSport === plugin.id;
 

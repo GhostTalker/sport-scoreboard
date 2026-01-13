@@ -1,5 +1,6 @@
 import type { CelebrationType } from './game';
 import type { SportType, CompetitionType } from './base';
+import type { Language } from '../i18n/translations';
 
 // Which celebration videos are enabled
 export type CelebrationSettings = Record<CelebrationType, boolean>;
@@ -34,6 +35,9 @@ export interface Settings {
   // View mode
   viewMode: ViewMode;
   multiViewFilters: MultiViewFilters;
+
+  // Language
+  language: Language;
 }
 
 export const DEFAULT_CELEBRATION_SETTINGS: CelebrationSettings = {
@@ -58,6 +62,15 @@ export const DEFAULT_MULTI_VIEW_FILTERS: MultiViewFilters = {
   showFinal: true,
 };
 
+// Helper to detect browser language
+function getBrowserLanguage(): Language {
+  const browserLang = navigator.language.toLowerCase();
+  if (browserLang.startsWith('de')) {
+    return 'de';
+  }
+  return 'en'; // Default to English
+}
+
 export const DEFAULT_SETTINGS: Settings = {
   currentSport: 'nfl',
   currentCompetition: 'nfl',
@@ -69,4 +82,5 @@ export const DEFAULT_SETTINGS: Settings = {
   celebrationVideos: DEFAULT_CELEBRATION_SETTINGS,
   viewMode: 'single',
   multiViewFilters: DEFAULT_MULTI_VIEW_FILTERS,
+  language: getBrowserLanguage(), // Auto-detect browser language
 };
