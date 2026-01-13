@@ -192,6 +192,10 @@ function GameCard({ game, isSelected, onSelect }: GameCardProps) {
             src={game.awayTeam.logo}
             alt={game.awayTeam.abbreviation}
             className="w-10 h-10 flex-shrink-0 object-contain"
+            onError={(e) => {
+              e.currentTarget.src = '/images/tbd-logo.svg';
+              e.currentTarget.onerror = null;
+            }}
           />
           <span className="font-bold text-white text-sm truncate">
             {game.awayTeam.shortDisplayName}
@@ -220,6 +224,10 @@ function GameCard({ game, isSelected, onSelect }: GameCardProps) {
             src={game.homeTeam.logo}
             alt={game.homeTeam.abbreviation}
             className="w-10 h-10 flex-shrink-0 object-contain"
+            onError={(e) => {
+              e.currentTarget.src = '/images/tbd-logo.svg';
+              e.currentTarget.onerror = null;
+            }}
           />
         </div>
       </div>

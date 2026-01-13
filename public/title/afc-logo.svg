@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Red background circle (AFC colors) -->
+  <circle cx="256" cy="256" r="240" fill="#C41E3A" stroke="#D50A0A" stroke-width="8"/>
+
+  <!-- AFC Shield shape -->
+  <path d="M 256 80 L 380 140 L 380 280 Q 380 370 256 430 Q 132 370 132 280 L 132 140 Z"
+        fill="#D50A0A" stroke="white" stroke-width="4"/>
+
+  <!-- AFC Text -->
+  <text x="256" y="280" font-family="Arial, sans-serif" font-size="120" font-weight="black"
+        text-anchor="middle" fill="white" stroke="none">AFC</text>
+
+  <!-- Small "American Football Conference" text -->
+  <text x="256" y="470" font-family="Arial, sans-serif" font-size="28" font-weight="bold"
+        text-anchor="middle" fill="#D50A0A">AMERICAN FOOTBALL CONFERENCE</text>
+</svg>

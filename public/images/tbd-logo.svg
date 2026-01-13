@@ -1,0 +1,10 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="240" fill="#374151" stroke="#6B7280" stroke-width="4"/>
+
+  <!-- Question Mark -->
+  <text x="256" y="340" font-family="Arial, sans-serif" font-size="280" font-weight="bold" text-anchor="middle" fill="#9CA3AF">?</text>
+
+  <!-- TBD Text -->
+  <text x="256" y="420" font-family="Arial, sans-serif" font-size="60" font-weight="bold" text-anchor="middle" fill="#D1D5DB">TBD</text>
+</svg>

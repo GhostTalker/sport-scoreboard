@@ -502,6 +502,11 @@ function TeamBadge({ team, isFinal, isWinner, layoutConfig, hasScored }: TeamBad
               ? `drop-shadow(0 0 16px #${glowColor}) brightness(1.2)`
               : `drop-shadow(0 0 8px #${glowColor}80)`,
           }}
+          onError={(e) => {
+            // Fallback to TBD placeholder if logo fails to load
+            e.currentTarget.src = '/images/tbd-logo.svg';
+            e.currentTarget.onerror = null; // Prevent infinite loop
+          }}
         />
       </div>
 
