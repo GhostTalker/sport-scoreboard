@@ -5,7 +5,7 @@
 A modern, responsive web application for displaying live NFL games with dynamic backgrounds, team logos, statistics, celebration videos, and German localization.
 
 ![Status](https://img.shields.io/badge/Status-Production-green)
-![Version](https://img.shields.io/badge/Version-2.0.0-blue)
+![Version](https://img.shields.io/badge/Version-2.0.1-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ---
@@ -709,6 +709,21 @@ This project is licensed under the **MIT License**.
 ---
 
 ## 📝 Changelog
+
+### v2.0.1 (2025-01-16)
+- 🐛 **Bundesliga Bugfixes**
+  - ✅ Fixed OpenLigaDB API property casing issues (camelCase vs PascalCase)
+  - ✅ Added explicit season parameter (2024) to matchday API requests
+  - ✅ Bundesliga games now display correctly for current matchday
+  - ✅ DFB-Pokal competition support working
+- 🎮 **Debug Controls**
+  - ✅ Sport-aware celebration buttons (NFL vs Bundesliga)
+  - ✅ Dynamic API status display (ESPN API vs OpenLigaDB API)
+  - ✅ Fixed period display for both sports
+- 🎨 **Onboarding**
+  - ✅ Initial sport selection screen for new users
+  - ✅ Beautiful card-based UI with sport logos
+  - ✅ Existing users automatically skip onboarding
 
 ### v2.0.0 (2025-01-13)
 - 🌍 **Multi-Sport Support**
