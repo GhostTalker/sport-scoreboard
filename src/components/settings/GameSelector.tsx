@@ -2,6 +2,7 @@ import { useGameStore } from '../../stores/gameStore';
 import { useUIStore } from '../../stores/uiStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import type { Game } from '../../types/game';
+import { isBundesligaGame } from '../../types/game';
 
 export function GameSelector() {
   const availableGames = useGameStore((state) => state.availableGames);
@@ -114,6 +115,11 @@ function GameCard({ game, isSelected, onSelect }: GameCardProps) {
   const isFinal = game.status === 'final';
   const isScheduled = game.status === 'scheduled';
 
+  // Determine team display order: Bundesliga = Home left, NFL = Away left
+  const isBundesliga = isBundesligaGame(game);
+  const leftTeam = isBundesliga ? game.homeTeam : game.awayTeam;
+  const rightTeam = isBundesliga ? game.awayTeam : game.homeTeam;
+
   const formatDateTime = (dateStr?: string) => {
     if (!dateStr) return { date: '', time: 'TBD' };
     const date = new Date(dateStr);
@@ -185,11 +191,11 @@ function GameCard({ game, isSelected, onSelect }: GameCardProps) {
 
       {/* Main row: Teams & Score */}
       <div className="flex items-center gap-2">
-        {/* Away Team */}
+        {/* Left Team (Home for Bundesliga, Away for NFL) */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <img
-            src={game.awayTeam.logo}
-            alt={game.awayTeam.abbreviation}
+            src={leftTeam.logo}
+            alt={leftTeam.abbreviation}
             className="w-10 h-10 flex-shrink-0 object-contain"
             onError={(e) => {
               e.currentTarget.src = '/images/tbd-logo.svg';
@@ -197,7 +203,7 @@ function GameCard({ game, isSelected, onSelect }: GameCardProps) {
             }}
           />
           <span className="font-bold text-white text-sm truncate">
-            {game.awayTeam.shortDisplayName}
+            {leftTeam.shortDisplayName}
           </span>
         </div>
 
@@ -205,7 +211,7 @@ function GameCard({ game, isSelected, onSelect }: GameCardProps) {
         <div className="flex items-center justify-center flex-shrink-0">
           {isLive || isFinal || isHalftime ? (
             <span className="text-lg font-black text-white">
-              {game.awayTeam.score} - {game.homeTeam.score}
+              {leftTeam.score} - {rightTeam.score}
             </span>
           ) : (
             <span className="text-sm font-bold text-blue-400">
@@ -214,14 +220,14 @@ function GameCard({ game, isSelected, onSelect }: GameCardProps) {
           )}
         </div>
 
-        {/* Home Team */}
+        {/* Right Team (Away for Bundesliga, Home for NFL) */}
         <div className="flex items-center gap-2 flex-1 justify-end min-w-0">
           <span className="font-bold text-white text-sm truncate">
-            {game.homeTeam.shortDisplayName}
+            {rightTeam.shortDisplayName}
           </span>
           <img
-            src={game.homeTeam.logo}
-            alt={game.homeTeam.abbreviation}
+            src={rightTeam.logo}
+            alt={rightTeam.abbreviation}
             className="w-10 h-10 flex-shrink-0 object-contain"
             onError={(e) => {
               e.currentTarget.src = '/images/tbd-logo.svg';

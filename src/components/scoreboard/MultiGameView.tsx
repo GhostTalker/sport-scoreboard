@@ -251,6 +251,14 @@ function GameCard({ game, onSelect, hasScoreChange, scoringTeam, layoutConfig }:
   const isScheduled = game.status === 'scheduled';
   const isHalftime = game.status === 'halftime';
 
+  // Determine team display order: Bundesliga = Home left, NFL = Away left
+  const isBundesliga = isBundesligaGame(game);
+  const leftTeam = isBundesliga ? game.homeTeam : game.awayTeam;
+  const rightTeam = isBundesliga ? game.awayTeam : game.homeTeam;
+  // Map scoringTeam to display position
+  const leftScored = isBundesliga ? scoringTeam === 'home' : scoringTeam === 'away';
+  const rightScored = isBundesliga ? scoringTeam === 'away' : scoringTeam === 'home';
+
   const formatTime = (dateStr?: string) => {
     if (!dateStr) return 'TBD';
     return new Date(dateStr).toLocaleTimeString('de-DE', {
@@ -349,23 +357,23 @@ function GameCard({ game, onSelect, hasScoreChange, scoringTeam, layoutConfig }:
 
       {/* Teams and Score - Centered Layout with Grid for vertical alignment */}
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 w-full">
-        {/* Away Team */}
+        {/* Left Team (Home for Bundesliga, Away for NFL) */}
         <div className="flex justify-end">
           <TeamBadge
-            team={game.awayTeam}
+            team={leftTeam}
             isFinal={isFinal}
-            isWinner={game.awayTeam.score > game.homeTeam.score}
+            isWinner={leftTeam.score > rightTeam.score}
             layoutConfig={layoutConfig}
-            hasScored={scoringTeam === 'away'}
+            hasScored={leftScored}
           />
         </div>
 
         {/* Score Display - Centered - Fixed width for consistency */}
         <div className="flex items-center justify-center gap-1.5 min-w-[120px] self-center">
-          {/* Away Score */}
+          {/* Left Score */}
           <span
             className={`${layoutConfig.scoreSize} font-black ${layoutConfig.scoreMinW} text-right ${
-              isFinal && game.awayTeam.score > game.homeTeam.score
+              isFinal && leftTeam.score > rightTeam.score
                 ? 'text-white'
                 : isFinal
                 ? 'text-white/50'
@@ -374,10 +382,10 @@ function GameCard({ game, onSelect, hasScoreChange, scoringTeam, layoutConfig }:
                 : 'text-white'
             }`}
             style={{
-              textShadow: isScheduled ? 'none' : `0 0 15px #${game.awayTeam.color}80`,
+              textShadow: isScheduled ? 'none' : `0 0 15px #${leftTeam.color}80`,
             }}
           >
-            {isScheduled ? '-' : game.awayTeam.score}
+            {isScheduled ? '-' : leftTeam.score}
           </span>
 
           {/* Separator Dots */}
@@ -386,10 +394,10 @@ function GameCard({ game, onSelect, hasScoreChange, scoringTeam, layoutConfig }:
             <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
           </div>
 
-          {/* Home Score */}
+          {/* Right Score */}
           <span
             className={`${layoutConfig.scoreSize} font-black ${layoutConfig.scoreMinW} text-left ${
-              isFinal && game.homeTeam.score > game.awayTeam.score
+              isFinal && rightTeam.score > leftTeam.score
                 ? 'text-white'
                 : isFinal
                 ? 'text-white/50'
@@ -398,21 +406,21 @@ function GameCard({ game, onSelect, hasScoreChange, scoringTeam, layoutConfig }:
                 : 'text-white'
             }`}
             style={{
-              textShadow: isScheduled ? 'none' : `0 0 15px #${game.homeTeam.color}80`,
+              textShadow: isScheduled ? 'none' : `0 0 15px #${rightTeam.color}80`,
             }}
           >
-            {isScheduled ? '-' : game.homeTeam.score}
+            {isScheduled ? '-' : rightTeam.score}
           </span>
         </div>
 
-        {/* Home Team */}
+        {/* Right Team (Away for Bundesliga, Home for NFL) */}
         <div className="flex justify-start">
           <TeamBadge
-            team={game.homeTeam}
+            team={rightTeam}
             isFinal={isFinal}
-            isWinner={game.homeTeam.score > game.awayTeam.score}
+            isWinner={rightTeam.score > leftTeam.score}
             layoutConfig={layoutConfig}
-            hasScored={scoringTeam === 'home'}
+            hasScored={rightScored}
           />
         </div>
       </div>

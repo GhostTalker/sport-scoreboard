@@ -182,8 +182,8 @@ export function MainScoreboard() {
         hideDateTime={true}
       />
 
-      {/* Main Score Display - Grid for perfect centering */}
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full max-w-7xl px-8 gap-12 mt-36">
+      {/* Main Score Display - Grid with items-start for precise logo-score alignment */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-start w-full max-w-7xl px-8 gap-12 mt-36">
         {/* Home Team - Left side for Bundesliga, Away for NFL */}
         <div className="flex justify-end">
           <TeamDisplay
@@ -194,10 +194,12 @@ export function MainScoreboard() {
           />
         </div>
 
-        {/* Center Section - Score or Start Time - Always centered */}
+        {/* Center Section - Score or Start Time - Offset to align with logo center */}
+        {/* Logo is 208px (w-52 h-52), center at 104px. ScoreBox is 144px (h-36), center at 72px */}
+        {/* Offset: 104px - 72px = 32px (mt-8) to align centers */}
         {currentGame.status === 'scheduled' ? (
-          // Show start time for upcoming games
-          <div className="flex flex-col items-center gap-3">
+          // Show start time for upcoming games - align with logo center
+          <div className="flex flex-col items-center gap-3 mt-8">
             <div className="flex flex-col items-center">
               <span className="text-xs text-white/50 uppercase tracking-wider mb-2">Kickoff</span>
               <span className="text-5xl font-black text-white font-mono">
@@ -252,8 +254,8 @@ export function MainScoreboard() {
             )}
           </div>
         ) : (
-          // Show score and clock for live/final games
-          <div className="flex flex-col items-center gap-4">
+          // Show score and clock for live/final games - align score with logo center
+          <div className="flex flex-col items-center gap-4 mt-8">
             {/* Score Display */}
             <div className="flex items-center gap-3">
               {/* First Score (Home for Bundesliga, Away for NFL) */}

@@ -9,7 +9,6 @@ export function useGameData() {
   // Get current plugin and adapter
   const plugin = useCurrentPlugin();
   const adapter = plugin?.adapter;
-  const currentSport = useSettingsStore(state => state.currentSport);
 
   const intervalRef = useRef<number | null>(null);
   const isFirstFetch = useRef(true);
@@ -201,6 +200,11 @@ export function useGameData() {
       return; // Wait for plugin to load
     }
 
+    // Reset initialization flag when adapter changes (e.g., sport switch)
+    hasInitialized.current = false;
+    isFirstFetch.current = true;
+
+    // Immediate fetch when adapter becomes available
     fetchData();
 
     const setupInterval = () => {
@@ -269,7 +273,7 @@ export function useGameData() {
       unsubscribeSport();
       hasInitialized.current = false;
     };
-  }, [fetchData, currentSport]); // currentSport ensures refetch on sport change
+  }, [adapter, fetchData]); // adapter dependency ensures refetch when plugin loads
 
   return {
     refetch: fetchData,
