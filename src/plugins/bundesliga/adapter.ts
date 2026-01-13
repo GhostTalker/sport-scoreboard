@@ -204,6 +204,30 @@ export class BundesligaAdapter implements SportAdapter {
     const elapsed = now - kickoff;
     const elapsedMinutes = elapsed / 60000;
 
+    // Check for postponed/cancelled games:
+    // - Kickoff time has passed (by more than 2 hours for a typical game duration)
+    // - No match results (empty array or missing)
+    // - No goals scored
+    // - Game not marked as finished
+    // This indicates the game likely didn't take place as scheduled
+    const hasMatchResults = match.matchResults && match.matchResults.length > 0;
+    const hasGoals = match.goals && match.goals.length > 0;
+    const TWO_HOURS_IN_MINUTES = 120;
+
+    if (elapsedMinutes >= TWO_HOURS_IN_MINUTES && !hasMatchResults && !hasGoals && !match.matchIsFinished) {
+      // Additional check: if lastUpdateDateTime is very old (more than 24 hours before kickoff),
+      // this further confirms the game data is stale/postponed
+      if (match.lastUpdateDateTime) {
+        const lastUpdate = new Date(match.lastUpdateDateTime).getTime();
+        const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+        if (kickoff - lastUpdate > TWENTY_FOUR_HOURS_MS) {
+          return 'postponed';
+        }
+      }
+      // Even without the old lastUpdate check, no results after 2+ hours = postponed
+      return 'postponed';
+    }
+
     if (elapsedMinutes < 0) {
       return 'scheduled';
     }
