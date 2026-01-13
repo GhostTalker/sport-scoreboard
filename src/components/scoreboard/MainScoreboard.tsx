@@ -183,12 +183,14 @@ export function MainScoreboard() {
       />
 
       {/* Main Score Display - Grid for perfect centering */}
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full max-w-7xl px-8 gap-12 mt-24">
-        {/* Away Team - Right aligned */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full max-w-7xl px-8 gap-12 mt-36">
+        {/* Home Team - Left side for Bundesliga, Away for NFL */}
         <div className="flex justify-end">
           <TeamDisplay
-            team={currentGame.awayTeam}
-            hasScored={scoringTeam === 'away' && scoringTimestamp !== null && Date.now() - scoringTimestamp < 30000}
+            team={isBundesligaGame(currentGame) ? currentGame.homeTeam : currentGame.awayTeam}
+            hasScored={isBundesligaGame(currentGame)
+              ? (scoringTeam === 'home' && scoringTimestamp !== null && Date.now() - scoringTimestamp < 30000)
+              : (scoringTeam === 'away' && scoringTimestamp !== null && Date.now() - scoringTimestamp < 30000)}
           />
         </div>
 
@@ -254,17 +256,23 @@ export function MainScoreboard() {
           <div className="flex flex-col items-center gap-4">
             {/* Score Display */}
             <div className="flex items-center gap-3">
-              {/* Away Score */}
-              <ScoreBox score={currentGame.awayTeam.score} teamColor={currentGame.awayTeam.color} />
-              
+              {/* First Score (Home for Bundesliga, Away for NFL) */}
+              <ScoreBox
+                score={isBundesligaGame(currentGame) ? currentGame.homeTeam.score : currentGame.awayTeam.score}
+                teamColor={isBundesligaGame(currentGame) ? currentGame.homeTeam.color : currentGame.awayTeam.color}
+              />
+
               {/* Separator */}
               <div className="flex flex-col items-center gap-1">
                 <div className="w-3 h-3 rounded-full bg-white/40" />
                 <div className="w-3 h-3 rounded-full bg-white/40" />
               </div>
-              
-              {/* Home Score */}
-              <ScoreBox score={currentGame.homeTeam.score} teamColor={currentGame.homeTeam.color} />
+
+              {/* Second Score (Away for Bundesliga, Home for NFL) */}
+              <ScoreBox
+                score={isBundesligaGame(currentGame) ? currentGame.awayTeam.score : currentGame.homeTeam.score}
+                teamColor={isBundesligaGame(currentGame) ? currentGame.awayTeam.color : currentGame.homeTeam.color}
+              />
             </div>
 
             {/* Game Clock or Final */}
@@ -385,11 +393,13 @@ export function MainScoreboard() {
           </div>
         )}
 
-        {/* Home Team */}
+        {/* Away Team - Right side for Bundesliga, Home for NFL */}
         <div className="flex justify-start">
           <TeamDisplay
-            team={currentGame.homeTeam}
-            hasScored={scoringTeam === 'home' && scoringTimestamp !== null && Date.now() - scoringTimestamp < 30000}
+            team={isBundesligaGame(currentGame) ? currentGame.awayTeam : currentGame.homeTeam}
+            hasScored={isBundesligaGame(currentGame)
+              ? (scoringTeam === 'away' && scoringTimestamp !== null && Date.now() - scoringTimestamp < 30000)
+              : (scoringTeam === 'home' && scoringTimestamp !== null && Date.now() - scoringTimestamp < 30000)}
           />
         </div>
       </div>

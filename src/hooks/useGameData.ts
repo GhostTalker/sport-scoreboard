@@ -235,8 +235,8 @@ export function useGameData() {
       const sportChanged = state.currentSport !== prevState.currentSport;
       const competitionChanged = state.currentCompetition !== prevState.currentCompetition;
 
-      if (sportChanged || competitionChanged) {
-        // Clear current game when sport or competition changes
+      if (sportChanged) {
+        // Clear current game when sport changes
         useGameStore.setState({
           currentGame: null,
           isLive: false,
@@ -245,7 +245,19 @@ export function useGameData() {
           availableGames: [],
         });
         // fetchData will be triggered automatically by useEffect when adapter changes
-        // No need to call it here - this prevents the 30s delay bug
+      }
+
+      if (competitionChanged && !sportChanged) {
+        // Competition changed but sport stayed the same
+        // Adapter doesn't change, so we need to explicitly refetch
+        useGameStore.setState({
+          currentGame: null,
+          isLive: false,
+          gameStats: null,
+          userConfirmedGameId: null,
+          availableGames: [],
+        });
+        fetchData(); // Explicit refetch for competition change
       }
     });
 
