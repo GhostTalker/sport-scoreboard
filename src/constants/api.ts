@@ -21,5 +21,5 @@ export const POLLING_INTERVALS = {
   live: 10000,      // 10 seconds when game is live
   plays: 8000,      // 8 seconds for play-by-play (slightly faster)
   scheduled: 60000, // 1 minute when waiting for game
-  final: 300000,    // 5 minutes when game is over
+  final: 60000,     // 1 minute when game is over (for late corrections/extra time goals)
 };
