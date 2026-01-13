@@ -9,8 +9,9 @@ export function SportSelectionScreen() {
   const handleSportSelection = (sport: SportType) => {
     // Set the sport and mark initial selection as complete
     setInitialSportSelection(sport);
-    // Navigate to settings so user can configure their preferences
-    setView('settings');
+    // Navigate to scoreboard to show games immediately
+    // (Settings can be accessed via arrow keys or swipe)
+    setView('scoreboard');
   };
 
   return (

@@ -5,7 +5,7 @@
 A modern, responsive web application for displaying live NFL and Bundesliga games with dynamic backgrounds, team logos, statistics, celebration videos, and German localization.
 
 ![Status](https://img.shields.io/badge/Status-Production-green)
-![Version](https://img.shields.io/badge/Version-2.0.6-blue)
+![Version](https://img.shields.io/badge/Version-2.0.7-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ---
@@ -709,6 +709,20 @@ This project is licensed under the **MIT License**.
 ---
 
 ## 📝 Changelog
+
+### v2.0.7 (2026-01-16)
+- 🐛 **Critical Bugfixes**
+  - ✅ Fixed sport selection screen - now shows again for all users
+    - Migration version upgraded to 7
+    - Forces all users to see sport selection on next visit
+  - ✅ Fixed Bundesliga games loading on initial selection
+    - Changed navigation from Settings to Scoreboard after sport selection
+    - Games now load immediately when Bundesliga is selected
+- 🎨 **Team Color Corrections**
+  - ✅ Hamburger SV - Already correct (Blue)
+  - ✅ SC Freiburg - Changed from Red to Black/White
+  - ✅ Eintracht Frankfurt - Changed from Red to Black/Red
+  - ✅ RB Leipzig - Changed from Red to White/Red
 
 ### v2.0.6 (2026-01-16)
 - 🐛 **Critical Bugfixes**

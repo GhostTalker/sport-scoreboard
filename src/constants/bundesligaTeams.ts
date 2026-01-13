@@ -36,8 +36,8 @@ export const BUNDESLIGA_TEAMS: Record<number, BundesligaTeamColors> = {
   },
   91: {
     name: 'Eintracht Frankfurt',
-    color: 'E1000F', // Red
-    alternateColor: 'FFFFFF', // White
+    color: '000000', // Black
+    alternateColor: 'E1000F', // Red
   },
   54: {
     name: 'Hertha BSC',
@@ -46,8 +46,8 @@ export const BUNDESLIGA_TEAMS: Record<number, BundesligaTeamColors> = {
   },
   1635: {
     name: 'RB Leipzig',
-    color: 'DD0741', // Red
-    alternateColor: 'FFFFFF', // White
+    color: 'FFFFFF', // White
+    alternateColor: 'DD0741', // Red
   },
   175: {
     name: 'TSG 1899 Hoffenheim',
@@ -56,7 +56,7 @@ export const BUNDESLIGA_TEAMS: Record<number, BundesligaTeamColors> = {
   },
   112: {
     name: 'SC Freiburg',
-    color: 'E2001A', // Red
+    color: '000000', // Black
     alternateColor: 'FFFFFF', // White
   },
   81: {
