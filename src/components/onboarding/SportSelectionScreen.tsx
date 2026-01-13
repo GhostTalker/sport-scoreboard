@@ -1,19 +1,27 @@
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useUIStore } from '../../stores/uiStore';
-import type { SportType } from '../../types/base';
+import { useAvailablePlugins } from '../../hooks/usePlugin';
 
 export function SportSelectionScreen() {
+  const plugins = useAvailablePlugins();
   const setInitialSportSelection = useSettingsStore((state) => state.setInitialSportSelection);
   const setView = useUIStore((state) => state.setView);
 
-  const handleSportSelection = (sport: SportType) => {
+  const handleSportSelection = (pluginId: string) => {
     // Set the sport and mark initial selection as complete
-    setInitialSportSelection(sport);
+    setInitialSportSelection(pluginId as any); // Type will be fixed in Phase 5
     // Small delay to allow useGameData subscriber to trigger and start fetching
     // This prevents showing empty state before games are loaded
     setTimeout(() => {
       setView('scoreboard');
     }, 100);
+  };
+
+  // Color mapping for hover effects (can be moved to plugin manifest later)
+  const getPluginColor = (id: string) => {
+    if (id === 'nfl') return { border: 'blue-500', shadow: 'blue-500/20', gradient: 'blue' };
+    if (id === 'bundesliga') return { border: 'green-500', shadow: 'green-500/20', gradient: 'green' };
+    return { border: 'purple-500', shadow: 'purple-500/20', gradient: 'purple' }; // default
   };
 
   return (
@@ -36,57 +44,41 @@ export function SportSelectionScreen() {
           </p>
         </div>
 
-        {/* Sport Selection Cards */}
+        {/* Sport Selection Cards - Dynamic from Plugins */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* NFL Card */}
-          <button
-            onClick={() => handleSportSelection('nfl')}
-            className="group relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-12 border-4 border-slate-700 hover:border-blue-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20"
-          >
-            {/* NFL Icon/Logo */}
-            <div className="text-center">
-              <div className="mb-6 flex justify-center transform group-hover:scale-110 transition-transform duration-300">
-                <img src="/title/nfl-logo.png" alt="NFL" className="h-32 w-auto object-contain" />
-              </div>
-              <h2 className="text-4xl font-bold text-white mb-3">
-                NFL
-              </h2>
-              <p className="text-xl text-white/60 mb-4">
-                American Football
-              </p>
-              <div className="text-sm text-white/40">
-                Live-Spiele, Statistiken & Celebrations
-              </div>
-            </div>
+          {plugins.map(plugin => {
+            const colors = getPluginColor(plugin.id);
+            return (
+              <button
+                key={plugin.id}
+                onClick={() => handleSportSelection(plugin.id)}
+                className={`group relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-12 border-4 border-slate-700 hover:border-${colors.border} transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-${colors.shadow}`}
+              >
+                {/* Plugin Icon/Logo */}
+                <div className="text-center">
+                  <div className="mb-6 flex justify-center transform group-hover:scale-110 transition-transform duration-300">
+                    <img
+                      src={plugin.icon}
+                      alt={plugin.displayName}
+                      className="h-32 w-auto object-contain"
+                    />
+                  </div>
+                  <h2 className="text-4xl font-bold text-white mb-3">
+                    {plugin.displayName}
+                  </h2>
+                  <p className="text-xl text-white/60 mb-4">
+                    {plugin.description}
+                  </p>
+                  <div className="text-sm text-white/40">
+                    {plugin.celebrationTypes.length} Celebration Types
+                  </div>
+                </div>
 
-            {/* Glow effect on hover */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-blue-500/0 group-hover:from-blue-500/10 group-hover:to-blue-600/10 rounded-3xl transition-all duration-300" />
-          </button>
-
-          {/* Bundesliga Card */}
-          <button
-            onClick={() => handleSportSelection('bundesliga')}
-            className="group relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-12 border-4 border-slate-700 hover:border-green-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/20"
-          >
-            {/* Bundesliga Icon/Logo */}
-            <div className="text-center">
-              <div className="mb-6 flex justify-center transform group-hover:scale-110 transition-transform duration-300">
-                <img src="/title/bundesliga-logo.png" alt="Bundesliga" className="h-32 w-auto object-contain" />
-              </div>
-              <h2 className="text-4xl font-bold text-white mb-3">
-                Bundesliga
-              </h2>
-              <p className="text-xl text-white/60 mb-4">
-                Deutscher Fußball
-              </p>
-              <div className="text-sm text-white/40">
-                Live-Spiele, Tore & Karten
-              </div>
-            </div>
-
-            {/* Glow effect on hover */}
-            <div className="absolute inset-0 bg-gradient-to-br from-green-500/0 to-green-500/0 group-hover:from-green-500/10 group-hover:to-green-600/10 rounded-3xl transition-all duration-300" />
-          </button>
+                {/* Glow effect on hover */}
+                <div className={`absolute inset-0 bg-gradient-to-br from-${colors.gradient}-500/0 to-${colors.gradient}-500/0 group-hover:from-${colors.gradient}-500/10 group-hover:to-${colors.gradient}-600/10 rounded-3xl transition-all duration-300`} />
+              </button>
+            );
+          })}
         </div>
 
         {/* Footer note */}

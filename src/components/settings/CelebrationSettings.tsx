@@ -1,96 +1,58 @@
 import { useSettingsStore } from '../../stores/settingsStore';
+import { useCurrentPlugin } from '../../hooks/usePlugin';
 import type { CelebrationType } from '../../types/game';
-import type { SportType } from '../../types/base';
 
 interface CelebrationOption {
-  type: CelebrationType;
+  type: string;
   label: string;
   description: string;
   color: string;
 }
 
-const NFL_CELEBRATIONS: CelebrationOption[] = [
-  {
-    type: 'touchdown',
-    label: 'Touchdown',
-    description: 'Bei +6, +7 oder +8 Punkten',
-    color: 'bg-green-600',
-  },
-  {
-    type: 'fieldgoal',
-    label: 'Field Goal',
-    description: 'Bei +3 Punkten',
-    color: 'bg-yellow-600',
-  },
-  {
-    type: 'safety',
-    label: 'Safety',
-    description: 'Bei +2 Punkten (Defensive)',
-    color: 'bg-purple-600',
-  },
-  {
-    type: 'interception',
-    label: 'Interception',
-    description: 'Bei abgefangenem Pass',
-    color: 'bg-blue-600',
-  },
-  {
-    type: 'sack',
-    label: 'Sack',
-    description: 'Wenn der QB gesackt wird',
-    color: 'bg-red-600',
-  },
-  {
-    type: 'fumble',
-    label: 'Fumble',
-    description: 'Bei Ballverlust oder Blocked Punt',
-    color: 'bg-orange-600',
-  },
-];
+// Display metadata for celebration types (keyed by type)
+const CELEBRATION_METADATA: Record<string, { label: string; description: string; color: string }> = {
+  // NFL
+  touchdown: { label: 'Touchdown', description: 'Bei +6, +7 oder +8 Punkten', color: 'bg-green-600' },
+  fieldgoal: { label: 'Field Goal', description: 'Bei +3 Punkten', color: 'bg-yellow-600' },
+  safety: { label: 'Safety', description: 'Bei +2 Punkten (Defensive)', color: 'bg-purple-600' },
+  interception: { label: 'Interception', description: 'Bei abgefangenem Pass', color: 'bg-blue-600' },
+  sack: { label: 'Sack', description: 'Wenn der QB gesackt wird', color: 'bg-red-600' },
+  fumble: { label: 'Fumble', description: 'Bei Ballverlust oder Blocked Punt', color: 'bg-orange-600' },
 
-const BUNDESLIGA_CELEBRATIONS: CelebrationOption[] = [
-  {
-    type: 'goal',
-    label: 'Tor',
-    description: 'Bei regulärem Tor',
-    color: 'bg-green-600',
-  },
-  {
-    type: 'penalty',
-    label: 'Elfmeter',
-    description: 'Bei Tor durch Elfmeter',
-    color: 'bg-blue-600',
-  },
-  {
-    type: 'own_goal',
-    label: 'Eigentor',
-    description: 'Bei Eigentor',
-    color: 'bg-orange-600',
-  },
-  {
-    type: 'red_card',
-    label: 'Rote Karte',
-    description: 'Bei direkter Roter Karte',
-    color: 'bg-red-600',
-  },
-  {
-    type: 'yellow_red_card',
-    label: 'Gelb-Rote Karte',
-    description: 'Bei zweiter Gelber Karte',
-    color: 'bg-yellow-600',
-  },
-];
+  // Bundesliga
+  goal: { label: 'Tor', description: 'Bei regulärem Tor', color: 'bg-green-600' },
+  penalty: { label: 'Elfmeter', description: 'Bei Tor durch Elfmeter', color: 'bg-blue-600' },
+  own_goal: { label: 'Eigentor', description: 'Bei Eigentor', color: 'bg-orange-600' },
+  red_card: { label: 'Rote Karte', description: 'Bei direkter Roter Karte', color: 'bg-red-600' },
+  yellow_red_card: { label: 'Gelb-Rote Karte', description: 'Bei zweiter Gelber Karte', color: 'bg-yellow-600' },
+};
 
-function getCelebrationOptions(sport: SportType): CelebrationOption[] {
-  return sport === 'nfl' ? NFL_CELEBRATIONS : BUNDESLIGA_CELEBRATIONS;
+function getCelebrationOptions(celebrationTypes: string[]): CelebrationOption[] {
+  return celebrationTypes.map(type => ({
+    type,
+    ...CELEBRATION_METADATA[type] || {
+      label: type,
+      description: 'Celebration event',
+      color: 'bg-gray-600'
+    },
+  }));
 }
 
 export function CelebrationSettings() {
-  const currentSport = useSettingsStore((state) => state.currentSport);
+  const plugin = useCurrentPlugin();
   const celebrationVideos = useSettingsStore((state) => state.celebrationVideos);
   const toggleCelebrationVideo = useSettingsStore((state) => state.toggleCelebrationVideo);
 
-  const celebrationOptions = getCelebrationOptions(currentSport);
+  if (!plugin) {
+    return (
+      <section className="bg-slate-800 rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-white mb-2">Celebration Videos</h3>
+        <p className="text-white/50 text-sm">Loading...</p>
+      </section>
+    );
+  }
+
+  const celebrationOptions = getCelebrationOptions(plugin.manifest.celebrationTypes);
 
   return (
     <section className="bg-slate-800 rounded-xl p-6">
