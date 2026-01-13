@@ -63,8 +63,9 @@ export function useGameData() {
     const store = useGameStore.getState();
     const { userConfirmedGameId, setAvailableGames, setCurrentGame, setGameStats, setLoading, setError } = store;
 
-    // Get current sport and adapter
+    // Get current sport, competition, and adapter
     const currentSport = useSettingsStore.getState().currentSport;
+    const currentCompetition = useSettingsStore.getState().currentCompetition;
     const adapter = getSportAdapter(currentSport);
 
     try {
@@ -74,7 +75,13 @@ export function useGameData() {
       setError(null);
 
       // Fetch scoreboard (all games) using sport adapter
-      const games = await adapter.fetchScoreboard();
+      let games = await adapter.fetchScoreboard();
+
+      // Filter games by competition for sports with multiple competitions
+      if (currentSport === 'bundesliga') {
+        games = games.filter((g) => g.competition === currentCompetition);
+      }
+
       setAvailableGames(games);
 
       // Determine which game to show

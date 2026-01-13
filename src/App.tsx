@@ -19,6 +19,7 @@ function App() {
   const celebrationOverlay = useUIStore((state) => state.celebrationOverlay);
   const viewMode = useSettingsStore((state) => state.viewMode);
   const hasSelectedInitialSport = useSettingsStore((state) => state.hasSelectedInitialSport);
+  const currentSport = useSettingsStore((state) => state.currentSport);
 
   // Preload celebration videos at app start
   const { isPreloading, progress } = useVideoPreloader();
@@ -34,6 +35,12 @@ function App() {
 
   // Keyboard navigation for desktop browsers
   useKeyboardNavigation();
+
+  // Update document title based on current sport
+  useEffect(() => {
+    const sportName = currentSport === 'nfl' ? 'NFL' : 'Bundesliga';
+    document.title = `${sportName} - Sport-Scoreboard`;
+  }, [currentSport]);
 
   // Prevent context menu on long press
   useEffect(() => {

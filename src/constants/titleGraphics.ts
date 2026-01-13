@@ -22,12 +22,17 @@ export const TITLE_GRAPHICS: Record<string, string> = {
  */
 export function getTitleGraphic(seasonName?: string): string | null {
   if (!seasonName) return null;
-  
+
   // Check for exact match first
   if (TITLE_GRAPHICS[seasonName]) {
     return TITLE_GRAPHICS[seasonName];
   }
-  
-  // Default to gameday graphic for any unmatched season name
+
+  // For NFL games without a specific season name, use GAME DAY
+  // For other sports, return null (no title graphic)
+  if (seasonName.includes('BUNDESLIGA') || seasonName.includes('POKAL')) {
+    return null; // Shouldn't happen if competition is set correctly
+  }
+
   return TITLE_GRAPHICS['GAME DAY'];
 }

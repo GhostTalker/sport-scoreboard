@@ -13,34 +13,51 @@ export class BundesligaAdapter implements SportAdapter {
 
   async fetchScoreboard(): Promise<Game[]> {
     try {
-      // Fetch current matchday for Bundesliga
-      const currentGroupResponse = await fetch(API_ENDPOINTS.bundesligaCurrentGroup);
-      if (!currentGroupResponse.ok) {
-        throw new Error(`OpenLigaDB error: ${currentGroupResponse.statusText}`);
-      }
-      const currentGroup = await currentGroupResponse.json();
-
-      // Fetch all matches for current matchday with season parameter
-      // OpenLigaDB currentGroup doesn't include season, calculate it dynamically
-      // Bundesliga season runs from August-May, so:
-      // January-July: use previous year (e.g., Jan 2026 -> season 2025/2026 -> year 2025)
-      // August-December: use current year (e.g., Oct 2025 -> season 2025/2026 -> year 2025)
+      // Calculate season year
       const now = new Date();
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth() + 1; // 1-12
       const season = currentMonth >= 8 ? currentYear : currentYear - 1;
 
-      const matchesResponse = await fetch(
-        `${API_ENDPOINTS.bundesligaMatchday(currentGroup.groupOrderID)}?season=${season}`
-      );
-      if (!matchesResponse.ok) {
-        throw new Error(`OpenLigaDB error: ${matchesResponse.statusText}`);
-      }
-      const matches = await matchesResponse.json();
+      const allGames: Game[] = [];
 
-      return matches.map((match: any) => this.transformMatch(match));
+      // Fetch Bundesliga games
+      try {
+        const blGroupResponse = await fetch(API_ENDPOINTS.bundesligaCurrentGroup);
+        if (blGroupResponse.ok) {
+          const blGroup = await blGroupResponse.json();
+          const blMatchesResponse = await fetch(
+            `${API_ENDPOINTS.bundesligaMatchday(blGroup.groupOrderID)}?season=${season}&league=bl1`
+          );
+          if (blMatchesResponse.ok) {
+            const blMatches = await blMatchesResponse.json();
+            allGames.push(...blMatches.map((match: any) => this.transformMatch(match)));
+          }
+        }
+      } catch (err) {
+        console.warn('Error fetching Bundesliga games:', err);
+      }
+
+      // Fetch DFB-Pokal games
+      try {
+        const dfbGroupResponse = await fetch(`${API_ENDPOINTS.bundesligaCurrentGroup}?league=dfb`);
+        if (dfbGroupResponse.ok) {
+          const dfbGroup = await dfbGroupResponse.json();
+          const dfbMatchesResponse = await fetch(
+            `${API_ENDPOINTS.bundesligaMatchday(dfbGroup.groupOrderID)}?season=${season}&league=dfb`
+          );
+          if (dfbMatchesResponse.ok) {
+            const dfbMatches = await dfbMatchesResponse.json();
+            allGames.push(...dfbMatches.map((match: any) => this.transformMatch(match)));
+          }
+        }
+      } catch (err) {
+        console.warn('Error fetching DFB-Pokal games:', err);
+      }
+
+      return allGames;
     } catch (error) {
-      console.error('Error fetching Bundesliga scoreboard:', error);
+      console.error('Error fetching scoreboard:', error);
       throw error;
     }
   }
@@ -242,13 +259,19 @@ export class BundesligaAdapter implements SportAdapter {
   }
 
   private transformTeam(team: any, score: number): Team {
+    // Use local logo for St. Pauli (teamId 98) as API logo has CORS issues
+    let logo = team.teamIconUrl;
+    if (team.teamId === 98) {
+      logo = '/logos/st-pauli.svg';
+    }
+
     return {
       id: team.teamId.toString(),
       name: team.teamName,
       abbreviation: team.shortName,
       displayName: team.teamName,
       shortDisplayName: team.shortName,
-      logo: team.teamIconUrl,
+      logo,
       color: getBundesligaTeamColor(team.teamId),
       alternateColor: getBundesligaTeamAlternateColor(team.teamId),
       score,

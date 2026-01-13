@@ -5,7 +5,7 @@
 A modern, responsive web application for displaying live NFL and Bundesliga games with dynamic backgrounds, team logos, statistics, celebration videos, and German localization.
 
 ![Status](https://img.shields.io/badge/Status-Production-green)
-![Version](https://img.shields.io/badge/Version-2.0.2-blue)
+![Version](https://img.shields.io/badge/Version-2.0.3-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ---
@@ -709,6 +709,23 @@ This project is licensed under the **MIT License**.
 ---
 
 ## 📝 Changelog
+
+### v2.0.3 (2026-01-16)
+- ⚽ **DFB-Pokal Support**
+  - ✅ Fixed DFB-Pokal showing separate games from Bundesliga
+  - ✅ Adapter now fetches both Bundesliga (bl1) and DFB-Pokal (dfb) games
+  - ✅ Competition filter in useGameData filters games correctly
+  - ✅ Both competitions work independently
+- 🏴‍☠️ **St. Pauli Fix**
+  - ✅ Created custom St. Pauli logo (SVG) to fix CORS issues
+  - ✅ Team ID 98 now displays correct brown color (#6A4029)
+  - ✅ Local logo fallback for reliable display
+- 📱 **Dynamic Browser Title**
+  - ✅ Title updates based on selected sport (NFL/Bundesliga)
+  - ✅ Clears browser cache issues
+- 🖼️ **Title Graphics**
+  - ✅ Bundesliga and DFB-Pokal SVG graphics display correctly
+  - ✅ Fixed fallback logic in getTitleGraphic()
 
 ### v2.0.2 (2026-01-16)
 - ⚽ **Bundesliga Improvements**
