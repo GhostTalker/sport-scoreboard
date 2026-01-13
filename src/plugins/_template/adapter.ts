@@ -1,5 +1,6 @@
-import type { SportAdapter } from '../../adapters/SportAdapter';
-import type { Game, GameStats, ScoreChangeResult } from '../../types/game';
+import type { SportAdapter, ScoreChangeResult } from '../../adapters/SportAdapter';
+import type { Game, CelebrationType } from '../../types/game';
+import type { GameStats } from '../../types/stats';
 
 /**
  * Template Sport Adapter
@@ -56,7 +57,7 @@ export class TemplateSportAdapter implements SportAdapter {
    * - Gib Game + Stats zurück
    * - Stats kann null sein, wenn nicht verfügbar
    */
-  async fetchGameDetails(gameId: string): Promise<{ game: Game; stats: GameStats | null }> {
+  async fetchGameDetails(_gameId: string): Promise<{ game: Game; stats: GameStats | null }> {
     try {
       // TODO: API-URL für Game-Details
       // Beispiel: const response = await fetch(`/api/dein-sport/game/${gameId}`);
@@ -68,47 +69,45 @@ export class TemplateSportAdapter implements SportAdapter {
       // const stats = data.stats ? this.transformStats(data.stats) : null;
       // return { game, stats };
 
-      console.warn(`TemplateSportAdapter.fetchGameDetails(${gameId}) not implemented`);
+      console.warn(`TemplateSportAdapter.fetchGameDetails(${_gameId}) not implemented`);
       throw new Error('Not implemented');
     } catch (error) {
-      console.error(`Error fetching game details for ${gameId}:`, error);
+      console.error(`Error fetching game details for ${_gameId}:`, error);
       throw error;
     }
   }
 
   /**
-   * Erkennt Score-Änderungen zwischen zwei Game-Snapshots
+   * Erkennt Score-Änderungen zwischen zwei Score-Werten
    *
    * TODO: Implementiere Score-Change Detection für Celebration Videos
-   * - Vergleiche prevGame und currentGame Scores
-   * - Erkenne welches Team gepunktet hat
+   * - Vergleiche alte und neue Score-Werte
+   * - Erkenne welches Team gepunktet hat (home oder away)
    * - Bestimme den Event-Type (z.B. 'goal', 'touchdown', etc.)
    * - Gib ScoreChangeResult zurück oder null wenn keine Änderung
    */
   detectScoreChange(
-    prevGame: Game,
-    currentGame: Game,
-    userTeamId: string | null
+    _prevHome: number,
+    _prevAway: number,
+    _newHome: number,
+    _newAway: number,
+    _game: Game
   ): ScoreChangeResult | null {
     // TODO: Score-Vergleich implementieren
     // Beispiel für Fußball:
-    // const homeScoreDiff = currentGame.homeTeam.score - prevGame.homeTeam.score;
-    // const awayScoreDiff = currentGame.awayTeam.score - prevGame.awayTeam.score;
+    // const homeScoreDiff = newHome - prevHome;
+    // const awayScoreDiff = newAway - prevAway;
     //
     // if (homeScoreDiff > 0) {
     //   return {
-    //     type: 'goal',
-    //     scoringTeam: currentGame.homeTeam,
-    //     points: homeScoreDiff,
-    //     isFavoriteTeam: userTeamId === currentGame.homeTeam.id,
+    //     type: 'goal', // CelebrationType aus manifest
+    //     team: 'home',
     //   };
     // }
     // if (awayScoreDiff > 0) {
     //   return {
     //     type: 'goal',
-    //     scoringTeam: currentGame.awayTeam,
-    //     points: awayScoreDiff,
-    //     isFavoriteTeam: userTeamId === currentGame.awayTeam.id,
+    //     team: 'away',
     //   };
     // }
 
@@ -150,9 +149,13 @@ export class TemplateSportAdapter implements SportAdapter {
    *
    * TODO: Sollte mit manifest.celebrationTypes übereinstimmen
    */
-  getCelebrationTypes(): string[] {
+  getCelebrationTypes(): CelebrationType[] {
     // TODO: Anpassen für deine Sportart
-    return ['score', 'big_play'];
+    // Beispiele für verschiedene Sportarten:
+    // - NFL: ['touchdown', 'fieldgoal', 'interception', 'sack', 'fumble', 'safety']
+    // - Fußball: ['goal', 'penalty', 'own_goal', 'red_card', 'yellow_red_card']
+    // Cast zu CelebrationType da das Template generisch ist
+    return ['touchdown'] as CelebrationType[]; // Placeholder
   }
 
   // Helper Methods (optional)
