@@ -22,7 +22,7 @@ export class BundesligaAdapter implements SportAdapter {
 
       // Fetch all matches for current matchday
       const matchesResponse = await fetch(
-        API_ENDPOINTS.bundesligaMatchday(currentGroup.GroupOrderID)
+        API_ENDPOINTS.bundesligaMatchday(currentGroup.groupOrderID)
       );
       if (!matchesResponse.ok) {
         throw new Error(`OpenLigaDB error: ${matchesResponse.statusText}`);
@@ -126,55 +126,55 @@ export class BundesligaAdapter implements SportAdapter {
   // Transform OpenLigaDB match to our Game format
   private transformMatch(oldbMatch: any): BundesligaGame {
     // Extract halftime and final scores
-    const halftimeResult = oldbMatch.MatchResults?.find((r: any) => r.ResultTypeID === 1);
-    const finalResult = oldbMatch.MatchResults?.find((r: any) => r.ResultTypeID === 2);
+    const halftimeResult = oldbMatch.matchResults?.find((r: any) => r.resultTypeID === 1);
+    const finalResult = oldbMatch.matchResults?.find((r: any) => r.resultTypeID === 2);
 
     // Determine status
     const status = this.determineGameStatus(oldbMatch);
 
     // Transform goals
-    const goals: Goal[] = (oldbMatch.Goals || []).map((g: any) => ({
-      goalId: g.GoalID,
-      minute: g.MatchMinute,
-      scorerName: g.GoalGetterName,
-      scorerTeam: g.ScoreTeam1 > (g.ScoreTeam2 || 0) ? 'home' : 'away',
-      isPenalty: g.IsPenalty || false,
-      isOwnGoal: g.IsOwnGoal || false,
+    const goals: Goal[] = (oldbMatch.goals || []).map((g: any) => ({
+      goalId: g.goalID,
+      minute: g.matchMinute,
+      scorerName: g.goalGetterName,
+      scorerTeam: g.scoreTeam1 > (g.scoreTeam2 || 0) ? 'home' : 'away',
+      isPenalty: g.isPenalty || false,
+      isOwnGoal: g.isOwnGoal || false,
       scoreAfter: {
-        home: g.ScoreTeam1,
-        away: g.ScoreTeam2,
+        home: g.scoreTeam1,
+        away: g.scoreTeam2,
       },
     }));
 
     return {
-      id: oldbMatch.MatchID.toString(),
+      id: oldbMatch.matchID.toString(),
       sport: 'bundesliga',
-      competition: oldbMatch.LeagueShortcut === 'dfb' ? 'dfb-pokal' : 'bundesliga',
-      homeTeam: this.transformTeam(oldbMatch.Team1, finalResult?.PointsTeam1 || 0),
-      awayTeam: this.transformTeam(oldbMatch.Team2, finalResult?.PointsTeam2 || 0),
+      competition: oldbMatch.leagueShortcut === 'dfb' ? 'dfb-pokal' : 'bundesliga',
+      homeTeam: this.transformTeam(oldbMatch.team1, finalResult?.pointsTeam1 || 0),
+      awayTeam: this.transformTeam(oldbMatch.team2, finalResult?.pointsTeam2 || 0),
       status,
-      startTime: oldbMatch.MatchDateTimeUTC,
-      venue: oldbMatch.Location?.LocationCity || undefined,
+      startTime: oldbMatch.matchDateTimeUTC,
+      venue: oldbMatch.location?.locationCity || undefined,
       clock: this.buildClock(oldbMatch, goals),
-      matchday: oldbMatch.Group.GroupOrderID,
+      matchday: oldbMatch.group.groupOrderID,
       goals,
       halftimeScore: halftimeResult
         ? {
-            home: halftimeResult.PointsTeam1,
-            away: halftimeResult.PointsTeam2,
+            home: halftimeResult.pointsTeam1,
+            away: halftimeResult.pointsTeam2,
           }
         : undefined,
-      lastUpdate: oldbMatch.LastUpdateDateTime,
+      lastUpdate: oldbMatch.lastUpdateDateTime,
     };
   }
 
   private determineGameStatus(match: any): GameStatus {
-    if (match.MatchIsFinished) {
+    if (match.matchIsFinished) {
       return 'final';
     }
 
     const now = Date.now();
-    const kickoff = new Date(match.MatchDateTime).getTime();
+    const kickoff = new Date(match.matchDateTime).getTime();
     const elapsed = now - kickoff;
     const elapsedMinutes = elapsed / 60000;
 
@@ -195,14 +195,14 @@ export class BundesligaAdapter implements SportAdapter {
 
   private buildClock(match: any, goals: Goal[]): SoccerClock {
     const now = Date.now();
-    const kickoff = new Date(match.MatchDateTime).getTime();
+    const kickoff = new Date(match.matchDateTime).getTime();
     const elapsedMs = now - kickoff;
     const elapsedMinutes = Math.floor(elapsedMs / 60000);
 
     let period: SoccerClock['period'] = 'first_half';
     let matchMinute = 0;
 
-    if (match.MatchIsFinished) {
+    if (match.matchIsFinished) {
       period = 'second_half';
       matchMinute = 90;
     } else if (elapsedMinutes < 45) {
@@ -234,14 +234,14 @@ export class BundesligaAdapter implements SportAdapter {
 
   private transformTeam(team: any, score: number): Team {
     return {
-      id: team.TeamId.toString(),
-      name: team.TeamName,
-      abbreviation: team.ShortName,
-      displayName: team.TeamName,
-      shortDisplayName: team.ShortName,
-      logo: team.TeamIconUrl,
-      color: getBundesligaTeamColor(team.TeamId),
-      alternateColor: getBundesligaTeamAlternateColor(team.TeamId),
+      id: team.teamId.toString(),
+      name: team.teamName,
+      abbreviation: team.shortName,
+      displayName: team.teamName,
+      shortDisplayName: team.shortName,
+      logo: team.teamIconUrl,
+      color: getBundesligaTeamColor(team.teamId),
+      alternateColor: getBundesligaTeamAlternateColor(team.teamId),
       score,
     };
   }
