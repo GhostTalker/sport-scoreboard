@@ -10,24 +10,31 @@ export function GameSelector() {
   const confirmGameSelection = useGameStore((state) => state.confirmGameSelection);
   const setView = useUIStore((state) => state.setView);
   const multiViewFilters = useSettingsStore((state) => state.multiViewFilters);
+  const currentCompetition = useSettingsStore((state) => state.currentCompetition);
 
   const handleSelectGame = (game: Game) => {
     confirmGameSelection(game);
     setView('scoreboard');
   };
 
-  if (availableGames.length === 0) {
+  // Filter games by current competition
+  const filteredGames = availableGames.filter(g => g.competition === currentCompetition);
+
+  if (filteredGames.length === 0) {
     return (
       <div className="text-center py-4 text-white/50">
-        No games available
+        {availableGames.length > 0
+          ? `Keine Spiele für ${currentCompetition === 'dfb-pokal' ? 'DFB-Pokal' : currentCompetition} verfügbar`
+          : 'Keine Spiele verfügbar'
+        }
       </div>
     );
   }
 
   // Group games by status
-  const liveGames = availableGames.filter(g => g.status === 'in_progress' || g.status === 'halftime');
-  const scheduledGames = availableGames.filter(g => g.status === 'scheduled');
-  const finishedGames = availableGames.filter(g => g.status === 'final');
+  const liveGames = filteredGames.filter(g => g.status === 'in_progress' || g.status === 'halftime');
+  const scheduledGames = filteredGames.filter(g => g.status === 'scheduled');
+  const finishedGames = filteredGames.filter(g => g.status === 'final');
 
   // Apply filters from settings
   const filteredLiveGames = multiViewFilters.showLive ? liveGames : [];

@@ -81,6 +81,14 @@ export function useGameData() {
       // Fetch scoreboard (all games) using sport adapter
       let games = await adapter.fetchScoreboard();
 
+      // Debug logging for game loading
+      console.log(`[useGameData] Fetched ${games.length} games for ${adapter.sport}:`, games.map(g => ({
+        id: g.id,
+        competition: g.competition,
+        teams: `${g.awayTeam.abbreviation} @ ${g.homeTeam.abbreviation}`,
+        status: g.status
+      })));
+
       // Show all games for the sport (don't filter by competition)
       // This allows showing both Bundesliga + DFB-Pokal games together
       setAvailableGames(games);
