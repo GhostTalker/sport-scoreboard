@@ -435,6 +435,8 @@ function TeamBadge({ team, isFinal, isWinner, layoutConfig, hasScored }: TeamBad
   const isHSV = team.name.includes('HSV') || team.name.includes('Hamburger');
   // Special rendering for BVB - yellow box with black text
   const isBVB = team.name.includes('Dortmund') || team.abbreviation === 'BVB';
+  // Special rendering for Heidenheim - blue border instead of red
+  const isHeidenheim = team.name.includes('Heidenheim');
 
   // Check if the primary color is too dark (for glow visibility)
   const hexToRgbSum = (hex: string) => {
@@ -454,7 +456,7 @@ function TeamBadge({ team, isFinal, isWinner, layoutConfig, hasScored }: TeamBad
   const opacity = isFinal && !isWinner ? 0.5 : 1;
 
   return (
-    <div className={`flex flex-col items-center gap-1 ${layoutConfig.teamBoxWidth}`} style={{ opacity }}>
+    <div className={`flex flex-col items-center gap-0.5 ${layoutConfig.teamBoxWidth}`} style={{ opacity }}>
       {/* Team Logo with Glow Effect */}
       <div
         className={`relative ${layoutConfig.logoSize} rounded-full flex items-center justify-center ${hasScored ? 'animate-pulse' : ''}`}
@@ -478,7 +480,7 @@ function TeamBadge({ team, isFinal, isWinner, layoutConfig, hasScored }: TeamBad
         <div
           className="absolute inset-0.5 rounded-full"
           style={{
-            border: `2px solid #${primaryColor}`,
+            border: isHSV ? '2px solid #0069B4' : `2px solid #${primaryColor}`,
             boxShadow: hasScored
               ? `
                   0 0 20px #${glowColor}90,
@@ -527,7 +529,7 @@ function TeamBadge({ team, isFinal, isWinner, layoutConfig, hasScored }: TeamBad
               : hasScored
               ? `linear-gradient(180deg, #${team.color} 0%, #${team.color}cc 100%)`
               : `linear-gradient(180deg, #${team.color}cc 0%, #${team.color}88 100%)`,
-            borderColor: isLeipzig ? '#DD0741' : isHSV ? '#FFFFFF' : `#${team.alternateColor || team.color}`,
+            borderColor: isLeipzig ? '#DD0741' : isHSV ? '#FFFFFF' : isHeidenheim ? '#003D7A' : `#${team.alternateColor || team.color}`,
             boxShadow: hasScored
               ? isLeipzig
                 ? '0 0 15px #DD0741, 0 0 25px #DD074180, 0 1px 8px #DD074150'
