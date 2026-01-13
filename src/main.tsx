@@ -12,13 +12,19 @@ import { PLUGIN_DEFINITIONS } from './config/plugins';
  */
 async function bootstrap() {
   console.log('🚀 Bootstrapping Sport-Scoreboard v3.0...');
+  console.log('📦 Plugin definitions:', PLUGIN_DEFINITIONS.length);
 
   // Register plugins
   for (const { manifest, loader } of PLUGIN_DEFINITIONS) {
+    console.log('  Registering plugin:', manifest.id, manifest.displayName);
     pluginRegistry.register(manifest, loader);
   }
 
   console.log(`✅ Registered ${PLUGIN_DEFINITIONS.length} plugins`);
+
+  // Verify registration
+  const registered = pluginRegistry.getAllPlugins();
+  console.log('✅ Verification: Registry contains', registered.length, 'plugins:', registered.map(p => p.id));
 
   // Render app
   createRoot(document.getElementById('root')!).render(

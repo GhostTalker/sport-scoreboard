@@ -8,6 +8,8 @@ export function SportSelectionScreen() {
   const setInitialSportSelection = useSettingsStore((state) => state.setInitialSportSelection);
   const setView = useUIStore((state) => state.setView);
 
+  console.log('[SportSelectionScreen] Plugins loaded:', plugins.length, plugins);
+
   const handleSportSelection = (pluginId: string) => {
     // Set the sport and mark initial selection as complete
     // pluginId is from plugin.manifest.id which is type-safe from PLUGIN_DEFINITIONS
