@@ -5,6 +5,25 @@ All notable changes to the Sport-Scoreboard project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.1] - 2026-01-14
+
+### Changed
+- Updated plugin logos in settings menu (Logo_NFL.png, Logo_Bundesliga.png)
+- Updated favicon to professional scoreboard icon
+- Sport selection logos updated (nfl-logo.png, bundesliga-logo.png)
+
+### Removed
+- Duplicate adapter files (nflAdapter.ts, bundesligaAdapter.ts, index.ts)
+- Unused SettingsSidebar component
+- 530 lines of redundant code
+
+### Technical
+- Fixed all 'any' type usage with proper TypeScript interfaces
+- Added comprehensive OpenLigaDB API type definitions
+- Improved type safety in settings migration handler
+- Added deprecation comment to scoreDetector.ts
+- Code review and cleanup completed
+
 ## [3.1.0] - 2026-01-14
 
 ### Added
@@ -64,6 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v3.1.1** - Code cleanup, logo updates, type safety improvements (-530 lines)
 - **v3.1.0** - UI redesign with horizontal tab menu, sound overlay, generic favicon
 - **v3.0.0** - Plugin system, internationalization, settings redesign
 - **v2.0.x** - Dual-sport support (NFL + Bundesliga), celebration videos

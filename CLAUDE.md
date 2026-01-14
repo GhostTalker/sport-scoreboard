@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Version:** 3.1.0
+**Version:** 3.1.1
 
 A modular multi-sport scoreboard application designed for iPad mini 6 and video wall displays. The app features a plugin-based architecture supporting multiple sports (NFL, Bundesliga, and more). It fetches real-time game data from various APIs, displays team logos, scores, game situations, and statistics with dynamic backgrounds.
 
@@ -254,6 +254,18 @@ pm2 save
 
 ## Version History
 
+### v3.1.1 (2026-01-14) - Code Cleanup & Logo Updates
+**Code Quality Improvements:**
+- Fixed all 'any' type usage with proper TypeScript interfaces
+- Added comprehensive OpenLigaDB API type definitions
+- Improved type safety in settings migration handler
+- Removed 530 lines of redundant code (duplicate adapters, unused components)
+
+**Visual Updates:**
+- Updated plugin logos in settings menu (Logo_NFL.png, Logo_Bundesliga.png)
+- Updated favicon to professional scoreboard icon
+- Sport selection logos updated (nfl-logo.png, bundesliga-logo.png)
+
 ### v3.1.0 (2026-01-14) - UI Redesign & Sound Overlay
 **Major UI improvements:**
 - Horizontal tab menu for settings (replaced vertical sidebar)
@@ -270,26 +282,17 @@ pm2 save
 
 ### v3.0.0 (2026-01-13) - Plugin System & Internationalization
 **Plugin Architecture:**
-- Complete plugin system with registry and lazy loading
-- Dynamic plugin management (enable/disable)
+- Plugin system with registry and lazy loading
+- Dynamic plugin management (enable/disable in settings)
 - Type-safe plugin definitions in `src/config/plugins.ts`
-- Plugin manifests with metadata (id, version, celebrations, competitions)
 
 **Internationalization:**
 - Dual language support (German/English)
 - Browser language auto-detection
-- Translation system in `src/i18n/`
-- Language selector in settings overlay
 
-**UI Enhancements:**
-- Sport tabs showing only enabled plugins
-- Competition selector (for multi-competition sports like Bundesliga)
-- Plugin management overlay
-- Settings redesign with overlay-based UI
-
-**Supported Plugins:**
-- NFL (ESPN API)
-- Bundesliga (OpenLigaDB API)
+**Available Plugins:**
+- NFL
+- Bundesliga
 
 ### v2.0.x - Dual-Sport Support
 - Added Bundesliga support alongside NFL
