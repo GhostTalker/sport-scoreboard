@@ -117,59 +117,62 @@ export const useSettingsStore = create<SettingsState>()(
       name: 'scoreboard-settings',
       // Exclude hasSelectedInitialSport from persistence
       // This ensures sport selection screen shows on every app start
-      partialize: (state) => {
+      partialize: (state): Omit<Settings, 'hasSelectedInitialSport'> => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { hasSelectedInitialSport, ...rest } = state;
         return rest;
       },
       // Migration for existing users
-      migrate: (persistedState: any, _version: number) => {
-        if (!persistedState.celebrationVideos) {
-          persistedState.celebrationVideos = DEFAULT_CELEBRATION_SETTINGS;
+      migrate: (persistedState: unknown, _version: number) => {
+        // Type guard for partial settings object
+        const state = persistedState as Partial<Settings> & Record<string, unknown>;
+        if (!state.celebrationVideos) {
+          state.celebrationVideos = DEFAULT_CELEBRATION_SETTINGS;
         }
-        if (!persistedState.viewMode) {
-          persistedState.viewMode = 'single';
+        if (!state.viewMode) {
+          state.viewMode = 'single';
         }
-        if (!persistedState.multiViewFilters) {
-          persistedState.multiViewFilters = DEFAULT_MULTI_VIEW_FILTERS;
+        if (!state.multiViewFilters) {
+          state.multiViewFilters = DEFAULT_MULTI_VIEW_FILTERS;
         }
         // Version 2.0 - Add sport selection
-        if (!persistedState.currentSport) {
-          persistedState.currentSport = 'nfl';
-          persistedState.currentCompetition = 'nfl';
+        if (!state.currentSport) {
+          state.currentSport = 'nfl';
+          state.currentCompetition = 'nfl';
         }
         // hasSelectedInitialSport is now excluded from persistence (v2.0.14)
         // It always starts as false on every app start
         // This line is kept for backward compatibility but has no effect
-        persistedState.hasSelectedInitialSport = false;
+        state.hasSelectedInitialSport = false;
         // Version 3.0 - Add plugin management
-        if (!persistedState.enabledPlugins) {
-          persistedState.enabledPlugins = ['nfl', 'bundesliga']; // Enable all existing plugins by default
+        if (!state.enabledPlugins) {
+          state.enabledPlugins = ['nfl', 'bundesliga']; // Enable all existing plugins by default
         }
         // Add Bundesliga celebration settings
-        if (persistedState.celebrationVideos) {
-          if (persistedState.celebrationVideos.goal === undefined) {
-            persistedState.celebrationVideos.goal = true;
+        if (state.celebrationVideos) {
+          if (state.celebrationVideos.goal === undefined) {
+            state.celebrationVideos.goal = true;
           }
-          if (persistedState.celebrationVideos.penalty === undefined) {
-            persistedState.celebrationVideos.penalty = true;
+          if (state.celebrationVideos.penalty === undefined) {
+            state.celebrationVideos.penalty = true;
           }
-          if (persistedState.celebrationVideos.own_goal === undefined) {
-            persistedState.celebrationVideos.own_goal = true;
+          if (state.celebrationVideos.own_goal === undefined) {
+            state.celebrationVideos.own_goal = true;
           }
-          if (persistedState.celebrationVideos.red_card === undefined) {
-            persistedState.celebrationVideos.red_card = true;
+          if (state.celebrationVideos.red_card === undefined) {
+            state.celebrationVideos.red_card = true;
           }
-          if (persistedState.celebrationVideos.yellow_red_card === undefined) {
-            persistedState.celebrationVideos.yellow_red_card = true;
+          if (state.celebrationVideos.yellow_red_card === undefined) {
+            state.celebrationVideos.yellow_red_card = true;
           }
         }
         // Version 3.0.1 - Add language support
-        if (!persistedState.language) {
+        if (!state.language) {
           // Auto-detect browser language
           const browserLang = navigator.language.toLowerCase();
-          persistedState.language = browserLang.startsWith('de') ? 'de' : 'en';
+          state.language = browserLang.startsWith('de') ? 'de' : 'en';
         }
-        return persistedState;
+        return state as Settings;
       },
       version: 13, // Incremented for language support feature
     }

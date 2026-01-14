@@ -1,6 +1,12 @@
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useAvailablePlugins } from '../../hooks/usePlugin';
 
+// Plugin logos for Settings display (different from sport selection logos)
+const PLUGIN_LOGOS: Record<string, string> = {
+  'nfl': '/logos/Logo_NFL.png',
+  'bundesliga': '/logos/Logo_Bundesliga.png',
+};
+
 export function PluginManager() {
   const enabledPlugins = useSettingsStore((state) => state.enabledPlugins);
   const togglePlugin = useSettingsStore((state) => state.togglePlugin);
@@ -44,9 +50,9 @@ export function PluginManager() {
               `}
             >
               <div className="flex items-center gap-3">
-                {/* Plugin Icon */}
+                {/* Plugin Icon - Use specific settings logos */}
                 <img
-                  src={plugin.icon}
+                  src={PLUGIN_LOGOS[plugin.id] || plugin.icon}
                   alt={plugin.displayName}
                   className="w-10 h-10 object-contain"
                   onError={(e) => {

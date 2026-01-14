@@ -1,7 +1,23 @@
 import type { ScoreEvent, ScoreType, NFLCelebrationType } from '../types/game';
 
 /**
+ * @deprecated This service is deprecated in favor of the adapter-based score detection.
+ * Use `adapter.detectScoreChange()` instead for sport-specific score change detection.
+ * This file is kept for backward compatibility with `useScoreChange` hook but should
+ * be migrated to use the plugin adapter's `detectScoreChange()` method.
+ *
+ * Migration path:
+ * 1. Update `useScoreChange` hook to use `adapter.detectScoreChange()` from the current plugin
+ * 2. Remove this service once migration is complete
+ *
+ * @see src/adapters/SportAdapter.ts - SportAdapter.detectScoreChange()
+ * @see src/plugins/nfl/adapter.ts - NFLAdapter.detectScoreChange()
+ * @see src/plugins/bundesliga/adapter.ts - BundesligaAdapter.detectScoreChange()
+ */
+
+/**
  * Detects the type of score based on point differential
+ * @deprecated Use adapter.detectScoreChange() instead
  */
 export function detectScoreChange(
   prevHome: number,

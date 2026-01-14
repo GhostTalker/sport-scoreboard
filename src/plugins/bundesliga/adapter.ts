@@ -3,7 +3,15 @@
 import type { SportAdapter, ScoreChangeResult } from '../../adapters/SportAdapter';
 import type { Game, BundesligaGame, CelebrationType } from '../../types/game';
 import type { GameStatus, Team } from '../../types/base';
-import type { SoccerClock, Goal } from '../../types/bundesliga';
+import type {
+  SoccerClock,
+  Goal,
+  OpenLigaDBMatch,
+  OpenLigaDBCurrentGroup,
+  OpenLigaDBTeam,
+  OpenLigaDBGoal,
+  OpenLigaDBMatchResult,
+} from '../../types/bundesliga';
 import type { GameStats } from '../../types/stats';
 import { API_ENDPOINTS } from '../../constants/api';
 import { getBundesligaTeamColor, getBundesligaTeamAlternateColor } from '../../constants/bundesligaTeams';
@@ -25,13 +33,13 @@ export class BundesligaAdapter implements SportAdapter {
       try {
         const blGroupResponse = await fetch(API_ENDPOINTS.bundesligaCurrentGroup);
         if (blGroupResponse.ok) {
-          const blGroup = await blGroupResponse.json();
+          const blGroup: OpenLigaDBCurrentGroup = await blGroupResponse.json();
           const blMatchesResponse = await fetch(
             `${API_ENDPOINTS.bundesligaMatchday(blGroup.groupOrderID)}?season=${season}&league=bl1`
           );
           if (blMatchesResponse.ok) {
-            const blMatches = await blMatchesResponse.json();
-            allGames.push(...blMatches.map((match: any) => this.transformMatch(match)));
+            const blMatches: OpenLigaDBMatch[] = await blMatchesResponse.json();
+            allGames.push(...blMatches.map((match) => this.transformMatch(match)));
           }
         }
       } catch (err) {
@@ -42,13 +50,13 @@ export class BundesligaAdapter implements SportAdapter {
       try {
         const dfbGroupResponse = await fetch(`${API_ENDPOINTS.bundesligaCurrentGroup}?league=dfb`);
         if (dfbGroupResponse.ok) {
-          const dfbGroup = await dfbGroupResponse.json();
+          const dfbGroup: OpenLigaDBCurrentGroup = await dfbGroupResponse.json();
           const dfbMatchesResponse = await fetch(
             `${API_ENDPOINTS.bundesligaMatchday(dfbGroup.groupOrderID)}?season=${season}&league=dfb`
           );
           if (dfbMatchesResponse.ok) {
-            const dfbMatches = await dfbMatchesResponse.json();
-            allGames.push(...dfbMatches.map((match: any) => this.transformMatch(match)));
+            const dfbMatches: OpenLigaDBMatch[] = await dfbMatchesResponse.json();
+            allGames.push(...dfbMatches.map((match) => this.transformMatch(match)));
           }
         }
       } catch (err) {
@@ -68,7 +76,7 @@ export class BundesligaAdapter implements SportAdapter {
       if (!response.ok) {
         throw new Error(`OpenLigaDB error: ${response.statusText}`);
       }
-      const match = await response.json();
+      const match: OpenLigaDBMatch = await response.json();
 
       // OpenLigaDB doesn't provide detailed stats like ESPN
       // Return game data only, stats are null
@@ -150,16 +158,20 @@ export class BundesligaAdapter implements SportAdapter {
   }
 
   // Transform OpenLigaDB match to our Game format
-  private transformMatch(oldbMatch: any): BundesligaGame {
+  private transformMatch(oldbMatch: OpenLigaDBMatch): BundesligaGame {
     // Extract halftime and final scores
-    const halftimeResult = oldbMatch.matchResults?.find((r: any) => r.resultTypeID === 1);
-    const finalResult = oldbMatch.matchResults?.find((r: any) => r.resultTypeID === 2);
+    const halftimeResult = oldbMatch.matchResults?.find(
+      (r: OpenLigaDBMatchResult) => r.resultTypeID === 1
+    );
+    const finalResult = oldbMatch.matchResults?.find(
+      (r: OpenLigaDBMatchResult) => r.resultTypeID === 2
+    );
 
     // Determine status
     const status = this.determineGameStatus(oldbMatch);
 
     // Transform goals
-    const goals: Goal[] = (oldbMatch.goals || []).map((g: any) => ({
+    const goals: Goal[] = (oldbMatch.goals || []).map((g: OpenLigaDBGoal) => ({
       goalId: g.goalID,
       minute: g.matchMinute,
       scorerName: g.goalGetterName,
@@ -194,7 +206,7 @@ export class BundesligaAdapter implements SportAdapter {
     };
   }
 
-  private determineGameStatus(match: any): GameStatus {
+  private determineGameStatus(match: OpenLigaDBMatch): GameStatus {
     if (match.matchIsFinished) {
       return 'final';
     }
@@ -243,7 +255,7 @@ export class BundesligaAdapter implements SportAdapter {
     return 'scheduled';
   }
 
-  private buildClock(match: any, goals: Goal[]): SoccerClock {
+  private buildClock(match: OpenLigaDBMatch, goals: Goal[]): SoccerClock {
     const now = Date.now();
     const kickoff = new Date(match.matchDateTime).getTime();
     const elapsedMs = now - kickoff;
@@ -435,7 +447,7 @@ export class BundesligaAdapter implements SportAdapter {
     return `${matchMinute}'`;
   }
 
-  private transformTeam(team: any, score: number): Team {
+  private transformTeam(team: OpenLigaDBTeam, score: number): Team {
     // Override logos for teams with better quality or transparency issues
     let logo = team.teamIconUrl;
 
