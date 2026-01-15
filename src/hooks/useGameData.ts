@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useCurrentPlugin } from './usePlugin';
-import { POLLING_INTERVALS } from '../constants/api';
+import { POLLING_INTERVALS, BUNDESLIGA_POLLING_INTERVAL } from '../constants/api';
 import { isNFLGame, isBundesligaGame } from '../types/game';
 
 export function useGameData() {
@@ -242,7 +242,12 @@ export function useGameData() {
       if (currentGame?.status === 'final') {
         interval = POLLING_INTERVALS.final;
       } else if (isLive) {
-        interval = POLLING_INTERVALS.live;
+        // Use sport-specific intervals
+        if (adapter.sport === 'bundesliga') {
+          interval = BUNDESLIGA_POLLING_INTERVAL; // 15 seconds for Bundesliga
+        } else {
+          interval = POLLING_INTERVALS.live; // 10 seconds for NFL
+        }
       }
 
       intervalRef.current = window.setInterval(fetchData, interval);

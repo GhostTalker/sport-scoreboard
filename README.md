@@ -285,6 +285,14 @@ For developers and testing:
   - `/scoreboard` - Current scores
   - `/schedule` - Season schedule & playoff weeks
   - `/summary` - Detailed game statistics
+- **OpenLigaDB API** - Bundesliga data (primary)
+  - Match results, goals, cards, events
+  - Polling interval: 15 seconds (1000 req/hour limit)
+- **API-Football** - Bundesliga live minutes (optional)
+  - Accurate match minute sync for live games
+  - Free tier: 100 requests/day
+  - Phase-based polling: 10min normal, 1min critical (injury time, restarts)
+  - See [Bundesliga Setup](#bundesliga-api-setup) for configuration
 
 ### Tools & DevOps
 - **ESLint** - Code Linting
@@ -339,6 +347,82 @@ NODE_ENV=production npm run start:prod
 ```
 
 Server runs on: `http://localhost:3001`
+
+---
+
+## ⚽ Bundesliga API Setup
+
+The Bundesliga plugin uses a **hybrid API approach** for optimal accuracy and cost-efficiency:
+
+### Primary API: OpenLigaDB (Free, Required)
+- Provides match results, goals, cards, and events
+- Polled every **15 seconds** during live matches
+- No API key required
+- Rate limit: 1000 requests/hour (community project)
+
+### Secondary API: API-Football (Optional, Recommended)
+- Provides accurate **live match minutes** for running games
+- Fixes issues with delayed kickoffs, interruptions, and injury time
+- Free tier: **100 requests/day**
+- Smart polling strategy:
+  - **Normal phases (0-44, 51-89 min):** 10-minute interval
+  - **Critical phases (injury time, restarts):** 1-minute interval
+  - Typical Saturday matchday: ~75 requests
+
+### Setup Instructions
+
+#### 1. Without API-Football (Basic)
+The app works without API-Football, but match minutes are **estimated** based on:
+- Kickoff time + elapsed time
+- Last goal minute (from OpenLigaDB)
+
+This can lead to inaccuracies during:
+- Delayed kickoffs
+- Match interruptions (VAR, injuries)
+- Injury time variations
+- Second-half restart delays
+
+#### 2. With API-Football (Recommended)
+For accurate live minutes, sign up for a free API key:
+
+1. Go to [API-Football](https://www.api-football.com/)
+2. Create a free account (100 requests/day)
+3. Copy your API key from the dashboard
+4. Create a `.env` file in the project root:
+   ```bash
+   cp .env.example .env
+   ```
+5. Add your API key:
+   ```env
+   VITE_API_FOOTBALL_KEY=your_api_key_here
+   ```
+6. Restart the development server
+
+**Note:** The `.env` file is git-ignored and will not be committed.
+
+### How It Works
+
+The hybrid system intelligently combines both APIs:
+
+```
+OpenLigaDB (every 15s)          API-Football (phase-based)
+        ↓                                ↓
+   Goals, Cards, Events          Live Match Minute
+        ↓                                ↓
+        └────────→ Merged Game Data ←────┘
+                         ↓
+              Accurate Live Display
+```
+
+**Match Minute Priority:**
+1. **API-Football sync** + elapsed time since sync (most accurate)
+2. **Last goal minute** (from OpenLigaDB) + elapsed time
+3. **Kickoff time** + elapsed time (fallback)
+
+**Request Budget (Saturday with 3 timeslots):**
+- Normal phases: 3 timeslots × 5 checks = 15 requests
+- Critical phases: 3 timeslots × 20 checks = 60 requests
+- **Total: ~75 requests** (within 100/day limit)
 
 ---
 

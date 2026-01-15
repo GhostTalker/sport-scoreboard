@@ -1,4 +1,6 @@
-// Bundesliga Adapter - Wraps OpenLigaDB API and Bundesliga-specific logic
+// Bundesliga Adapter - Hybrid: OpenLigaDB + API-Football
+// OpenLigaDB: Tore, Karten, Scores (alle 15s)
+// API-Football: Live-Minute (phasenbasiert: 10min normal, 1min kritisch)
 
 import type { SportAdapter, ScoreChangeResult } from '../../adapters/SportAdapter';
 import type { Game, BundesligaGame, CelebrationType } from '../../types/game';
@@ -15,9 +17,137 @@ import type {
 import type { GameStats } from '../../types/stats';
 import { API_ENDPOINTS } from '../../constants/api';
 import { getBundesligaTeamColor, getBundesligaTeamAlternateColor } from '../../constants/bundesligaTeams';
+import { fetchBundesligaLiveFixtures, type ApiFootballFixture } from '../../services/apiFootball';
+
+interface MinuteState {
+  lastApiMinute: number | null;
+  lastApiTimestamp: number | null;
+}
+
+type GamePhase = 'NORMAL' | 'INJURY_TIME_1' | 'HALFTIME' | 'RESTART_2H' | 'INJURY_TIME_2';
 
 export class BundesligaAdapter implements SportAdapter {
   sport = 'bundesliga' as const;
+
+  // API-Football state
+  private minuteStates = new Map<string, MinuteState>();
+  private lastApiSync = 0;
+  private apiCallCount = 0;
+
+  // Polling intervals (in milliseconds)
+  private readonly INTERVAL_NORMAL = 600000; // 10 minutes
+  private readonly INTERVAL_CRITICAL = 60000; // 1 minute (injury time, restarts)
+
+  /**
+   * Determine the current phase of the match
+   */
+  private getPhase(game: BundesligaGame): GamePhase {
+    if (game.status !== 'in_progress') {
+      return 'NORMAL';
+    }
+
+    const minute = game.clock.matchMinute;
+
+    // Injury time first half (45-50 min)
+    if (minute >= 45 && minute < 50 && game.clock.period === 'first_half') {
+      return 'INJURY_TIME_1';
+    }
+
+    // Halftime
+    if (game.clock.period === 'halftime') {
+      return 'HALFTIME';
+    }
+
+    // Second half restart (46-50 min) - critical for delayed restarts
+    if (minute >= 46 && minute <= 50 && game.clock.period === 'second_half') {
+      return 'RESTART_2H';
+    }
+
+    // Injury time second half (90+ min)
+    if (minute >= 90 && game.clock.period === 'second_half') {
+      return 'INJURY_TIME_2';
+    }
+
+    // Extra time injury time (DFB-Pokal)
+    if (minute >= 105 && game.clock.period === 'extra_time') {
+      return 'INJURY_TIME_2';
+    }
+
+    return 'NORMAL';
+  }
+
+  /**
+   * Get required API-Football sync interval based on game phase
+   */
+  private getIntervalForPhase(phase: GamePhase): number {
+    switch (phase) {
+      case 'INJURY_TIME_1':
+      case 'RESTART_2H':
+      case 'INJURY_TIME_2':
+        return this.INTERVAL_CRITICAL; // 1 minute
+      case 'HALFTIME':
+      case 'NORMAL':
+      default:
+        return this.INTERVAL_NORMAL; // 10 minutes
+    }
+  }
+
+  /**
+   * Check if we should sync with API-Football now
+   */
+  private shouldSyncApiFootball(games: BundesligaGame[]): boolean {
+    // Find live games
+    const liveGames = games.filter(g => g.status === 'in_progress');
+
+    if (liveGames.length === 0) {
+      return false; // No live games, no need to sync
+    }
+
+    // Determine most critical phase among all live games
+    let minInterval = this.INTERVAL_NORMAL;
+    for (const game of liveGames) {
+      const phase = this.getPhase(game);
+      const interval = this.getIntervalForPhase(phase);
+      minInterval = Math.min(minInterval, interval);
+    }
+
+    // Check if enough time has passed since last sync
+    const now = Date.now();
+    const timeSinceLastSync = now - this.lastApiSync;
+
+    return timeSinceLastSync >= minInterval;
+  }
+
+  /**
+   * Sync with API-Football to get accurate live minutes (BATCH)
+   */
+  private async syncApiFootball(): Promise<void> {
+    try {
+      const fixtures = await fetchBundesligaLiveFixtures();
+      const now = Date.now();
+
+      console.log(`⚽ API-Football sync: ${fixtures.length} live fixtures`);
+
+      for (const fixture of fixtures) {
+        const gameId = fixture.fixture.id.toString();
+        const minute = fixture.fixture.status.elapsed;
+
+        if (minute !== null) {
+          this.minuteStates.set(gameId, {
+            lastApiMinute: minute,
+            lastApiTimestamp: now,
+          });
+        }
+      }
+
+      this.lastApiSync = now;
+      this.apiCallCount++;
+
+      console.log(`✅ API-Football synced: ${this.apiCallCount} requests today`);
+    } catch (error) {
+      console.error('❌ API-Football sync failed:', error);
+    }
+  }
 
   async fetchScoreboard(): Promise<Game[]> {
     try {
@@ -61,6 +191,12 @@ export class BundesligaAdapter implements SportAdapter {
         }
       } catch (err) {
         console.warn('Error fetching DFB-Pokal games:', err);
+      }
+
+      // Sync with API-Football if needed (phase-based polling)
+      const bundesligaGames = allGames as BundesligaGame[];
+      if (this.shouldSyncApiFootball(bundesligaGames)) {
+        await this.syncApiFootball();
       }
 
       return allGames;
@@ -264,8 +400,19 @@ export class BundesligaAdapter implements SportAdapter {
     // Check if this is DFB-Pokal (which can have extra time / Verlaengerung)
     const isDFBPokal = match.leagueShortcut === 'dfb';
 
-    // Find the latest valid (non-null) goal minute from goals array
-    // The API provides matchMinute in goals, which is the most accurate source
+    // Priority 1: API-Football minute (most accurate for live games)
+    const gameId = match.matchID.toString();
+    const minuteState = this.minuteStates.get(gameId);
+    let apiMinute: number | null = null;
+
+    if (minuteState && minuteState.lastApiMinute !== null && minuteState.lastApiTimestamp !== null) {
+      // Calculate simulated minute based on API sync + elapsed time
+      const elapsedSinceSync = (now - minuteState.lastApiTimestamp) / 60000;
+      apiMinute = Math.floor(minuteState.lastApiMinute + elapsedSinceSync);
+    }
+
+    // Priority 2: Find the latest valid (non-null) goal minute from goals array
+    // The API provides matchMinute in goals, which is accurate for goal times
     const validGoalMinutes = goals
       .map((g) => g.minute)
       .filter((m): m is number => m !== null && m !== undefined && !isNaN(m));
@@ -294,23 +441,15 @@ export class BundesligaAdapter implements SportAdapter {
       period = 'first_half';
       matchMinute = 0;
     }
-    // GAME IN PROGRESS - Use goal-based time first, then estimate
+    // GAME IN PROGRESS - Priority: API-Football > Goal minute > Estimate
     else {
-      // If we have goal data, use it as primary source
-      if (latestGoalMinute !== null) {
+      // Priority 1: Use API-Football minute if available (most accurate)
+      if (apiMinute !== null) {
+        matchMinute = apiMinute;
+      }
+      // Priority 2: Use latest goal minute and estimate forward
+      else if (latestGoalMinute !== null) {
         matchMinute = latestGoalMinute;
-
-        // Determine period based on goal minute
-        if (matchMinute <= 45) {
-          period = 'first_half';
-        } else if (matchMinute <= 90) {
-          period = 'second_half';
-        } else if (isDFBPokal) {
-          period = 'extra_time';
-        } else {
-          // Bundesliga doesn't have extra time, so this is Nachspielzeit
-          period = 'second_half';
-        }
 
         // Estimate current time based on elapsed time since last goal
         // This helps show time progress between goals
@@ -325,8 +464,9 @@ export class BundesligaAdapter implements SportAdapter {
         if (estimatedCurrentMinute > matchMinute) {
           matchMinute = estimatedCurrentMinute;
         }
-      } else {
-        // No goals scored yet - estimate based on elapsed time
+      }
+      // Priority 3: No API data or goals - estimate based on elapsed time
+      else {
         matchMinute = this.estimateCurrentMinute(elapsedMinutes, 0, isDFBPokal);
       }
 

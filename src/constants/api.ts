@@ -18,8 +18,11 @@ export const API_ENDPOINTS = {
 
 // Polling Intervals (in ms)
 export const POLLING_INTERVALS = {
-  live: 10000,      // 10 seconds when game is live
+  live: 10000,      // 10 seconds when game is live (NFL)
   plays: 8000,      // 8 seconds for play-by-play (slightly faster)
   scheduled: 60000, // 1 minute when waiting for game
   final: 60000,     // 1 minute when game is over (for late corrections/extra time goals)
 };
+
+// Sport-specific polling intervals
+export const BUNDESLIGA_POLLING_INTERVAL = 15000; // 15 seconds (OpenLigaDB rate limit: 1000/hour)
