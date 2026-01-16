@@ -16,9 +16,45 @@ import type {
 import type { GameStats } from '../../types/stats';
 import { API_ENDPOINTS } from '../../constants/api';
 
-// UEFA-specific team colors (will use default colors from constants if not found)
+// UEFA-specific team colors (primary colors for major European clubs)
+// OpenLigaDB Team IDs mapped to hex colors
 const UEFA_TEAM_COLORS: Record<number, string> = {
-  // Add team colors as needed
+  // German Clubs
+  40: 'FDD835', // Borussia Dortmund - Yellow
+  9: 'DC143C', // FC Bayern München - Red
+  81: 'E32221', // Bayer 04 Leverkusen - Red
+  91: 'E1000F', // Eintracht Frankfurt - Red
+  95: 'FFED00', // VfB Stuttgart - Yellow
+
+  // English Clubs
+  34: 'EF0107', // Liverpool FC - Red
+  35: '003399', // Chelsea FC - Blue
+  328: '7F0000', // Arsenal FC - Red
+  329: '6CABDD', // Manchester City - Sky Blue
+  384: '034694', // Aston Villa - Claret Blue
+
+  // Spanish Clubs
+  418: 'FEBE10', // Villarreal CF - Yellow
+  720: 'FFFFFF', // Real Madrid - White
+  131: 'A50044', // FC Barcelona - Blaugrana
+  982: 'CE3524', // Atlético Madrid - Red/White
+
+  // Italian Clubs
+  5: '0068A8', // Inter Mailand - Blue/Black
+  583: '000000', // Juventus Turin - Black/White
+  398: 'FD1F00', // AC Mailand - Red/Black
+
+  // French Clubs
+  1851: '004170', // Paris Saint-Germain - Blue
+
+  // Dutch Clubs
+  6928: 'D30E22', // PSV Eindhoven - Red/White
+
+  // Portuguese Clubs
+  2448: 'E30613', // Benfica Lissabon - Red
+
+  // Other
+  7574: '00529F', // FC Kopenhagen - Blue
 };
 
 export class UEFAAdapter implements SportAdapter {
@@ -202,8 +238,9 @@ export class UEFAAdapter implements SportAdapter {
   }
 
   private determineRound(groupName: string): string {
-    // Group name examples: "Gruppenphase", "Achtelfinale", "Viertelfinale", "Halbfinale", "Finale"
+    // Group name examples: "Ligaphase", "Gruppenphase", "Achtelfinale", "Viertelfinale", "Halbfinale", "Finale"
     const roundMap: Record<string, string> = {
+      'Ligaphase': 'League Phase', // New format 2024/25+
       'Gruppenphase': 'Group Stage',
       'Achtelfinale': 'Round of 16',
       'Viertelfinale': 'Quarter-finals',

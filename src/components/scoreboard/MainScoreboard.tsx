@@ -6,7 +6,7 @@ import { GameSituation } from './GameSituation';
 import { getTitleGraphic } from '../../constants/titleGraphics';
 import { DebugPanel } from '../debug/DebugPanel';
 import { version } from '../../../package.json';
-import { isNFLGame, isBundesligaGame } from '../../types/game';
+import { isNFLGame, isBundesligaGame, isUEFAGame } from '../../types/game';
 
 export function MainScoreboard() {
   const currentGame = useGameStore((state) => state.currentGame);
@@ -59,6 +59,8 @@ export function MainScoreboard() {
   const effectiveSeason = debugSeason || (
     isNFLGame(currentGame)
       ? currentGame.seasonName
+      : isUEFAGame(currentGame)
+      ? currentGame.round?.toUpperCase() || 'LEAGUE PHASE' // UEFA: use round name
       : currentGame.competition === 'bundesliga'
       ? 'BUNDESLIGA'
       : currentGame.competition === 'dfb-pokal'

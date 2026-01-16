@@ -14,6 +14,14 @@ export const TITLE_GRAPHICS: Record<string, string> = {
   'BUNDESLIGA': '/title/bundesliga.png',
   'DFB-POKAL': '/title/dfbpokal.png',
   'DFB-POKAL FINALE': '/title/dfbpokalfinale.png',
+
+  // UEFA Champions League Graphics
+  'GROUP STAGE': '/title/championsleague.png',
+  'LEAGUE PHASE': '/title/championsleague.png', // New format 2024+
+  'ROUND OF 16': '/title/championsleague-playoffs.png',
+  'QUARTER-FINALS': '/title/championsleague-quaterfinals.png',
+  'SEMI-FINALS': '/title/championsleague-semifinals.png',
+  'FINAL': '/title/championsleague-finals.png',
 };
 
 /**
