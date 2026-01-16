@@ -1,6 +1,15 @@
 #!/bin/bash
 # Sport-Scoreboard - Quick Deployment Script
 # Usage: ./deploy.sh
+#
+# Deployment User: scoreboard-app (NOT root)
+# Host: 10.1.0.51
+#
+# Remote execution:
+#   ssh -i "<path-to-ssh-key>" scoreboard-app@10.1.0.51 "cd /srv/GhostGit/nfl-scoreboard && ./deploy.sh"
+#
+# Security: This script should be run as the 'scoreboard-app' user,
+# which owns /srv/GhostGit/nfl-scoreboard. Never deploy as root.
 
 set -e  # Exit on error
 

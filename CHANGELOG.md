@@ -5,6 +5,28 @@ All notable changes to the Sport-Scoreboard project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1] - 2026-01-17
+
+### Security
+- **CORS Restriction** - Limited to LAN origins only (10.1.0.51, localhost, 127.0.0.1)
+- **API Rate Limiting** - Added express-rate-limit (100 requests per 15 minutes per IP)
+- **Non-Root Deployment** - Created dedicated `scoreboard-app` user for production deployment
+
+### Added
+- **Feedback Button** - Added to settings menu with mailto: link including app context (version, sport, browser)
+- **Error Boundary Component** - Graceful error handling with user-friendly fallback UI and recovery options
+- **PM2 Log Rotation** - Configured pm2-logrotate module (10MB max file size, 7-day retention)
+
+### Changed
+- **Deployment User** - Production deployment now uses `scoreboard-app` user instead of root
+- **CORS Policy** - Restricted from wildcard (*) to private network origins only
+- **SSH Configuration** - Updated deployment credentials to use non-root user
+
+### Technical
+- New dependency: `express-rate-limit` for API protection
+- PM2 module: `pm2-logrotate` installed and configured on production server
+- Enhanced security posture for private network deployment
+
 ## [3.2.0] - 2026-01-15
 
 ### Added
@@ -113,6 +135,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v3.2.1** - Security hardening: CORS restriction, rate limiting, non-root deployment, error boundary
+- **v3.2.0** - UEFA Champions League plugin, hybrid API system for Bundesliga
 - **v3.1.1** - Code cleanup, logo updates, type safety improvements (-530 lines)
 - **v3.1.0** - UI redesign with horizontal tab menu, sound overlay, generic favicon
 - **v3.0.0** - Plugin system, internationalization, settings redesign

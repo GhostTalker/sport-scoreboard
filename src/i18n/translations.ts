@@ -53,6 +53,11 @@ export interface Translations {
     navigation: {
       hint: string;
     };
+    feedback: {
+      title: string;
+      button: string;
+      description: string;
+    };
   };
 
   // Sidebar
@@ -162,6 +167,11 @@ export const translations: Record<Language, Translations> = {
       navigation: {
         hint: 'Drücke Pfeil rechts oder Escape zum Zurückkehren',
       },
+      feedback: {
+        title: 'Feedback',
+        button: '📧 Feedback senden',
+        description: 'Fehler melden, Funktionen vorschlagen oder deine Erfahrung teilen',
+      },
     },
     sidebar: {
       plugins: 'Plugins',
@@ -256,6 +266,11 @@ export const translations: Record<Language, Translations> = {
       },
       navigation: {
         hint: 'Press Arrow Right or Escape to return',
+      },
+      feedback: {
+        title: 'Feedback',
+        button: '📧 Send Feedback',
+        description: 'Report bugs, suggest features, or share your experience',
       },
     },
     sidebar: {

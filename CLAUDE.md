@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Version:** 3.1.1
+**Version:** 3.2.1
 
 A modular multi-sport scoreboard application designed for iPad mini 6 and video wall displays. The app features a plugin-based architecture supporting multiple sports (NFL, Bundesliga, and more). It fetches real-time game data from various APIs, displays team logos, scores, game situations, and statistics with dynamic backgrounds.
 
@@ -227,13 +227,13 @@ The app is designed to run on a Linux server:
 
 **IMPORTANT**: When deploying to the production server, use these SSH credentials:
 
-- **User**: `root`
+- **User**: `scoreboard-app` (dedicated deployment user - never use root)
 - **Host**: `10.1.0.51`
 - **SSH Key**: `C:\Users\Pit\OneDrive\Dokumente\Security\SSH Keys\MadClusterNet\id_rsa`
 
 **Deployment Command**:
 ```bash
-ssh -i "C:\Users\Pit\OneDrive\Dokumente\Security\SSH Keys\MadClusterNet\id_rsa" root@10.1.0.51 "cd /srv/GhostGit/nfl-scoreboard && ./deploy.sh"
+ssh -i "C:\Users\Pit\OneDrive\Dokumente\Security\SSH Keys\MadClusterNet\id_rsa" scoreboard-app@10.1.0.51 "cd /srv/GhostGit/nfl-scoreboard && ./deploy.sh"
 ```
 
 For persistent deployment, use PM2:
@@ -243,6 +243,78 @@ pm2 startup
 pm2 save
 ```
 
+### Server User Setup (One-Time)
+
+If the `scoreboard-app` user doesn't exist, create it as root:
+
+```bash
+# SSH as root (one-time setup only)
+ssh -i "<path-to-ssh-key>" root@10.1.0.51
+
+# Create dedicated deployment user
+useradd -m -s /bin/bash scoreboard-app
+usermod -aG sudo scoreboard-app
+
+# Set up SSH access
+mkdir -p /home/scoreboard-app/.ssh
+cp /root/.ssh/authorized_keys /home/scoreboard-app/.ssh/
+chown -R scoreboard-app:scoreboard-app /home/scoreboard-app/.ssh
+chmod 700 /home/scoreboard-app/.ssh
+chmod 600 /home/scoreboard-app/.ssh/authorized_keys
+
+# Transfer app ownership
+chown -R scoreboard-app:scoreboard-app /srv/GhostGit/nfl-scoreboard
+
+# Optional: Disable root SSH login (recommended)
+# Edit /etc/ssh/sshd_config: PermitRootLogin no
+# Then: systemctl restart sshd
+```
+
+## Security (v3.2.1+)
+
+The application implements several security measures for private network deployment:
+
+### CORS Configuration
+
+CORS is restricted to trusted LAN origins only. Configure in `server/index.ts`:
+
+```typescript
+const allowedOrigins = [
+  'http://localhost:5173',      // Vite dev server
+  'http://localhost:3001',      // Production local
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3001',
+  'http://10.1.0.51:3001',      // Production server
+];
+```
+
+**When changing server IP**: Update `allowedOrigins` array, rebuild, and restart.
+
+### API Rate Limiting
+
+All `/api/*` routes are protected by rate limiting:
+- **Window**: 15 minutes
+- **Max Requests**: 100 per IP per window
+- **Response**: 429 Too Many Requests when exceeded
+
+Implemented via `express-rate-limit` middleware in `server/index.ts`.
+
+### Non-Root Deployment
+
+The application runs under a dedicated `scoreboard-app` user:
+- No root access required for operation
+- Owns only the application directory
+- PM2 runs as the same user
+
+### PM2 Log Rotation
+
+Logs are automatically rotated to prevent disk exhaustion:
+- **Max size**: 10MB per file
+- **Retention**: 7 days
+- **Compression**: Enabled for rotated files
+
+Configure via `pm2-logrotate` module.
+
 ## Common Pitfalls
 
 1. **Cache issues on iPad**: Browser aggressively caches. Users may need hard refresh (CMD+Shift+R)
@@ -250,9 +322,38 @@ pm2 save
 3. **ESPN API rate limiting**: Use caching in espnProxy, don't poll too frequently
 4. **Playoff detection**: ESPN API inconsistently provides `seasonName` - fallback logic in `getSeasonName()` determines round by week number
 5. **CORS in development**: Express proxy must be running for frontend to access ESPN API
+6. **CORS errors in production**: Ensure the client IP/origin is in `allowedOrigins` array in `server/index.ts`
+7. **Rate limit (429) errors**: Normal polling (10-15s) stays within limits. If hitting limits, wait 15 minutes or check for runaway polling loops
+8. **SSH connection refused**: Ensure you're using `scoreboard-app` user, not `root`. Check SSH key permissions (600)
 
 
 ## Version History
+
+### v3.2.1 (2026-01-17) - Security Hardening & Error Handling
+**Security Improvements:**
+- Restricted CORS to LAN origins only (10.1.0.51, localhost, 127.0.0.1)
+- Added API rate limiting (100 requests per 15 minutes per IP)
+- Created non-root deployment user (`scoreboard-app`)
+
+**New Features:**
+- Feedback button in settings (mailto: link with app context)
+- Error boundary component for graceful error handling
+- PM2 log rotation (10MB max, 7-day retention)
+
+**Documentation:**
+- Created DEPLOYMENT.md with comprehensive deployment guide
+- Created docs/SECURITY.md with security configuration details
+- Updated all documentation for v3.2.1 release
+
+### v3.2.0 (2026-01-15) - UEFA Champions League & Hybrid API
+**New Plugin:**
+- UEFA Champions League plugin with full round detection
+- OpenLigaDB integration for Champions League matches
+
+**Bundesliga Enhancement:**
+- Hybrid API system (OpenLigaDB + API-Football)
+- Accurate live minutes for running matches
+- Smart phase-based polling to stay within API limits
 
 ### v3.1.1 (2026-01-14) - Code Cleanup & Logo Updates
 **Code Quality Improvements:**

@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Plugin System
 import { pluginRegistry } from './core/plugin/PluginRegistry';
@@ -24,10 +25,12 @@ async function bootstrap() {
 
   console.log('✅ All plugins registered');
 
-  // Render app
+  // Render app with Error Boundary for graceful error handling
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <App />
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
     </StrictMode>
   );
 }

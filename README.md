@@ -5,10 +5,10 @@
 A modern, responsive web application for displaying live NFL and Bundesliga games with dynamic backgrounds, team logos, statistics, celebration videos, and German localization.
 
 ![Status](https://img.shields.io/badge/Status-Production-green)
-![Version](https://img.shields.io/badge/Version-3.2.0-blue)
+![Version](https://img.shields.io/badge/Version-3.2.1-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-> **What's New in v3.2.0:** UEFA Champions League Plugin, Hybrid API system for Bundesliga (OpenLigaDB + API-Football for accurate live minutes), Smart phase-based polling
+> **What's New in v3.2.1:** Security hardening (CORS restriction, API rate limiting), non-root deployment user, error boundary component, feedback button, PM2 log rotation
 
 ---
 
@@ -21,6 +21,7 @@ A modern, responsive web application for displaying live NFL and Bundesliga game
 - [Installation](#-installation)
 - [Getting Started](#-getting-started)
 - [Deployment](#-deployment)
+- [Security](#-security)
 - [Project Structure](#-project-structure)
 - [Configuration](#-configuration)
 - [Development](#-development)
@@ -428,12 +429,31 @@ OpenLigaDB (every 15s)          API-Football (phase-based)
 
 ## 🌐 Deployment
 
+### Deployment User (v3.2.1+)
+
+Starting with v3.2.1, the application should be deployed using a dedicated non-root user for improved security:
+
+```bash
+# Create deployment user (run as root once)
+useradd -m -s /bin/bash scoreboard-app
+mkdir -p /srv/GhostGit/nfl-scoreboard
+chown -R scoreboard-app:scoreboard-app /srv/GhostGit/nfl-scoreboard
+
+# Set up SSH key for scoreboard-app user
+su - scoreboard-app
+mkdir -p ~/.ssh
+# Add your public key to ~/.ssh/authorized_keys
+```
+
 ### Automatic Deployment (Recommended)
 
 The project includes a deployment script for quick updates:
 
 ```bash
-# On the server
+# SSH to server as scoreboard-app user
+ssh scoreboard-app@10.1.0.51
+
+# Run deployment
 cd /srv/GhostGit/nfl-scoreboard
 ./deploy.sh
 ```
@@ -448,8 +468,8 @@ The script automatically executes:
 
 #### Initial Setup
 ```bash
-# SSH to server
-ssh user@linux-server
+# SSH to server as scoreboard-app user
+ssh scoreboard-app@linux-server
 
 # Clone project
 cd /srv/GhostGit
@@ -479,7 +499,7 @@ NODE_ENV=production npm run start:prod
 
 #### With PM2 (Recommended)
 ```bash
-# Install PM2
+# Install PM2 globally
 npm install -g pm2
 
 # Start app
@@ -494,10 +514,88 @@ pm2 list
 pm2 logs nfl-scoreboard
 ```
 
+#### PM2 Log Rotation (v3.2.1+)
+```bash
+# Install log rotation module
+pm2 install pm2-logrotate
+
+# Configure rotation settings
+pm2 set pm2-logrotate:max_size 10M
+pm2 set pm2-logrotate:retain 7
+pm2 set pm2-logrotate:compress true
+pm2 set pm2-logrotate:dateFormat YYYY-MM-DD_HH-mm-ss
+pm2 set pm2-logrotate:rotateModule true
+```
+
 ### Access
 - **Local**: `http://localhost:3001`
 - **Network**: `http://<YOUR-SERVER-IP>:3001`
 - **iPad**: Browser to `http://<YOUR-SERVER-IP>:3001`
+
+> **Note:** CORS is restricted to local network origins. See [Security](#-security) for details.
+
+---
+
+## 🔒 Security
+
+This application is designed for **private network deployment** (home LAN, office network). The following security measures are in place as of v3.2.1:
+
+### CORS Configuration
+
+Cross-Origin Resource Sharing is restricted to trusted origins only:
+
+```typescript
+// Allowed origins (server/index.ts)
+const allowedOrigins = [
+  'http://localhost:5173',      // Vite dev server
+  'http://localhost:3001',      // Production local
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3001',
+  'http://10.1.0.51:3001',      // Production server
+];
+```
+
+**Important:** If you deploy to a different IP address, update the `allowedOrigins` array in `server/index.ts`.
+
+### API Rate Limiting
+
+All API endpoints are protected by rate limiting to prevent abuse:
+
+| Setting | Value |
+|---------|-------|
+| Window | 15 minutes |
+| Max Requests | 100 per IP |
+| Response on Limit | 429 Too Many Requests |
+
+Normal usage (polling every 10-15 seconds) stays well within these limits.
+
+### Non-Root Deployment
+
+The application runs under a dedicated `scoreboard-app` user with minimal privileges:
+
+- No sudo access required for normal operation
+- Owns only the application directory
+- Cannot modify system files
+- PM2 runs as the same non-root user
+
+### Threat Model
+
+This application assumes:
+- Deployment on a **trusted private network**
+- No exposure to the public internet
+- Users are trusted (family, colleagues)
+
+**Not recommended for:**
+- Public-facing deployments
+- Untrusted network environments
+- Production systems requiring authentication
+
+### Feedback & Bug Reports
+
+Use the Feedback button in Settings to report issues. The mailto link automatically includes:
+- Application version
+- Current sport/competition
+- Browser information
 
 ---
 

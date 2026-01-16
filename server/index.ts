@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { apiRouter } from './routes/api';
@@ -15,8 +16,55 @@ const PORT = Number(process.env.PORT) || 3001;
 const log = (msg: string) => process.stdout.write(msg + '\n');
 const logError = (msg: string) => process.stderr.write(msg + '\n');
 
-// Middleware
-app.use(cors());
+// ═══════════════════════════════════════════════════════════════════════
+// SECURITY: CORS Configuration
+// ═══════════════════════════════════════════════════════════════════════
+// Restrict to known origins for private LAN deployment
+// Production: http://10.1.0.51:3001 (video wall server)
+// Development: localhost on ports 3001 (Express) and 5173 (Vite)
+const allowedOrigins = [
+  'http://10.1.0.51:3001',     // Production server
+  'http://localhost:3001',      // Local production test
+  'http://localhost:5173',      // Vite dev server
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like curl, Postman, or same-origin)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      logError(`[SECURITY] Blocked CORS request from unauthorized origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET'],  // Only GET requests needed - no POST/PUT/DELETE
+  credentials: true,
+}));
+
+// ═══════════════════════════════════════════════════════════════════════
+// SECURITY: API Rate Limiting
+// ═══════════════════════════════════════════════════════════════════════
+// Protect against abuse and excessive API calls to ESPN proxy
+// Limit: 100 requests per 15 minutes per IP address
+// Standard headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,  // 15 minutes
+  max: 100,                   // Max 100 requests per window
+  standardHeaders: true,      // Return rate limit info in `RateLimit-*` headers
+  legacyHeaders: false,       // Disable `X-RateLimit-*` headers (use standard instead)
+  message: 'Too many requests from this IP, please try again later',
+  handler: (req, res) => {
+    logError(`[SECURITY] Rate limit exceeded for IP: ${req.ip}`);
+    res.status(429).json({
+      error: 'Too many requests from this IP, please try again later',
+      retryAfter: Math.ceil(15 * 60 / 60) + ' minutes',
+    });
+  },
+});
+
 app.use(express.json());
 
 // Enhanced request logging with response time
@@ -39,7 +87,8 @@ app.use((req, res, next) => {
 });
 
 // API Routes (proxy to ESPN) - MUST be before static files
-app.use('/api', apiRouter);
+// Apply rate limiting ONLY to API routes (not static assets)
+app.use('/api', apiLimiter, apiRouter);
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
