@@ -37,7 +37,7 @@ const WIKIMEDIA_DIRECT_LOGOS: Record<string, string> = {
 
   // Belgian Clubs (OpenLigaDB names) - Direct SVG URLs
   'FC Brügge': 'https://upload.wikimedia.org/wikipedia/en/d/d0/Club_Brugge_KV_logo.svg',
-  // 'Union Saint-Gilloise': Use OpenLigaDB URL (no high-res Wikimedia available)
+  'Union Saint-Gilloise': '/images/teams/union-saint-gilloise-big.png', // Local high-res PNG
 
   // Portuguese Clubs (OpenLigaDB names) - Direct SVG URLs
   'Benfica Lissabon': 'https://upload.wikimedia.org/wikipedia/en/a/a2/SL_Benfica_logo.svg',
