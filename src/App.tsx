@@ -4,6 +4,7 @@ import { MainScoreboard } from './components/scoreboard/MainScoreboard';
 import { MultiGameView } from './components/scoreboard/MultiGameView';
 import { StatsPanel } from './components/stats/StatsPanel';
 import { SettingsPanel } from './components/settings/SettingsPanel';
+import { NFLPlayoffBracket } from './components/bracket/NFLPlayoffBracket';
 import { SportSelectionScreen } from './components/onboarding/SportSelectionScreen';
 import { VideoOverlay } from './components/celebration/VideoOverlay';
 import { useUIStore } from './stores/uiStore';
@@ -70,6 +71,7 @@ function App() {
           {currentView === 'scoreboard' && viewMode === 'multi' && <MultiGameView />}
           {currentView === 'stats' && <StatsPanel />}
           {currentView === 'settings' && <SettingsPanel />}
+          {currentView === 'bracket' && <NFLPlayoffBracket />}
         </div>
       </SwipeContainer>
 

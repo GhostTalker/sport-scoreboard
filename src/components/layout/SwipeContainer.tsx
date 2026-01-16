@@ -1,5 +1,7 @@
 import { ReactNode } from 'react';
 import { useSwipe, getAvailableDirections } from '../../hooks/useSwipe';
+import { useGameStore } from '../../stores/gameStore';
+import { isNFLGame } from '../../types/game';
 
 interface SwipeContainerProps {
   children: ReactNode;
@@ -7,14 +9,22 @@ interface SwipeContainerProps {
 
 export function SwipeContainer({ children }: SwipeContainerProps) {
   const { handlers, currentView } = useSwipe();
+  const currentGame = useGameStore((state) => state.currentGame);
   const availableDirections = getAvailableDirections(currentView);
+
+  // Check if bracket is available for NFL playoffs
+  const isBracketAvailable = !!(currentGame && isNFLGame(currentGame) && currentGame.seasonType === 3);
 
   return (
     <div {...handlers} className="h-full w-full relative">
       {children}
-      
+
       {/* Navigation hints - subtle, only on edges */}
-      <NavigationHints directions={availableDirections} currentView={currentView} />
+      <NavigationHints
+        directions={availableDirections}
+        currentView={currentView}
+        isBracketAvailable={isBracketAvailable}
+      />
     </div>
   );
 }
@@ -22,11 +32,15 @@ export function SwipeContainer({ children }: SwipeContainerProps) {
 interface NavigationHintsProps {
   directions: string[];
   currentView: string;
+  isBracketAvailable?: boolean;
 }
 
-function NavigationHints({ directions, currentView }: NavigationHintsProps) {
-  // Don't show hints on main scoreboard (keep it clean)
-  if (currentView === 'scoreboard') {
+function NavigationHints({ directions, currentView, isBracketAvailable }: NavigationHintsProps) {
+  // Show bracket hint on scoreboard and stats during NFL playoffs
+  const showBracketHint = isBracketAvailable && (currentView === 'scoreboard' || currentView === 'stats');
+
+  // Don't show hints on main scoreboard (keep it clean) unless bracket is available
+  if (currentView === 'scoreboard' && !showBracketHint) {
     return null;
   }
 
@@ -59,12 +73,21 @@ function NavigationHints({ directions, currentView }: NavigationHintsProps) {
         </div>
       )}
       
-      {directions.includes('right') && (
+      {directions.includes('right') && currentView === 'bracket' && (
         <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center text-white/40">
           <svg className="w-5 h-5 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
-          <span className="text-xs ml-1">Back (Arrow Right / Esc)</span>
+          <span className="text-xs ml-1">Back (Arrow Left / Esc)</span>
+        </div>
+      )}
+
+      {showBracketHint && (
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center text-white/40">
+          <span className="text-xs mr-1">Bracket (Arrow Right)</span>
+          <svg className="w-5 h-5 -rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
       )}
     </>

@@ -96,3 +96,45 @@ export const PLAY_TYPE_TO_VIDEO: Record<string, NFLCelebrationType> = {
   [PLAY_TYPE_IDS.BLOCKED_PUNT]: 'fumble', // Use fumble video for blocked punts
   [PLAY_TYPE_IDS.SAFETY]: 'safety',
 };
+
+// NFL Playoff Bracket Types
+export type PlayoffRound = 'wild_card' | 'divisional' | 'conference' | 'super_bowl';
+
+export interface PlayoffTeam {
+  id: string;
+  name: string;
+  abbreviation: string;
+  logo: string;
+  color: string;
+  seed?: number; // 1-7
+  score?: number;
+}
+
+export interface PlayoffMatchup {
+  id: string;
+  round: PlayoffRound;
+  conference: 'AFC' | 'NFC' | 'CHAMPIONSHIP'; // CHAMPIONSHIP for Super Bowl
+  homeTeam: PlayoffTeam | null;
+  awayTeam: PlayoffTeam | null;
+  winner?: 'home' | 'away';
+  status: 'scheduled' | 'in_progress' | 'final';
+  startTime?: string;
+  venue?: string;
+}
+
+export interface PlayoffBracket {
+  season: number;
+  week: number;
+  currentRound: PlayoffRound;
+  afc: {
+    wildCard: PlayoffMatchup[];     // 3 games (2v7, 3v6, 4v5)
+    divisional: PlayoffMatchup[];   // 2 games
+    conference: PlayoffMatchup | null;  // 1 game
+  };
+  nfc: {
+    wildCard: PlayoffMatchup[];     // 3 games (2v7, 3v6, 4v5)
+    divisional: PlayoffMatchup[];   // 2 games
+    conference: PlayoffMatchup | null;  // 1 game
+  };
+  superBowl: PlayoffMatchup | null;
+}
