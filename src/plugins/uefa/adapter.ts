@@ -18,44 +18,56 @@ import { API_ENDPOINTS } from '../../constants/api';
 import { getBestLogoUrl } from '../../utils/logoFallback';
 
 // UEFA-specific team colors (primary colors for major European clubs)
-// OpenLigaDB Team IDs mapped to hex colors
+// OpenLigaDB Team IDs for UEFA Champions League (ucl2025)
+// NOTE: These IDs are different from Bundesliga IDs!
 const UEFA_TEAM_COLORS: Record<number, string> = {
   // German Clubs
-  40: 'FDD835', // Borussia Dortmund - Yellow
-  9: 'DC143C', // FC Bayern München - Red
-  81: 'E32221', // Bayer 04 Leverkusen - Red
+  7: 'FDD835', // Borussia Dortmund - Yellow
+  40: 'DC143C', // FC Bayern München - Red
+  6: 'E32221', // Bayer 04 Leverkusen - Red
   91: 'E1000F', // Eintracht Frankfurt - Red
-  95: 'FFED00', // VfB Stuttgart - Yellow
 
   // English Clubs
-  34: 'EF0107', // Liverpool FC - Red
-  35: '003399', // Chelsea FC - Blue
-  328: '7F0000', // Arsenal FC - Red
-  329: '6CABDD', // Manchester City - Sky Blue
-  384: '034694', // Aston Villa - Claret Blue
+  370: 'EF0107', // FC Liverpool - Red
+  364: '034694', // Chelsea FC - Blue
+  354: 'EF0107', // Arsenal FC - Red
+  4244: '6CABDD', // Manchester City - Sky Blue
+  452: '132257', // Tottenham Hotspur - Navy Blue
+  1075: '241F20', // Newcastle United - Black
 
   // Spanish Clubs
-  418: 'FEBE10', // Villarreal CF - Yellow
-  720: 'FFFFFF', // Real Madrid - White
-  131: 'A50044', // FC Barcelona - Blaugrana
-  982: 'CE3524', // Atlético Madrid - Red/White
+  382: 'FEBE10', // Villarreal CF - Yellow
+  356: 'A50044', // FC Barcelona - Blaugrana
+  355: 'CE3524', // Atlético Madrid - Red
+  1135: 'EE2523', // Athletic Bilbao - Red/White
 
   // Italian Clubs
-  5: '0068A8', // Inter Mailand - Blue/Black
-  583: '000000', // Juventus Turin - Black/White
-  398: 'FD1F00', // AC Mailand - Red/Black
+  733: '0068A8', // Inter Mailand - Blue/Black
+  369: '000000', // Juventus Turin - Black/White
+  1160: '1E90FF', // SSC Neapel - Blue
+  1807: '003D7C', // Atalanta Bergamo - Blue
 
   // French Clubs
-  1851: '004170', // Paris Saint-Germain - Blue
+  2281: '004170', // Paris St. Germain - Blue
 
-  // Dutch Clubs
-  6928: 'D30E22', // PSV Eindhoven - Red/White
+  // Dutch/Belgian Clubs
+  376: 'D30E22', // PSV Eindhoven - Red/White
+  1210: '005BAA', // FC Brügge - Blue/Black
+  4825: '0033A0', // Union Saint-Gilloise - Blue/Yellow
 
   // Portuguese Clubs
-  2448: 'E30613', // Benfica Lissabon - Red
+  1816: 'E30613', // Benfica Lissabon - Red
+  4604: '006638', // Sporting CP - Green
+
+  // Turkish Clubs
+  2554: 'FFC519', // Galatasaray Istanbul - Yellow/Red
 
   // Other
-  7574: '00529F', // FC Kopenhagen - Blue
+  453: '0047AB', // FC Kopenhagen - Blue
+  436: 'EF3340', // Olympiakos Piräus - Red
+  4458: '8B0000', // Qarabag FK - Dark Red
+  5707: 'FFD700', // FK Bodö/Glimt - Yellow
+  7081: '0066CC', // Paphos FC - Blue
 };
 
 export class UEFAAdapter implements SportAdapter {
