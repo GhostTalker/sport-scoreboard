@@ -11,11 +11,18 @@ interface SwipeContainerProps {
 export function SwipeContainer({ children }: SwipeContainerProps) {
   const { handlers, currentView } = useSwipe();
   const currentGame = useGameStore((state) => state.currentGame);
+  const availableGames = useGameStore((state) => state.availableGames);
   const viewMode = useSettingsStore((state) => state.viewMode);
   const availableDirections = getAvailableDirections(currentView);
 
   // Check if bracket is available for NFL playoffs
-  const isBracketAvailable = !!(currentGame && isNFLGame(currentGame) && currentGame.seasonType === 3);
+  // In single-view mode: check currentGame
+  // In multi-view mode: check if any game is NFL playoffs
+  const isBracketAvailableSingle = !!(currentGame && isNFLGame(currentGame) && currentGame.seasonType === 3);
+  const isBracketAvailableMulti = viewMode === 'multi' && availableGames.some(
+    (game) => isNFLGame(game) && game.seasonType === 3
+  );
+  const isBracketAvailable = isBracketAvailableSingle || isBracketAvailableMulti;
 
   return (
     <div {...handlers} className="h-full w-full relative">

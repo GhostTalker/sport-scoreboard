@@ -1,6 +1,7 @@
 import { useSwipeable } from 'react-swipeable';
 import { useUIStore } from '../stores/uiStore';
 import { useGameStore } from '../stores/gameStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import { isNFLGame } from '../types/game';
 
 type View = 'scoreboard' | 'stats' | 'settings' | 'bracket';
@@ -37,9 +38,17 @@ export function useSwipe() {
   const currentView = useUIStore((state) => state.currentView);
   const setView = useUIStore((state) => state.setView);
   const currentGame = useGameStore((state) => state.currentGame);
+  const availableGames = useGameStore((state) => state.availableGames);
+  const viewMode = useSettingsStore((state) => state.viewMode);
 
   // Check if bracket view is available (NFL playoffs only)
-  const isBracketAvailable = currentGame && isNFLGame(currentGame) && currentGame.seasonType === 3;
+  // In single-view mode: check currentGame
+  // In multi-view mode: check if any game is NFL playoffs
+  const isBracketAvailableSingle = currentGame && isNFLGame(currentGame) && currentGame.seasonType === 3;
+  const isBracketAvailableMulti = viewMode === 'multi' && availableGames.some(
+    (game) => isNFLGame(game) && game.seasonType === 3
+  );
+  const isBracketAvailable = isBracketAvailableSingle || isBracketAvailableMulti;
 
   const handleSwipe = (direction: string) => {
     // Get dynamic navigation based on current game

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useUIStore } from '../stores/uiStore';
 import { useGameStore } from '../stores/gameStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import { isNFLGame } from '../types/game';
 
 type View = 'scoreboard' | 'stats' | 'settings' | 'bracket';
@@ -41,6 +42,8 @@ export function useKeyboardNavigation() {
   const showCelebration = useUIStore((state) => state.showCelebration);
   const debugMode = useUIStore((state) => state.debugMode);
   const currentGame = useGameStore((state) => state.currentGame);
+  const availableGames = useGameStore((state) => state.availableGames);
+  const viewMode = useSettingsStore((state) => state.viewMode);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -61,8 +64,15 @@ export function useKeyboardNavigation() {
       // Get dynamic navigation based on current game
       const navigation = { ...BASE_NAVIGATION[currentView] };
 
-      // Enable bracket navigation for NFL playoffs
-      const isBracketAvailable = currentGame && isNFLGame(currentGame) && currentGame.seasonType === 3;
+      // Check if bracket is available
+      // In single-view mode: check currentGame
+      // In multi-view mode: check if any game is NFL playoffs
+      const isBracketAvailableSingle = currentGame && isNFLGame(currentGame) && currentGame.seasonType === 3;
+      const isBracketAvailableMulti = viewMode === 'multi' && availableGames.some(
+        (game) => isNFLGame(game) && game.seasonType === 3
+      );
+      const isBracketAvailable = isBracketAvailableSingle || isBracketAvailableMulti;
+
       if (isBracketAvailable) {
         if (currentView === 'scoreboard' || currentView === 'stats') {
           navigation.ArrowRight = 'bracket';
@@ -79,5 +89,5 @@ export function useKeyboardNavigation() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentView, setView, showCelebration, debugMode, currentGame]);
+  }, [currentView, setView, showCelebration, debugMode, currentGame, availableGames, viewMode]);
 }

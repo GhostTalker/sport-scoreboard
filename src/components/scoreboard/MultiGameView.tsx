@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSwipeable } from 'react-swipeable';
 import { useGameStore } from '../../stores/gameStore';
 import { useSettingsStore } from '../../stores/settingsStore';
+import { useUIStore } from '../../stores/uiStore';
 import { getTitleGraphic } from '../../constants/titleGraphics';
 import type { Game, Team } from '../../types/game';
 import { isNFLGame, isBundesligaGame, isUEFAGame } from '../../types/game';
@@ -15,6 +17,29 @@ export function MultiGameView() {
   const setViewMode = useSettingsStore((state) => state.setViewMode);
   const multiViewFilters = useSettingsStore((state) => state.multiViewFilters);
   const currentCompetition = useSettingsStore((state) => state.currentCompetition);
+  const setView = useUIStore((state) => state.setView);
+
+  // Check if bracket view is available (NFL playoffs - any game with seasonType 3)
+  const isNFLPlayoffs = availableGames.some(
+    (game) => isNFLGame(game) && game.seasonType === 3
+  );
+
+  // Swipe handlers for bracket navigation
+  const swipeHandlers = useSwipeable({
+    onSwipedRight: () => {
+      if (isNFLPlayoffs) {
+        setView('bracket');
+      }
+    },
+    onSwipedLeft: () => {
+      setView('settings');
+    },
+    trackMouse: false,
+    trackTouch: true,
+    delta: 50,
+    preventScrollOnSwipe: true,
+    swipeDuration: 500,
+  });
 
   // Track previous scores to detect changes
   const previousScoresRef = useRef<Map<string, { home: number; away: number }>>(new Map());
@@ -180,6 +205,7 @@ export function MultiGameView() {
 
   return (
     <div
+      {...swipeHandlers}
       className="h-full w-full flex flex-col overflow-hidden"
       style={{
         background: `
@@ -223,8 +249,24 @@ export function MultiGameView() {
       </div>
 
       {/* Navigation hint - Footer */}
-      <div className="flex-shrink-0 pb-2 text-center text-white/20 text-xs">
-        Arrow Keys to navigate | v{version}
+      <div className="flex-shrink-0 pb-2 flex items-center justify-center gap-4 text-white/20 text-xs">
+        <span>Arrow Keys to navigate</span>
+        {isNFLPlayoffs && (
+          <>
+            <span>|</span>
+            <button
+              onClick={() => setView('bracket')}
+              className="flex items-center gap-1 px-2 py-1 rounded bg-blue-600/30 hover:bg-blue-600/50 text-white/60 hover:text-white transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              <span>Bracket</span>
+            </button>
+          </>
+        )}
+        <span>|</span>
+        <span>v{version}</span>
       </div>
     </div>
   );

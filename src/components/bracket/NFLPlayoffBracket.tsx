@@ -176,8 +176,8 @@ export function NFLPlayoffBracket() {
         <div className="flex items-start justify-center gap-4" style={{ height: '620px' }}>
           {/* Left: AFC Bracket */}
           <div style={{ width: '340px', height: '100%' }}>
-            <div className="text-center mb-3 bg-blue-600/20 rounded-lg py-2 border border-blue-500/30">
-              <h3 className="text-xl font-bold text-blue-400">AFC</h3>
+            <div className="text-center mb-3 bg-red-600/20 rounded-lg py-2 border border-red-500/30">
+              <h3 className="text-xl font-bold text-red-400">AFC</h3>
             </div>
             <div style={{ height: 'calc(100% - 44px)' }}>
               <ConferenceBracketLeft
@@ -185,6 +185,7 @@ export function NFLPlayoffBracket() {
                 wildCard={bracket.afc.wildCard}
                 divisional={bracket.afc.divisional}
                 conferenceGame={bracket.afc.conference}
+                byeTeam={bracket.afc.byeTeam}
               />
             </div>
           </div>
@@ -206,8 +207,8 @@ export function NFLPlayoffBracket() {
 
           {/* Right: NFC Bracket */}
           <div style={{ width: '340px', height: '100%' }}>
-            <div className="text-center mb-3 bg-red-600/20 rounded-lg py-2 border border-red-500/30">
-              <h3 className="text-xl font-bold text-red-400">NFC</h3>
+            <div className="text-center mb-3 bg-blue-600/20 rounded-lg py-2 border border-blue-500/30">
+              <h3 className="text-xl font-bold text-blue-400">NFC</h3>
             </div>
             <div style={{ height: 'calc(100% - 44px)' }}>
               <ConferenceBracketRight
@@ -215,6 +216,7 @@ export function NFLPlayoffBracket() {
                 wildCard={bracket.nfc.wildCard}
                 divisional={bracket.nfc.divisional}
                 conferenceGame={bracket.nfc.conference}
+                byeTeam={bracket.nfc.byeTeam}
               />
             </div>
           </div>
@@ -229,10 +231,11 @@ interface ConferenceBracketProps {
   wildCard: PlayoffMatchup[];
   divisional: PlayoffMatchup[];
   conferenceGame: PlayoffMatchup | null;
+  byeTeam: PlayoffTeam | null;
 }
 
 // AFC Bracket - Left side (flows left to right) - Fixed layout
-function ConferenceBracketLeft({ conference, wildCard, divisional, conferenceGame }: ConferenceBracketProps) {
+function ConferenceBracketLeft({ conference, wildCard, divisional, conferenceGame, byeTeam }: ConferenceBracketProps) {
   const wcSlots = Array(3).fill(null).map((_, i) => wildCard[i] || createPlaceholderMatchup('wild_card', conference, i));
   const divSlots = Array(2).fill(null).map((_, i) => divisional[i] || createPlaceholderMatchup('divisional', conference, i));
   const confSlot = conferenceGame || createPlaceholderMatchup('conference', conference, 0);
@@ -241,71 +244,19 @@ function ConferenceBracketLeft({ conference, wildCard, divisional, conferenceGam
     <div className="relative h-full flex gap-1">
       {/* Column 1: Wild Card (with BYE) - Fixed width */}
       <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '110px' }}>
-        <div className="text-center mb-2 bg-blue-500/20 rounded mx-1 py-1">
-          <p className="text-[10px] text-blue-300 font-bold">WILD CARD</p>
+        <div className="text-center mb-2 bg-red-500/20 rounded mx-1 py-1">
+          <p className="text-[10px] text-red-300 font-bold">WILD CARD</p>
         </div>
         <div className="flex-1 flex flex-col justify-around">
           {/* #1 Seed BYE */}
-          <div className="h-12 flex items-center justify-center bg-slate-800/20 rounded border border-slate-700/30 mx-2">
-            <span className="text-white/30 text-[10px] font-semibold">#1 BYE</span>
+          <div className="mx-2">
+            <ByeTeamCard team={byeTeam} conference={conference} />
           </div>
           {wcSlots.map((matchup, idx) => (
             <div key={idx} className="mx-2">
               <MatchupCard matchup={matchup} compact />
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Column 2: Divisional - Fixed width */}
-      <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '110px' }}>
-        <div className="text-center mb-2 bg-blue-500/20 rounded mx-1 py-1">
-          <p className="text-[10px] text-blue-300 font-bold">DIVISIONAL</p>
-        </div>
-        <div className="flex-1 flex flex-col justify-around">
-          {divSlots.map((matchup, idx) => (
-            <div key={idx} className="mx-2">
-              <MatchupCard matchup={matchup} compact />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Column 3: Conference Championship - Fixed width */}
-      <div className="flex flex-col justify-center py-2 bg-slate-800/10 rounded-lg" style={{ width: '118px' }}>
-        <div className="text-center mb-2 bg-blue-500/20 rounded mx-1 py-1">
-          <p className="text-[10px] text-blue-300 font-bold">AFC CHAMP</p>
-        </div>
-        <div className="flex-1 flex items-center">
-          <div className="mx-2 w-full">
-            <MatchupCard matchup={confSlot} compact />
-          </div>
-        </div>
-      </div>
-
-      {/* SVG Connection Lines - Fixed positions */}
-      <BracketConnectionsLeft />
-    </div>
-  );
-}
-
-// NFC Bracket - Right side (flows right to left, mirrored) - Fixed layout
-function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGame }: ConferenceBracketProps) {
-  const wcSlots = Array(3).fill(null).map((_, i) => wildCard[i] || createPlaceholderMatchup('wild_card', conference, i));
-  const divSlots = Array(2).fill(null).map((_, i) => divisional[i] || createPlaceholderMatchup('divisional', conference, i));
-  const confSlot = conferenceGame || createPlaceholderMatchup('conference', conference, 0);
-
-  return (
-    <div className="relative h-full flex gap-1">
-      {/* Column 3: Conference Championship - Fixed width */}
-      <div className="flex flex-col justify-center py-2 bg-slate-800/10 rounded-lg" style={{ width: '118px' }}>
-        <div className="text-center mb-2 bg-red-500/20 rounded mx-1 py-1">
-          <p className="text-[10px] text-red-300 font-bold">NFC CHAMP</p>
-        </div>
-        <div className="flex-1 flex items-center">
-          <div className="mx-2 w-full">
-            <MatchupCard matchup={confSlot} compact />
-          </div>
         </div>
       </div>
 
@@ -323,15 +274,67 @@ function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGa
         </div>
       </div>
 
+      {/* Column 3: Conference Championship - Fixed width */}
+      <div className="flex flex-col justify-center py-2 bg-slate-800/10 rounded-lg" style={{ width: '118px' }}>
+        <div className="text-center mb-2 bg-red-500/20 rounded mx-1 py-1">
+          <p className="text-[10px] text-red-300 font-bold">AFC CHAMP</p>
+        </div>
+        <div className="flex-1 flex items-center">
+          <div className="mx-2 w-full">
+            <MatchupCard matchup={confSlot} compact />
+          </div>
+        </div>
+      </div>
+
+      {/* SVG Connection Lines - Fixed positions */}
+      <BracketConnectionsLeft />
+    </div>
+  );
+}
+
+// NFC Bracket - Right side (flows right to left, mirrored) - Fixed layout
+function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGame, byeTeam }: ConferenceBracketProps) {
+  const wcSlots = Array(3).fill(null).map((_, i) => wildCard[i] || createPlaceholderMatchup('wild_card', conference, i));
+  const divSlots = Array(2).fill(null).map((_, i) => divisional[i] || createPlaceholderMatchup('divisional', conference, i));
+  const confSlot = conferenceGame || createPlaceholderMatchup('conference', conference, 0);
+
+  return (
+    <div className="relative h-full flex gap-1">
+      {/* Column 3: Conference Championship - Fixed width */}
+      <div className="flex flex-col justify-center py-2 bg-slate-800/10 rounded-lg" style={{ width: '118px' }}>
+        <div className="text-center mb-2 bg-blue-500/20 rounded mx-1 py-1">
+          <p className="text-[10px] text-blue-300 font-bold">NFC CHAMP</p>
+        </div>
+        <div className="flex-1 flex items-center">
+          <div className="mx-2 w-full">
+            <MatchupCard matchup={confSlot} compact />
+          </div>
+        </div>
+      </div>
+
+      {/* Column 2: Divisional - Fixed width */}
+      <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '110px' }}>
+        <div className="text-center mb-2 bg-blue-500/20 rounded mx-1 py-1">
+          <p className="text-[10px] text-blue-300 font-bold">DIVISIONAL</p>
+        </div>
+        <div className="flex-1 flex flex-col justify-around">
+          {divSlots.map((matchup, idx) => (
+            <div key={idx} className="mx-2">
+              <MatchupCard matchup={matchup} compact />
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Column 1: Wild Card (with BYE) - Fixed width */}
       <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '110px' }}>
-        <div className="text-center mb-2 bg-red-500/20 rounded mx-1 py-1">
-          <p className="text-[10px] text-red-300 font-bold">WILD CARD</p>
+        <div className="text-center mb-2 bg-blue-500/20 rounded mx-1 py-1">
+          <p className="text-[10px] text-blue-300 font-bold">WILD CARD</p>
         </div>
         <div className="flex-1 flex flex-col justify-around">
           {/* #1 Seed BYE */}
-          <div className="h-12 flex items-center justify-center bg-slate-800/20 rounded border border-slate-700/30 mx-2">
-            <span className="text-white/30 text-[10px] font-semibold">#1 BYE</span>
+          <div className="mx-2">
+            <ByeTeamCard team={byeTeam} conference={conference} />
           </div>
           {wcSlots.map((matchup, idx) => (
             <div key={idx} className="mx-2">
@@ -360,39 +363,39 @@ function BracketConnectionsLeft() {
     <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
       {/* === Wild Card to Divisional - Top DIV game === */}
       {/* Top DIV (25%) fed by: #1 BYE (12.5%) + WC Game 1 winner (37.5%) */}
-      {/* Horizontal stub from BYE */}
-      <line x1="110" y1="12.5%" x2="110.5" y2="12.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      {/* Horizontal stub from WC Game 1 */}
-      <line x1="110" y1="37.5%" x2="110.5" y2="37.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      {/* Vertical connector between 12.5% and 37.5% */}
-      <line x1="110.5" y1="12.5%" x2="110.5" y2="37.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      {/* Horizontal from midpoint (25%) to DIV */}
-      <line x1="110.5" y1="25%" x2="111" y2="25%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      {/* Long horizontal line from BYE */}
+      <line x1="110" y1="12.5%" x2="125" y2="12.5%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
+      {/* Long horizontal line from WC Game 1 */}
+      <line x1="110" y1="37.5%" x2="125" y2="37.5%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
+      {/* Vertical connector at x=125 between 12.5% and 37.5% */}
+      <line x1="125" y1="12.5%" x2="125" y2="37.5%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
+      {/* Horizontal continuation from midpoint (25%) to DIV column */}
+      <line x1="125" y1="25%" x2="130" y2="25%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
 
-      {/* === Wild Card to Divisional - Bottom DIV game === */}
-      {/* Bottom DIV (75%) fed by: WC Game 2 (62.5%) + WC Game 3 (87.5%) */}
-      {/* Horizontal stub from WC Game 2 */}
-      <line x1="110" y1="62.5%" x2="110.5" y2="62.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      {/* Horizontal stub from WC Game 3 */}
-      <line x1="110" y1="87.5%" x2="110.5" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      {/* Vertical connector between 62.5% and 87.5% */}
-      <line x1="110.5" y1="62.5%" x2="110.5" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      {/* Horizontal from midpoint (75%) to DIV */}
-      <line x1="110.5" y1="75%" x2="111" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      {/* === Wild Card to Divisional - Bottom pair === */}
+      {/* WC Game 2 (62.5%) + WC Game 3 (87.5%) -> DIV Bottom (75%) */}
+      {/* Long horizontal line from WC Game 2 */}
+      <line x1="110" y1="62.5%" x2="125" y2="62.5%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
+      {/* Long horizontal line from WC Game 3 */}
+      <line x1="110" y1="87.5%" x2="125" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
+      {/* Vertical connector at x=125 between 62.5% and 87.5% */}
+      <line x1="125" y1="62.5%" x2="125" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
+      {/* Horizontal continuation from midpoint (75%) to DIV column */}
+      <line x1="125" y1="75%" x2="130" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
 
       {/* === Divisional to Conference === */}
-      {/* CONF (50%) fed by: DIV Top (25%) + DIV Bottom (75%) */}
-      {/* Horizontal stub from DIV Top */}
-      <line x1="221" y1="25%" x2="221.5" y2="25%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      {/* Horizontal stub from DIV Bottom */}
-      <line x1="221" y1="75%" x2="221.5" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      {/* Vertical connector between 25% and 75% */}
-      <line x1="221.5" y1="25%" x2="221.5" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      {/* Horizontal from midpoint (50%) to CONF */}
-      <line x1="221.5" y1="50%" x2="222" y2="50%" stroke="#60a5fa" strokeWidth="2.5" opacity="0.6" />
+      {/* DIV Top (25%) + DIV Bottom (75%) -> CONF (50%) */}
+      {/* Long horizontal line from DIV Top */}
+      <line x1="224" y1="25%" x2="239" y2="25%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
+      {/* Long horizontal line from DIV Bottom */}
+      <line x1="224" y1="75%" x2="239" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
+      {/* Vertical connector at x=239 between 25% and 75% */}
+      <line x1="239" y1="25%" x2="239" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
+      {/* Horizontal continuation from midpoint (50%) to CONF column */}
+      <line x1="239" y1="50%" x2="244" y2="50%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
 
       {/* === Conference to Super Bowl === */}
-      <line x1="340" y1="50%" x2="348" y2="50%" stroke="#fbbf24" strokeWidth="3" opacity="0.7" />
+      <line x1="340" y1="50%" x2="350" y2="50%" stroke="#fbbf24" strokeWidth="3" opacity="0.7" />
     </svg>
   );
 }
@@ -409,40 +412,40 @@ function BracketConnectionsRight() {
   return (
     <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
       {/* === Super Bowl to Conference === */}
-      <line x1="-8" y1="50%" x2="0" y2="50%" stroke="#fbbf24" strokeWidth="3" opacity="0.7" />
+      <line x1="-10" y1="50%" x2="0" y2="50%" stroke="#fbbf24" strokeWidth="3" opacity="0.7" />
 
       {/* === Conference to Divisional === */}
       {/* CONF (50%) feeds: DIV Top (25%) + DIV Bottom (75%) */}
-      {/* Horizontal stub from CONF */}
-      <line x1="118" y1="50%" x2="118.5" y2="50%" stroke="#ef4444" strokeWidth="2.5" opacity="0.6" />
-      {/* Vertical connector between 25% and 75% */}
-      <line x1="118.5" y1="25%" x2="118.5" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      {/* Horizontal stub to DIV Top */}
-      <line x1="118.5" y1="25%" x2="119" y2="25%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      {/* Horizontal stub to DIV Bottom */}
-      <line x1="118.5" y1="75%" x2="119" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      {/* Long horizontal line from CONF (goes leftward) */}
+      <line x1="118" y1="50%" x2="103" y2="50%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+      {/* Vertical connector at x=103 between 25% and 75% */}
+      <line x1="103" y1="25%" x2="103" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+      {/* Horizontal continuation from 25% to DIV column */}
+      <line x1="103" y1="25%" x2="98" y2="25%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+      {/* Horizontal continuation from 75% to DIV column */}
+      <line x1="103" y1="75%" x2="98" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
 
-      {/* === Divisional to Wild Card - Top DIV game === */}
+      {/* === Divisional to Wild Card - Top pair === */}
       {/* DIV Top (25%) feeds: #1 BYE (12.5%) + WC Game 1 (37.5%) */}
-      {/* Horizontal stub from DIV Top */}
-      <line x1="229" y1="25%" x2="229.5" y2="25%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      {/* Vertical connector between 12.5% and 37.5% */}
-      <line x1="229.5" y1="12.5%" x2="229.5" y2="37.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      {/* Horizontal stub to BYE */}
-      <line x1="229.5" y1="12.5%" x2="230" y2="12.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      {/* Horizontal stub to WC Game 1 */}
-      <line x1="229.5" y1="37.5%" x2="230" y2="37.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      {/* Long horizontal line from DIV Top */}
+      <line x1="229" y1="25%" x2="244" y2="25%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+      {/* Vertical connector at x=244 between 12.5% and 37.5% */}
+      <line x1="244" y1="12.5%" x2="244" y2="37.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+      {/* Horizontal continuation to BYE */}
+      <line x1="244" y1="12.5%" x2="249" y2="12.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+      {/* Horizontal continuation to WC Game 1 */}
+      <line x1="244" y1="37.5%" x2="249" y2="37.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
 
-      {/* === Divisional to Wild Card - Bottom DIV game === */}
+      {/* === Divisional to Wild Card - Bottom pair === */}
       {/* DIV Bottom (75%) feeds: WC Game 2 (62.5%) + WC Game 3 (87.5%) */}
-      {/* Horizontal stub from DIV Bottom */}
-      <line x1="229" y1="75%" x2="229.5" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      {/* Vertical connector between 62.5% and 87.5% */}
-      <line x1="229.5" y1="62.5%" x2="229.5" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      {/* Horizontal stub to WC Game 2 */}
-      <line x1="229.5" y1="62.5%" x2="230" y2="62.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      {/* Horizontal stub to WC Game 3 */}
-      <line x1="229.5" y1="87.5%" x2="230" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      {/* Long horizontal line from DIV Bottom */}
+      <line x1="229" y1="75%" x2="244" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+      {/* Vertical connector at x=244 between 62.5% and 87.5% */}
+      <line x1="244" y1="62.5%" x2="244" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+      {/* Horizontal continuation to WC Game 2 */}
+      <line x1="244" y1="62.5%" x2="249" y2="62.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+      {/* Horizontal continuation to WC Game 3 */}
+      <line x1="244" y1="87.5%" x2="249" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
     </svg>
   );
 }
@@ -482,6 +485,54 @@ function MatchupCard({ matchup, compact }: MatchupCardProps) {
           <span className="text-[8px] text-green-400 font-semibold">● LIVE</span>
         </div>
       )}
+    </div>
+  );
+}
+
+// Bye Team Card - displays the #1 seed with a yellow/gold border
+interface ByeTeamCardProps {
+  team: PlayoffTeam | null;
+  conference: 'AFC' | 'NFC';
+}
+
+function ByeTeamCard({ team, conference: _conference }: ByeTeamCardProps) {
+  if (!team) {
+    // Placeholder when team not yet determined
+    return (
+      <div className="h-12 flex items-center justify-center bg-slate-800/20 rounded border border-yellow-600/30">
+        <span className="text-white/30 text-[10px] font-semibold">#1 BYE</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-slate-800/80 rounded p-1 border-2 border-yellow-500/60 relative z-10">
+      <div className="flex items-center gap-1 py-0.5">
+        {/* Team Logo */}
+        <div className="w-5 h-5 flex-shrink-0">
+          <img
+            src={team.logo}
+            alt={team.abbreviation}
+            className="w-full h-full object-contain"
+            onError={(e) => {
+              e.currentTarget.src = '/images/tbd-logo.svg';
+            }}
+          />
+        </div>
+
+        {/* Team Info */}
+        <div className="flex-1 min-w-0 flex items-center gap-0.5">
+          <span className="text-[9px] text-yellow-400/80">#1</span>
+          <span className="text-[11px] font-semibold text-white truncate">
+            {team.abbreviation}
+          </span>
+        </div>
+      </div>
+
+      {/* BYE Label */}
+      <div className="text-center mt-0.5">
+        <span className="text-[8px] text-yellow-400 font-bold">BYE</span>
+      </div>
     </div>
   );
 }
@@ -670,6 +721,34 @@ function createPlaceholderMatchup(
   };
 }
 
+// Helper function to extract #1 seed (bye team) from divisional games
+// The #1 seed is the home team in the divisional game where they play the lowest remaining seed
+function extractByeTeam(divisionalGames: NFLGame[], isAFC: boolean): PlayoffTeam | null {
+  const confDivisionalGames = divisionalGames.filter(g => isAFC ? isAFCGame(g) : !isAFCGame(g));
+
+  // Find the game where the home team is seed #1
+  // In divisional round, #1 seed always hosts (they have a bye in wild card)
+  for (const game of confDivisionalGames) {
+    // The home team in divisional is typically the higher seed
+    const homeTeam = game.homeTeam;
+
+    // Create a PlayoffTeam from the home team
+    // The #1 seed is always the home team in one of the divisional games
+    const byeTeam: PlayoffTeam = {
+      id: homeTeam.id,
+      name: homeTeam.name,
+      abbreviation: homeTeam.abbreviation,
+      logo: homeTeam.logo,
+      color: homeTeam.color,
+      seed: 1,
+    };
+
+    return byeTeam;
+  }
+
+  return null;
+}
+
 // Helper function to build playoff bracket from games
 function buildPlayoffBracket(games: NFLGame[], currentGame: NFLGame): PlayoffBracket {
   const playoffGames = games.filter(g => g.seasonType === 3);
@@ -686,6 +765,17 @@ function buildPlayoffBracket(games: NFLGame[], currentGame: NFLGame): PlayoffBra
   else if (currentGame.week === 3) currentRound = 'conference';
   else if (currentGame.week === 5) currentRound = 'super_bowl';
 
+  // Extract bye teams from divisional games
+  // The #1 seed is the home team in the divisional matchup against the lowest remaining seed
+  const afcDivisionalMatchups = divisionalGames.filter(g => isAFCGame(g)).map(gameToMatchup);
+  const nfcDivisionalMatchups = divisionalGames.filter(g => !isAFCGame(g)).map(gameToMatchup);
+
+  // Find the #1 seed - they host in divisional and have seed=1
+  const afcByeTeam = afcDivisionalMatchups.find(m => m.homeTeam?.seed === 1)?.homeTeam ||
+                     extractByeTeam(divisionalGames, true);
+  const nfcByeTeam = nfcDivisionalMatchups.find(m => m.homeTeam?.seed === 1)?.homeTeam ||
+                     extractByeTeam(divisionalGames, false);
+
   return {
     season: currentGame.startTime ? new Date(currentGame.startTime).getFullYear() : new Date().getFullYear(),
     week: currentGame.week || 1,
@@ -696,8 +786,9 @@ function buildPlayoffBracket(games: NFLGame[], currentGame: NFLGame): PlayoffBra
         const bSeed = Math.min(b.homeTeam?.seed || 999, b.awayTeam?.seed || 999);
         return aSeed - bSeed;
       }),
-      divisional: divisionalGames.filter(g => isAFCGame(g)).map(gameToMatchup),
+      divisional: afcDivisionalMatchups,
       conference: conferenceGames.find(g => isAFCGame(g)) ? gameToMatchup(conferenceGames.find(g => isAFCGame(g))!) : null,
+      byeTeam: afcByeTeam || null,
     },
     nfc: {
       wildCard: wildCardGames.filter(g => !isAFCGame(g)).map(gameToMatchup).sort((a, b) => {
@@ -705,8 +796,9 @@ function buildPlayoffBracket(games: NFLGame[], currentGame: NFLGame): PlayoffBra
         const bSeed = Math.min(b.homeTeam?.seed || 999, b.awayTeam?.seed || 999);
         return aSeed - bSeed;
       }),
-      divisional: divisionalGames.filter(g => !isAFCGame(g)).map(gameToMatchup),
+      divisional: nfcDivisionalMatchups,
       conference: conferenceGames.find(g => !isAFCGame(g)) ? gameToMatchup(conferenceGames.find(g => !isAFCGame(g))!) : null,
+      byeTeam: nfcByeTeam || null,
     },
     superBowl: superBowlGames[0] ? gameToMatchup(superBowlGames[0]) : null,
   };

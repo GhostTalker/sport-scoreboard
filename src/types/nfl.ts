@@ -130,11 +130,13 @@ export interface PlayoffBracket {
     wildCard: PlayoffMatchup[];     // 3 games (2v7, 3v6, 4v5)
     divisional: PlayoffMatchup[];   // 2 games
     conference: PlayoffMatchup | null;  // 1 game
+    byeTeam: PlayoffTeam | null;    // #1 seed with bye
   };
   nfc: {
     wildCard: PlayoffMatchup[];     // 3 games (2v7, 3v6, 4v5)
     divisional: PlayoffMatchup[];   // 2 games
     conference: PlayoffMatchup | null;  // 1 game
+    byeTeam: PlayoffTeam | null;    // #1 seed with bye
   };
   superBowl: PlayoffMatchup | null;
 }
