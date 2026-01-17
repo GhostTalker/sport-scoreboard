@@ -104,13 +104,13 @@ body {
 }
 
 .superbowl-glow-pulse {
-  animation: superbowl-pulse-glow 2s ease-in-out infinite;
+  animation: superbowl-pulse-glow 4s ease-in-out infinite;
 }
 
 .superbowl-line-pulse-afc {
-  animation: superbowl-pulse-line-afc 2s ease-in-out infinite;
+  animation: superbowl-pulse-line-afc 4s ease-in-out infinite;
 }
 
 .superbowl-line-pulse-nfc {
-  animation: superbowl-pulse-line-nfc 2s ease-in-out infinite;
+  animation: superbowl-pulse-line-nfc 4s ease-in-out infinite;
 }
