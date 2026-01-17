@@ -20,11 +20,16 @@ export function NFLPlayoffBracket() {
 
       setIsLoading(true);
       try {
-        const year = currentGame.startTime ? new Date(currentGame.startTime).getFullYear() : new Date().getFullYear();
+        // Use 2025 for current playoffs season
+        const year = 2025;
+        console.log(`[Playoff Bracket] Fetching playoff games for year ${year}`);
+
         const playoffGames = await fetchAllPlayoffGames(year);
         const nflPlayoffGames = playoffGames.filter(isNFLGame);
 
         console.log(`[Playoff Bracket] Loaded ${nflPlayoffGames.length} NFL playoff games`);
+        console.log('[Playoff Bracket] Games:', nflPlayoffGames.map(g => `Week ${g.week}: ${g.awayTeam.abbreviation} @ ${g.homeTeam.abbreviation}`));
+
         setAllPlayoffGames(nflPlayoffGames);
       } catch (error) {
         console.error('[Playoff Bracket] Error loading playoff games:', error);
@@ -246,57 +251,62 @@ function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGa
 
 // Connection lines for AFC bracket - Fixed pixel positions
 function BracketConnectionsLeft() {
+  // Column widths: WC=110px, gap=1px, DIV=110px, gap=1px, CONF=118px
   return (
     <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
-      {/* Wild Card to Divisional - Lines from WC games to DIV games */}
-      {/* WC Game 1 (37.5%) + WC Game 2 (62.5%) -> DIV Game 1 (25%) */}
-      <line x1="110" y1="37.5%" x2="145" y2="37.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="110" y1="62.5%" x2="145" y2="62.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="145" y1="37.5%" x2="145" y2="62.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="145" y1="50%" x2="165" y2="25%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      {/* Wild Card to Divisional - Top pair (Game 1 + Game 2 -> DIV Top) */}
+      <line x1="106" y1="37.5%" x2="115" y2="37.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="106" y1="62.5%" x2="115" y2="62.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="115" y1="37.5%" x2="115" y2="62.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="115" y1="50%" x2="115" y2="33.33%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="115" y1="33.33%" x2="115" y2="33.33%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
 
-      {/* BYE (12.5%) + WC Game 3 (87.5%) -> DIV Game 2 (75%) */}
-      <line x1="110" y1="12.5%" x2="145" y2="12.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="110" y1="87.5%" x2="145" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="145" y1="12.5%" x2="145" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="145" y1="50%" x2="165" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      {/* BYE + WC Game 3 -> DIV Bottom */}
+      <line x1="106" y1="12.5%" x2="115" y2="12.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="106" y1="87.5%" x2="115" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="115" y1="12.5%" x2="115" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="115" y1="50%" x2="115" y2="66.67%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="115" y1="66.67%" x2="115" y2="66.67%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
 
-      {/* Divisional to Conference - Both DIV games to CONF */}
-      <line x1="220" y1="25%" x2="255" y2="25%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="220" y1="75%" x2="255" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="255" y1="25%" x2="255" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="255" y1="50%" x2="280" y2="50%" stroke="#60a5fa" strokeWidth="2.5" opacity="0.6" />
+      {/* Divisional to Conference */}
+      <line x1="217" y1="33.33%" x2="226" y2="33.33%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="217" y1="66.67%" x2="226" y2="66.67%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="226" y1="33.33%" x2="226" y2="66.67%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="226" y1="50%" x2="226" y2="50%" stroke="#60a5fa" strokeWidth="2.5" opacity="0.6" />
 
       {/* Conference to Super Bowl */}
-      <line x1="338" y1="50%" x2="360" y2="50%" stroke="#fbbf24" strokeWidth="3" opacity="0.7" />
+      <line x1="340" y1="50%" x2="348" y2="50%" stroke="#fbbf24" strokeWidth="3" opacity="0.7" />
     </svg>
   );
 }
 
 // Connection lines for NFC bracket - Fixed pixel positions (mirrored)
 function BracketConnectionsRight() {
+  // Column widths: CONF=118px, gap=1px, DIV=110px, gap=1px, WC=110px
   return (
     <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
       {/* Conference to Super Bowl */}
-      <line x1="0" y1="50%" x2="22" y2="50%" stroke="#fbbf24" strokeWidth="3" opacity="0.7" />
+      <line x1="0" y1="50%" x2="8" y2="50%" stroke="#fbbf24" strokeWidth="3" opacity="0.7" />
 
       {/* Conference to Divisional */}
-      <line x1="58" y1="50%" x2="83" y2="50%" stroke="#ef4444" strokeWidth="2.5" opacity="0.6" />
-      <line x1="83" y1="25%" x2="83" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="83" y1="25%" x2="118" y2="25%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="83" y1="75%" x2="118" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="114" y1="50%" x2="123" y2="50%" stroke="#ef4444" strokeWidth="2.5" opacity="0.6" />
+      <line x1="123" y1="33.33%" x2="123" y2="66.67%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="123" y1="33.33%" x2="123" y2="33.33%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="123" y1="66.67%" x2="123" y2="66.67%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
 
       {/* Divisional to Wild Card - Top pair */}
-      <line x1="173" y1="25%" x2="193" y2="50%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="193" y1="37.5%" x2="193" y2="62.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="193" y1="37.5%" x2="228" y2="37.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="193" y1="62.5%" x2="228" y2="62.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="229" y1="33.33%" x2="238" y2="33.33%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="238" y1="33.33%" x2="238" y2="50%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="238" y1="37.5%" x2="238" y2="62.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="238" y1="37.5%" x2="238" y2="37.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="238" y1="62.5%" x2="238" y2="62.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
 
       {/* Divisional to Wild Card - Bottom pair */}
-      <line x1="173" y1="75%" x2="193" y2="50%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="193" y1="12.5%" x2="193" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="193" y1="12.5%" x2="228" y2="12.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="193" y1="87.5%" x2="228" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="229" y1="66.67%" x2="238" y2="66.67%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="238" y1="66.67%" x2="238" y2="50%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="238" y1="12.5%" x2="238" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="238" y1="12.5%" x2="238" y2="12.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="238" y1="87.5%" x2="238" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
     </svg>
   );
 }
