@@ -366,19 +366,18 @@ function BracketConnectionsLeft() {
   // Content area starts after the header (~7%) and items are centered within their slots
 
   // WC column: 4 items (BYE + 3 WC games) with justify-around
-  // Actual visual centers are approximately: 18%, 38%, 62%, 82%
-  const wc1 = 18;   // BYE
-  const wc2 = 38;   // WC1
-  const wc3 = 62;   // WC2
-  const wc4 = 82;   // WC3
+  // Y coordinates corrected based on actual visual layout accounting for headers
+  const wc1 = 24;   // BYE team box
+  const wc2 = 40;   // first WC game
+  const wc3 = 56;   // second WC game
+  const wc4 = 81;   // third WC game
 
   // DIV column: 2 items with justify-around
-  // Visual centers at approximately: 32%, 72%
-  const div1 = 32;  // DIV1
-  const div2 = 72;  // DIV2
+  const div1 = 34;  // first divisional game
+  const div2 = 78;  // second divisional game
 
   // CONF column: 1 item centered (uses flex items-center)
-  const conf = 52;  // CONF
+  const conf = 52;  // conference game - keep centered
 
   // X coordinates (in viewBox units, 340 = 100%)
   // Scale: 340px container, viewBox 0-100
@@ -447,19 +446,18 @@ function BracketConnectionsRight() {
   // Same as AFC since the layout structure is identical
 
   // WC column: 4 items (BYE + 3 WC games) with justify-around
-  // Actual visual centers are approximately: 18%, 38%, 62%, 82%
-  const wc1 = 18;   // BYE
-  const wc2 = 38;   // WC1
-  const wc3 = 62;   // WC2
-  const wc4 = 82;   // WC3
+  // Y coordinates corrected based on actual visual layout accounting for headers
+  const wc1 = 24;   // BYE team box
+  const wc2 = 40;   // first WC game
+  const wc3 = 56;   // second WC game
+  const wc4 = 81;   // third WC game
 
   // DIV column: 2 items with justify-around
-  // Visual centers at approximately: 32%, 72%
-  const div1 = 32;  // DIV1
-  const div2 = 72;  // DIV2
+  const div1 = 34;  // first divisional game
+  const div2 = 78;  // second divisional game
 
   // CONF column: 1 item centered
-  const conf = 52;  // CONF
+  const conf = 52;  // conference game - keep centered
 
   // X coordinates (in viewBox units, 340 = 100%)
   // NFC layout: CONF(0-118) | gap | DIV(122-232) | gap | WC(236-340)
