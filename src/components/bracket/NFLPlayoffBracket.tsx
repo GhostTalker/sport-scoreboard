@@ -66,7 +66,7 @@ export function NFLPlayoffBracket() {
   const bracket = buildPlayoffBracket(allPlayoffGames, currentGame);
 
   return (
-    <div className="h-full w-full bg-slate-900 flex items-center justify-center overflow-hidden">
+    <div className="h-full w-full bg-slate-900 flex justify-center pt-4 overflow-hidden">
       {/* Fixed-size bracket container for iPad mini (1024x768 landscape) */}
       <div className="flex flex-col" style={{ width: '1000px', height: '680px' }}>
         {/* Header */}
@@ -91,8 +91,8 @@ export function NFLPlayoffBracket() {
             </div>
           </div>
 
-          {/* Center: Super Bowl - vertically centered */}
-          <div className="flex flex-col items-center" style={{ width: '240px', height: '100%', paddingTop: '180px' }}>
+          {/* Center: Super Bowl - aligned with Conference Championship */}
+          <div className="flex flex-col items-center" style={{ width: '240px', height: '100%', paddingTop: '120px' }}>
             {/* Trophy Image */}
             <img
               src="/images/nfl_trophy.png"
@@ -251,30 +251,49 @@ function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGa
 
 // Connection lines for AFC bracket - Fixed pixel positions
 function BracketConnectionsLeft() {
-  // Column widths: WC=110px, gap=1px, DIV=110px, gap=1px, CONF=118px
+  // Layout: WC=110px, gap=1px, DIV=110px, gap=1px, CONF=118px (total 340px)
+  // X positions: WC ends at 110, DIV starts at 111, DIV ends at 221, CONF starts at 222
+  // Y positions with justify-around:
+  //   WC (4 items): 12.5%, 37.5%, 62.5%, 87.5%
+  //   DIV (2 items): 25%, 75%
+  //   CONF (1 item): 50%
+
   return (
     <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
-      {/* Wild Card to Divisional - Top pair (Game 1 + Game 2 -> DIV Top) */}
-      <line x1="106" y1="37.5%" x2="115" y2="37.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="106" y1="62.5%" x2="115" y2="62.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="115" y1="37.5%" x2="115" y2="62.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="115" y1="50%" x2="115" y2="33.33%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="115" y1="33.33%" x2="115" y2="33.33%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      {/* === Wild Card to Divisional - Top DIV game === */}
+      {/* Top DIV (25%) fed by: #1 BYE (12.5%) + WC Game 1 winner (37.5%) */}
+      {/* Horizontal stub from BYE */}
+      <line x1="110" y1="12.5%" x2="110.5" y2="12.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      {/* Horizontal stub from WC Game 1 */}
+      <line x1="110" y1="37.5%" x2="110.5" y2="37.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      {/* Vertical connector between 12.5% and 37.5% */}
+      <line x1="110.5" y1="12.5%" x2="110.5" y2="37.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      {/* Horizontal from midpoint (25%) to DIV */}
+      <line x1="110.5" y1="25%" x2="111" y2="25%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
 
-      {/* BYE + WC Game 3 -> DIV Bottom */}
-      <line x1="106" y1="12.5%" x2="115" y2="12.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="106" y1="87.5%" x2="115" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="115" y1="12.5%" x2="115" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="115" y1="50%" x2="115" y2="66.67%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="115" y1="66.67%" x2="115" y2="66.67%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      {/* === Wild Card to Divisional - Bottom DIV game === */}
+      {/* Bottom DIV (75%) fed by: WC Game 2 (62.5%) + WC Game 3 (87.5%) */}
+      {/* Horizontal stub from WC Game 2 */}
+      <line x1="110" y1="62.5%" x2="110.5" y2="62.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      {/* Horizontal stub from WC Game 3 */}
+      <line x1="110" y1="87.5%" x2="110.5" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      {/* Vertical connector between 62.5% and 87.5% */}
+      <line x1="110.5" y1="62.5%" x2="110.5" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      {/* Horizontal from midpoint (75%) to DIV */}
+      <line x1="110.5" y1="75%" x2="111" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
 
-      {/* Divisional to Conference */}
-      <line x1="217" y1="33.33%" x2="226" y2="33.33%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="217" y1="66.67%" x2="226" y2="66.67%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="226" y1="33.33%" x2="226" y2="66.67%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
-      <line x1="226" y1="50%" x2="226" y2="50%" stroke="#60a5fa" strokeWidth="2.5" opacity="0.6" />
+      {/* === Divisional to Conference === */}
+      {/* CONF (50%) fed by: DIV Top (25%) + DIV Bottom (75%) */}
+      {/* Horizontal stub from DIV Top */}
+      <line x1="221" y1="25%" x2="221.5" y2="25%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      {/* Horizontal stub from DIV Bottom */}
+      <line x1="221" y1="75%" x2="221.5" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      {/* Vertical connector between 25% and 75% */}
+      <line x1="221.5" y1="25%" x2="221.5" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      {/* Horizontal from midpoint (50%) to CONF */}
+      <line x1="221.5" y1="50%" x2="222" y2="50%" stroke="#60a5fa" strokeWidth="2.5" opacity="0.6" />
 
-      {/* Conference to Super Bowl */}
+      {/* === Conference to Super Bowl === */}
       <line x1="340" y1="50%" x2="348" y2="50%" stroke="#fbbf24" strokeWidth="3" opacity="0.7" />
     </svg>
   );
@@ -282,31 +301,50 @@ function BracketConnectionsLeft() {
 
 // Connection lines for NFC bracket - Fixed pixel positions (mirrored)
 function BracketConnectionsRight() {
-  // Column widths: CONF=118px, gap=1px, DIV=110px, gap=1px, WC=110px
+  // Layout: CONF=118px, gap=1px, DIV=110px, gap=1px, WC=110px (total 340px)
+  // X positions: CONF ends at 118, DIV starts at 119, DIV ends at 229, WC starts at 230
+  // Y positions with justify-around:
+  //   CONF (1 item): 50%
+  //   DIV (2 items): 25%, 75%
+  //   WC (4 items): 12.5%, 37.5%, 62.5%, 87.5%
+
   return (
     <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
-      {/* Conference to Super Bowl */}
-      <line x1="0" y1="50%" x2="8" y2="50%" stroke="#fbbf24" strokeWidth="3" opacity="0.7" />
+      {/* === Super Bowl to Conference === */}
+      <line x1="-8" y1="50%" x2="0" y2="50%" stroke="#fbbf24" strokeWidth="3" opacity="0.7" />
 
-      {/* Conference to Divisional */}
-      <line x1="114" y1="50%" x2="123" y2="50%" stroke="#ef4444" strokeWidth="2.5" opacity="0.6" />
-      <line x1="123" y1="33.33%" x2="123" y2="66.67%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="123" y1="33.33%" x2="123" y2="33.33%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="123" y1="66.67%" x2="123" y2="66.67%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      {/* === Conference to Divisional === */}
+      {/* CONF (50%) feeds: DIV Top (25%) + DIV Bottom (75%) */}
+      {/* Horizontal stub from CONF */}
+      <line x1="118" y1="50%" x2="118.5" y2="50%" stroke="#ef4444" strokeWidth="2.5" opacity="0.6" />
+      {/* Vertical connector between 25% and 75% */}
+      <line x1="118.5" y1="25%" x2="118.5" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      {/* Horizontal stub to DIV Top */}
+      <line x1="118.5" y1="25%" x2="119" y2="25%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      {/* Horizontal stub to DIV Bottom */}
+      <line x1="118.5" y1="75%" x2="119" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
 
-      {/* Divisional to Wild Card - Top pair */}
-      <line x1="229" y1="33.33%" x2="238" y2="33.33%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="238" y1="33.33%" x2="238" y2="50%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="238" y1="37.5%" x2="238" y2="62.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="238" y1="37.5%" x2="238" y2="37.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="238" y1="62.5%" x2="238" y2="62.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      {/* === Divisional to Wild Card - Top DIV game === */}
+      {/* DIV Top (25%) feeds: #1 BYE (12.5%) + WC Game 1 (37.5%) */}
+      {/* Horizontal stub from DIV Top */}
+      <line x1="229" y1="25%" x2="229.5" y2="25%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      {/* Vertical connector between 12.5% and 37.5% */}
+      <line x1="229.5" y1="12.5%" x2="229.5" y2="37.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      {/* Horizontal stub to BYE */}
+      <line x1="229.5" y1="12.5%" x2="230" y2="12.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      {/* Horizontal stub to WC Game 1 */}
+      <line x1="229.5" y1="37.5%" x2="230" y2="37.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
 
-      {/* Divisional to Wild Card - Bottom pair */}
-      <line x1="229" y1="66.67%" x2="238" y2="66.67%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="238" y1="66.67%" x2="238" y2="50%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="238" y1="12.5%" x2="238" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="238" y1="12.5%" x2="238" y2="12.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
-      <line x1="238" y1="87.5%" x2="238" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      {/* === Divisional to Wild Card - Bottom DIV game === */}
+      {/* DIV Bottom (75%) feeds: WC Game 2 (62.5%) + WC Game 3 (87.5%) */}
+      {/* Horizontal stub from DIV Bottom */}
+      <line x1="229" y1="75%" x2="229.5" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      {/* Vertical connector between 62.5% and 87.5% */}
+      <line x1="229.5" y1="62.5%" x2="229.5" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      {/* Horizontal stub to WC Game 2 */}
+      <line x1="229.5" y1="62.5%" x2="230" y2="62.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      {/* Horizontal stub to WC Game 3 */}
+      <line x1="229.5" y1="87.5%" x2="230" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
     </svg>
   );
 }
@@ -407,52 +445,113 @@ function TeamRow({ team, isWinner, status, compact }: TeamRowProps) {
 }
 
 function SuperBowlMatchup({ matchup }: { matchup: PlayoffMatchup | null }) {
-  if (!matchup) {
-    return (
-      <div className="w-full bg-gradient-to-br from-yellow-900/20 to-slate-800/50 rounded-lg p-4 border-2 border-yellow-600/30">
-        <div className="text-center mb-3">
-          <h3 className="text-lg font-bold text-yellow-400/60">Super Bowl</h3>
-          <p className="text-white/20 text-[10px] mt-1">To Be Determined</p>
-        </div>
-      </div>
-    );
-  }
+  const isLive = matchup?.status === 'in_progress';
+  const isComplete = matchup?.status === 'final';
 
-  const isLive = matchup.status === 'in_progress';
+  // Determine if teams are TBD (no matchup or null team)
+  const awayTeam = matchup?.awayTeam;
+  const homeTeam = matchup?.homeTeam;
+
+  // For Super Bowl: away is typically AFC Champion, home is NFC Champion
+  const afcLogo = '/logos/afc-logo.svg';
+  const nfcLogo = '/logos/nfc-logo.svg';
 
   return (
     <div className="w-full bg-gradient-to-br from-yellow-900/30 to-slate-800 rounded-lg p-4 border-2 border-yellow-600/50">
+      {/* Header */}
       <div className="text-center mb-3">
         <h3 className="text-lg font-bold text-yellow-400">Super Bowl</h3>
-        {matchup.venue && (
+        {matchup?.venue && (
           <p className="text-white/40 text-[9px] mt-0.5">{matchup.venue}</p>
         )}
       </div>
 
-      <div className="space-y-2">
-        {/* Away Team */}
-        <TeamRow
-          team={matchup.awayTeam}
-          isWinner={matchup.winner === 'away'}
-          status={matchup.status}
+      {/* Horizontal Team Layout */}
+      <div className="flex items-center justify-center gap-3">
+        {/* AFC Champion (Away Team) */}
+        <SuperBowlTeamDisplay
+          team={awayTeam}
+          fallbackLogo={afcLogo}
+          fallbackLabel="AFC"
+          isWinner={matchup?.winner === 'away'}
+          isComplete={isComplete}
         />
 
-        <div className="text-center text-white/30 text-[10px] font-semibold">VS</div>
+        {/* VS Divider */}
+        <div className="flex flex-col items-center justify-center px-2">
+          <span className="text-white/50 text-sm font-bold">VS</span>
+          {isLive && (
+            <span className="text-[9px] text-green-400 font-semibold mt-1">LIVE</span>
+          )}
+        </div>
 
-        {/* Home Team */}
-        <TeamRow
-          team={matchup.homeTeam}
-          isWinner={matchup.winner === 'home'}
-          status={matchup.status}
+        {/* NFC Champion (Home Team) */}
+        <SuperBowlTeamDisplay
+          team={homeTeam}
+          fallbackLogo={nfcLogo}
+          fallbackLabel="NFC"
+          isWinner={matchup?.winner === 'home'}
+          isComplete={isComplete}
         />
       </div>
 
-      {/* Live indicator */}
-      {isLive && (
-        <div className="mt-2 text-center">
-          <span className="text-[10px] text-green-400 font-semibold">● LIVE</span>
+      {/* Score display for live/final games */}
+      {matchup && (awayTeam?.score !== undefined || homeTeam?.score !== undefined) && (
+        <div className="flex items-center justify-center gap-3 mt-3">
+          <div className={`text-2xl font-bold tabular-nums ${matchup.winner === 'away' ? 'text-white' : 'text-white/50'}`}>
+            {awayTeam?.score ?? '-'}
+          </div>
+          <div className="text-white/30 text-sm">-</div>
+          <div className={`text-2xl font-bold tabular-nums ${matchup.winner === 'home' ? 'text-white' : 'text-white/50'}`}>
+            {homeTeam?.score ?? '-'}
+          </div>
         </div>
       )}
+    </div>
+  );
+}
+
+interface SuperBowlTeamDisplayProps {
+  team: PlayoffTeam | null | undefined;
+  fallbackLogo: string;
+  fallbackLabel: string;
+  isWinner: boolean | undefined;
+  isComplete: boolean | undefined;
+}
+
+function SuperBowlTeamDisplay({ team, fallbackLogo, fallbackLabel, isWinner, isComplete }: SuperBowlTeamDisplayProps) {
+  const isTBD = !team;
+  const opacity = isComplete && !isWinner && !isTBD ? 'opacity-40' : '';
+
+  return (
+    <div className={`flex flex-col items-center gap-1 ${opacity}`} style={{ width: '70px' }}>
+      {/* Team/Conference Logo */}
+      <div className="w-12 h-12 flex items-center justify-center">
+        <img
+          src={isTBD ? fallbackLogo : team.logo}
+          alt={isTBD ? fallbackLabel : team.abbreviation}
+          className={`w-full h-full object-contain ${isTBD ? 'opacity-40' : ''}`}
+          onError={(e) => {
+            e.currentTarget.src = fallbackLogo;
+          }}
+        />
+      </div>
+
+      {/* Team Name or TBD Label */}
+      <div className="text-center">
+        {isTBD ? (
+          <span className="text-white/30 text-[10px] font-medium">{fallbackLabel}</span>
+        ) : (
+          <>
+            {team.seed && (
+              <span className="text-[9px] text-white/30 mr-0.5">#{team.seed}</span>
+            )}
+            <span className={`text-xs font-semibold ${isWinner ? 'text-yellow-400' : 'text-white/80'}`}>
+              {team.abbreviation}
+            </span>
+          </>
+        )}
+      </div>
     </div>
   );
 }
