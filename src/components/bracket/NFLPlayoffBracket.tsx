@@ -366,7 +366,7 @@ function BracketConnectionsLeft() {
   const wc4 = 147;   // HOU vs PIT
   const div1 = 51;   // BUF vs DEN
   const div2 = 128;  // HOU vs NE
-  const conf = 90;   // Conference Championship
+  const conf = 89;   // Conference Championship (moved up 1px)
 
   // X coordinates (in viewBox units, 340 = 100%)
   // Layout: WC(0-112) | gap(2) | DIV(114-226) | gap(2) | CONF(228-340)
@@ -430,7 +430,7 @@ function SuperBowlConnectionLines() {
 
   const totalWidth = 952;
   const totalHeight = 620;
-  const confY = 347; // Y position for Super Bowl connection lines (moved up 1px)
+  const confY = 346; // Y position for Super Bowl connection lines (moved up 1px)
 
   // X positions - SHORT LINES pattern like other connections
   // Pattern: Box edge → short line → Gap middle → short line → SB box edge
@@ -442,8 +442,8 @@ function SuperBowlConnectionLines() {
 
   // NFC side (precise coordinates from user measurement)
   const nfcConfLeft = 614;  // Left edge of NFC CONF box (user specified)
-  const nfcGapMid = 607;    // Middle of gap between SB box (600) and CONF (614)
-  const sbBoxRight = 600;   // Right edge of SB box (user specified)
+  const nfcGapMid = 605.5;  // Middle of gap between SB box (597) and CONF (614)
+  const sbBoxRight = 597;   // Right edge of SB box (user specified: moved left 3px)
 
   return (
     <svg
@@ -520,7 +520,7 @@ function BracketConnectionsRight() {
   const wc4 = 147;   // Wild Card game 3
   const div1 = 51;   // Divisional game 1
   const div2 = 128;  // Divisional game 2
-  const conf = 90;   // Conference Championship
+  const conf = 89;   // Conference Championship (moved up 1px)
 
   // X coordinates (in viewBox units, 340 = 100%)
   // NFC layout (mirrored): CONF(0-112) | gap(2) | DIV(114-226) | gap(2) | WC(228-340)
