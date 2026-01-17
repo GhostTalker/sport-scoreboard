@@ -361,25 +361,24 @@ function BracketConnectionsLeft() {
   // - Header: ~28px (text-center mb-2 with py-1 inside)
   // - Content area: remaining height with flex-1 flex-col justify-around
 
-  // Header takes approximately 5% of container height
-  // Content starts at ~5% and ends at ~98% (accounting for py-2 padding)
-  const headerEnd = 6;     // Where content area starts (after header)
-  const contentEnd = 98;   // Where content area ends
-  const contentHeight = contentEnd - headerEnd;
+  // Y coordinates adjusted to match actual rendered positions of game boxes
+  // The game boxes are distributed with justify-around within the content area
+  // Content area starts after the header (~7%) and items are centered within their slots
 
   // WC column: 4 items (BYE + 3 WC games) with justify-around
-  // justify-around formula: item[i] center = headerEnd + contentHeight * (2*i + 1) / (2*n)
-  const wc1 = headerEnd + contentHeight * 1 / 8;   // BYE: ~17.5%
-  const wc2 = headerEnd + contentHeight * 3 / 8;   // WC1: ~40.5%
-  const wc3 = headerEnd + contentHeight * 5 / 8;   // WC2: ~63.5%
-  const wc4 = headerEnd + contentHeight * 7 / 8;   // WC3: ~86.5%
+  // Actual visual centers are approximately: 18%, 38%, 62%, 82%
+  const wc1 = 18;   // BYE
+  const wc2 = 38;   // WC1
+  const wc3 = 62;   // WC2
+  const wc4 = 82;   // WC3
 
   // DIV column: 2 items with justify-around
-  const div1 = headerEnd + contentHeight * 1 / 4;  // DIV1: ~29%
-  const div2 = headerEnd + contentHeight * 3 / 4;  // DIV2: ~75%
+  // Visual centers at approximately: 32%, 72%
+  const div1 = 32;  // DIV1
+  const div2 = 72;  // DIV2
 
   // CONF column: 1 item centered (uses flex items-center)
-  const conf = headerEnd + contentHeight / 2;      // CONF: ~52%
+  const conf = 52;  // CONF
 
   // X coordinates (in viewBox units, 340 = 100%)
   // Scale: 340px container, viewBox 0-100
@@ -444,23 +443,23 @@ function BracketConnectionsRight() {
   // Container is 340px wide, height varies but we use viewBox 0-100 for Y
   // NFC column layout (reversed): CONF=118px (0-118), gap=4px, DIV=110px (122-232), gap=4px, WC=110px (236-340)
 
-  // Y positions - same as AFC since the layout structure is identical
-  const headerEnd = 6;
-  const contentEnd = 98;
-  const contentHeight = contentEnd - headerEnd;
+  // Y coordinates adjusted to match actual rendered positions of game boxes
+  // Same as AFC since the layout structure is identical
 
   // WC column: 4 items (BYE + 3 WC games) with justify-around
-  const wc1 = headerEnd + contentHeight * 1 / 8;   // BYE: ~17.5%
-  const wc2 = headerEnd + contentHeight * 3 / 8;   // WC1: ~40.5%
-  const wc3 = headerEnd + contentHeight * 5 / 8;   // WC2: ~63.5%
-  const wc4 = headerEnd + contentHeight * 7 / 8;   // WC3: ~86.5%
+  // Actual visual centers are approximately: 18%, 38%, 62%, 82%
+  const wc1 = 18;   // BYE
+  const wc2 = 38;   // WC1
+  const wc3 = 62;   // WC2
+  const wc4 = 82;   // WC3
 
   // DIV column: 2 items with justify-around
-  const div1 = headerEnd + contentHeight * 1 / 4;  // DIV1: ~29%
-  const div2 = headerEnd + contentHeight * 3 / 4;  // DIV2: ~75%
+  // Visual centers at approximately: 32%, 72%
+  const div1 = 32;  // DIV1
+  const div2 = 72;  // DIV2
 
   // CONF column: 1 item centered
-  const conf = headerEnd + contentHeight / 2;      // CONF: ~52%
+  const conf = 52;  // CONF
 
   // X coordinates (in viewBox units, 340 = 100%)
   // NFC layout: CONF(0-118) | gap | DIV(122-232) | gap | WC(236-340)
@@ -573,7 +572,7 @@ function ByeTeamCard({ team, conference: _conference }: ByeTeamCardProps) {
         <div className="flex items-center gap-1 py-0.5">
           <div className="w-4 h-4 bg-slate-700/50 rounded"></div>
           <div className="flex-1">
-            <span className="text-white/20 text-[10px]">#1 TBD</span>
+            <span className="text-white/20 text-[10px]">TBD</span>
           </div>
         </div>
 
@@ -608,8 +607,7 @@ function ByeTeamCard({ team, conference: _conference }: ByeTeamCardProps) {
         </div>
 
         {/* Team Info */}
-        <div className="flex-1 min-w-0 flex items-center gap-0.5">
-          <span className="text-[9px] text-white/30">#1</span>
+        <div className="flex-1 min-w-0 flex items-center">
           <span className="text-[11px] font-semibold text-white truncate">
             {team.abbreviation}
           </span>
