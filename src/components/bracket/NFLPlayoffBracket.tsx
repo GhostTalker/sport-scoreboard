@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { isNFLGame } from '../../types/game';
 import type { NFLGame, PlayoffMatchup, PlayoffTeam, PlayoffBracket } from '../../types/nfl';
@@ -7,13 +7,30 @@ import { fetchAllPlayoffGames } from '../../services/espnApi';
 export function NFLPlayoffBracket() {
   const currentGame = useGameStore((state) => state.currentGame);
   const availableGames = useGameStore((state) => state.availableGames);
-  const [allPlayoffGames, setAllPlayoffGames] = useState<NFLGame[]>([]);
+  const [bracketGames, setBracketGames] = useState<NFLGame[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch all playoff rounds when component mounts
+  // Track if initial load has completed
+  const hasInitialLoad = useRef(false);
+  // Track game IDs that are finalized (won't change)
+  const finalizedGameIds = useRef<Set<string>>(new Set());
+
+  // Memoize NFL playoff games from the store to prevent unnecessary recalculations
+  const storePlayoffGames = useMemo(() =>
+    availableGames.filter((g): g is NFLGame => isNFLGame(g) && g.seasonType === 3),
+    [availableGames]
+  );
+
+  // Initial load - fetch all playoff games once when component mounts
   useEffect(() => {
-    async function loadAllPlayoffGames() {
+    async function loadInitialPlayoffGames() {
       if (!currentGame || !isNFLGame(currentGame)) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Skip if already loaded
+      if (hasInitialLoad.current && bracketGames.length > 0) {
         setIsLoading(false);
         return;
       }
@@ -22,26 +39,107 @@ export function NFLPlayoffBracket() {
       try {
         // Use 2025 for current playoffs season
         const year = 2025;
-        console.log(`[Playoff Bracket] Fetching playoff games for year ${year}`);
+        console.log(`[Playoff Bracket] Initial load - fetching playoff games for year ${year}`);
 
         const playoffGames = await fetchAllPlayoffGames(year);
-        const nflPlayoffGames = playoffGames.filter(isNFLGame);
+        const nflPlayoffGames = playoffGames.filter((g): g is NFLGame => isNFLGame(g));
 
         console.log(`[Playoff Bracket] Loaded ${nflPlayoffGames.length} NFL playoff games`);
         console.log('[Playoff Bracket] Games:', nflPlayoffGames.map(g => `Week ${g.week}: ${g.awayTeam.abbreviation} @ ${g.homeTeam.abbreviation}`));
 
-        setAllPlayoffGames(nflPlayoffGames);
+        // Track finalized games (won't need updates)
+        nflPlayoffGames.forEach(game => {
+          if (game.status === 'final') {
+            finalizedGameIds.current.add(game.id);
+          }
+        });
+
+        setBracketGames(nflPlayoffGames);
+        hasInitialLoad.current = true;
       } catch (error) {
         console.error('[Playoff Bracket] Error loading playoff games:', error);
         // Fallback to available games from store
-        setAllPlayoffGames(availableGames.filter(isNFLGame));
+        setBracketGames(storePlayoffGames);
+        hasInitialLoad.current = true;
       } finally {
         setIsLoading(false);
       }
     }
 
-    loadAllPlayoffGames();
-  }, [currentGame, availableGames]);
+    loadInitialPlayoffGames();
+    // Only depend on currentGame ID for initial load trigger - not the entire object
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentGame?.id]);
+
+  // Update live/in-progress games from store without refetching entire bracket
+  const updateLiveGames = useCallback(() => {
+    if (!hasInitialLoad.current || bracketGames.length === 0) {
+      return;
+    }
+
+    if (storePlayoffGames.length === 0) {
+      return;
+    }
+
+    // Create a map of store games by ID for quick lookup
+    const storeGamesMap = new Map(storePlayoffGames.map(g => [g.id, g]));
+
+    // Check if any games need updating
+    let hasUpdates = false;
+    const updatedGames = bracketGames.map(bracketGame => {
+      // Skip finalized games - they won't change
+      if (finalizedGameIds.current.has(bracketGame.id)) {
+        return bracketGame;
+      }
+
+      const storeGame = storeGamesMap.get(bracketGame.id);
+      if (!storeGame) {
+        return bracketGame;
+      }
+
+      // Check if game state changed (scores or status)
+      const hasScoreChange =
+        bracketGame.homeTeam.score !== storeGame.homeTeam.score ||
+        bracketGame.awayTeam.score !== storeGame.awayTeam.score;
+      const hasStatusChange = bracketGame.status !== storeGame.status;
+
+      if (hasScoreChange || hasStatusChange) {
+        hasUpdates = true;
+        console.log(`[Playoff Bracket] Updating game ${bracketGame.id}: ${bracketGame.awayTeam.abbreviation} @ ${bracketGame.homeTeam.abbreviation} (status: ${storeGame.status})`);
+
+        // Mark as finalized if game just ended
+        if (storeGame.status === 'final') {
+          finalizedGameIds.current.add(storeGame.id);
+        }
+
+        return storeGame;
+      }
+
+      return bracketGame;
+    });
+
+    // Also check for new games that might have appeared (e.g., newly scheduled playoff games)
+    storePlayoffGames.forEach(storeGame => {
+      const existsInBracket = bracketGames.some(g => g.id === storeGame.id);
+      if (!existsInBracket) {
+        hasUpdates = true;
+        updatedGames.push(storeGame);
+        console.log(`[Playoff Bracket] Adding new game ${storeGame.id}: ${storeGame.awayTeam.abbreviation} @ ${storeGame.homeTeam.abbreviation}`);
+      }
+    });
+
+    if (hasUpdates) {
+      setBracketGames(updatedGames);
+    }
+  }, [bracketGames, storePlayoffGames]);
+
+  // Listen for store updates and selectively update live games
+  useEffect(() => {
+    updateLiveGames();
+  }, [updateLiveGames]);
+
+  // Alias for backward compatibility with the rest of the component
+  const allPlayoffGames = bracketGames;
 
   if (!currentGame || !isNFLGame(currentGame)) {
     return (
