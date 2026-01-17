@@ -2,6 +2,7 @@ import { useGameStore } from '../../stores/gameStore';
 import { TeamStats } from './TeamStats';
 import { isNFLGame, isTournamentGame, isUEFAGame } from '../../types/game';
 import { UEFAStandings } from '../uefa/UEFAStandings';
+import { TournamentGroupStandings } from '../tournament/TournamentGroupStandings';
 
 export function StatsPanel() {
   const currentGame = useGameStore((state) => state.currentGame);
@@ -103,13 +104,13 @@ export function StatsPanel() {
     if (isTournamentGame(currentGame)) {
       const tournamentGame = currentGame;
 
-      // Show tournament bracket for knockout phase
+      // Show tournament bracket placeholder for knockout phase
       if (tournamentGame.roundType !== 'group') {
         return (
           <div className="h-full w-full flex flex-col items-center justify-center bg-slate-900 p-6">
             <p className="text-white/50 text-xl mb-2">Turnierbaum</p>
             <p className="text-white/30 text-sm">{tournamentGame.round}</p>
-            <p className="text-white/30 text-xs mt-4">Coming soon: Tournament bracket visualization</p>
+            <p className="text-white/30 text-xs mt-4">Tournament bracket - Coming soon</p>
             <div className="text-center mt-8 text-white/30 text-sm">
               Swipe down to return to scoreboard
             </div>
@@ -119,14 +120,10 @@ export function StatsPanel() {
 
       // Show group tables for group phase
       return (
-        <div className="h-full w-full flex flex-col items-center justify-center bg-slate-900 p-6">
-          <p className="text-white/50 text-xl mb-2">Gruppentabelle</p>
-          <p className="text-white/30 text-sm">{tournamentGame.group || tournamentGame.round}</p>
-          <p className="text-white/30 text-xs mt-4">Coming soon: Group table visualization</p>
-          <div className="text-center mt-8 text-white/30 text-sm">
-            Swipe down to return to scoreboard
-          </div>
-        </div>
+        <TournamentGroupStandings
+          currentGames={availableGames}
+          currentGame={tournamentGame}
+        />
       );
     }
 

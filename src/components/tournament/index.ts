@@ -1,0 +1,1 @@
+export { TournamentGroupStandings } from './TournamentGroupStandings';

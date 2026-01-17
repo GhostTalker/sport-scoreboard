@@ -75,21 +75,55 @@ export function getLogoFallback(teamName: string): string | null {
 }
 
 /**
+ * Validate URL protocol to prevent XSS attacks
+ * SECURITY: CWE-79 - Prevents javascript:, data:, vbscript: protocol injection
+ *
+ * Only allow:
+ * - http: and https: (absolute URLs)
+ * - Relative URLs starting with /
+ */
+function isValidLogoUrl(url: string): boolean {
+  if (!url || typeof url !== 'string') {
+    return false;
+  }
+
+  // Trim whitespace
+  const trimmedUrl = url.trim();
+
+  // Allow relative URLs (start with /)
+  if (trimmedUrl.startsWith('/')) {
+    return true;
+  }
+
+  // Only allow http: and https: protocols
+  // Reject javascript:, data:, vbscript:, file:, etc.
+  const lowercaseUrl = trimmedUrl.toLowerCase();
+  if (lowercaseUrl.startsWith('http://') || lowercaseUrl.startsWith('https://')) {
+    return true;
+  }
+
+  // Reject everything else (javascript:, data:, vbscript:, etc.)
+  return false;
+}
+
+/**
  * Get the best quality logo URL, with fallbacks
  * ALWAYS prefer our curated high-quality Wikimedia SVG URLs over OpenLigaDB's low-res images
+ * SECURITY: Validates all URLs to prevent XSS attacks
  */
 export function getBestLogoUrl(openLigaDbUrl: string, teamName: string): string {
   // PRIORITY 1: Try our curated high-quality Wikimedia Commons SVG URLs
   const wikimediaUrl = getLogoFallback(teamName);
-  if (wikimediaUrl) {
+  if (wikimediaUrl && isValidLogoUrl(wikimediaUrl)) {
     return wikimediaUrl;
   }
 
   // PRIORITY 2: Fall back to OpenLigaDB URL if we don't have a Wikimedia URL
-  if (openLigaDbUrl && openLigaDbUrl.includes('http')) {
+  // SECURITY: Validate URL protocol before using
+  if (openLigaDbUrl && isValidLogoUrl(openLigaDbUrl)) {
     return openLigaDbUrl;
   }
 
-  // Last resort: placeholder
+  // Last resort: placeholder (always safe - relative URL)
   return '/images/tbd-logo.svg';
 }

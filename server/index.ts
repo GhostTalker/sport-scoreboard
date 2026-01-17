@@ -42,8 +42,16 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like curl, Postman, or same-origin)
-    if (!origin) return callback(null, true);
+    // SECURITY: In production, reject requests with no Origin header
+    // This prevents direct API access from tools like curl/Postman
+    // Development: Allow no-origin requests for testing
+    if (!origin) {
+      if (process.env.NODE_ENV === 'production') {
+        logError('[SECURITY] Blocked request with no Origin header in production');
+        return callback(new Error('Not allowed by CORS - Origin header required'));
+      }
+      return callback(null, true);
+    }
 
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -77,7 +85,12 @@ const apiLimiter = rateLimit({
   },
 });
 
-app.use(express.json());
+// ═══════════════════════════════════════════════════════════════════════
+// SECURITY: JSON Body Size Limit
+// ═══════════════════════════════════════════════════════════════════════
+// Prevent DoS attacks via large JSON payloads
+// SECURITY: CWE-400 - Uncontrolled Resource Consumption
+app.use(express.json({ limit: '1mb' }));
 
 // Enhanced request logging with response time
 app.use((req, res, next) => {
@@ -122,21 +135,26 @@ if (process.env.NODE_ENV === 'production') {
 // Server Startup
 // ═══════════════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════════════
+// SECURITY: Bind to LAN-only IP address (not 0.0.0.0)
+// ═══════════════════════════════════════════════════════════════════════
+// Production: Bind to 10.1.0.51 (LAN-only, not exposed to internet)
+// Development: Use 0.0.0.0 for easier local testing
+const BIND_ADDRESS = process.env.NODE_ENV === 'production' ? '10.1.0.51' : '0.0.0.0';
+
 // Store server reference for graceful shutdown
-// Note: Using 'let' because TypeScript needs this pattern for the async close() callback
-const server: Server = app.listen(PORT, '0.0.0.0', () => {
+const server: Server = app.listen(PORT, BIND_ADDRESS, () => {
   log(`
 ╔════════════════════════════════════════════════════════╗
 ║                                                        ║
-║   NFL Scoreboard Server                               ║
-║   Running on http://0.0.0.0:${PORT}                      ║
+║   Sports Scoreboard Server                            ║
+║   Running on http://${BIND_ADDRESS}:${PORT}${' '.repeat(Math.max(0, 20 - BIND_ADDRESS.length))}║
 ║                                                        ║
-║   API Proxy: http://<your-ip>:${PORT}/api                ║
+║   API Proxy: http://${BIND_ADDRESS}:${PORT}/api${' '.repeat(Math.max(0, 16 - BIND_ADDRESS.length))}║
 ║                                                        ║
-║   For iPad access, use your local IP:                 ║
-║   http://<your-ip>:${PORT}                               ║
+║   Security: ${process.env.NODE_ENV === 'production' ? 'LAN-only (10.1.0.51)' : 'Development (all interfaces)'}${' '.repeat(Math.max(0, process.env.NODE_ENV === 'production' ? 5 : 0))}║
 ║                                                        ║
-║   Health Check: http://localhost:${PORT}/api/health      ║
+║   Health Check: http://${BIND_ADDRESS}:${PORT}/api/health${' '.repeat(Math.max(0, 9 - BIND_ADDRESS.length))}║
 ║                                                        ║
 ╚════════════════════════════════════════════════════════╝
   `);

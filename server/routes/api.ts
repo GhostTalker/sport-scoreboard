@@ -8,7 +8,7 @@
  * - Admin endpoints for manual intervention
  */
 
-import { Router, Response } from 'express';
+import { Router, Response, Request, NextFunction } from 'express';
 import { espnProxy, FetchResult } from '../services/espnProxy';
 import { openligadbProxy } from '../services/openligadbProxy';
 
@@ -21,6 +21,153 @@ const logError = (msg: string, ...args: unknown[]) => {
 const serverStartTime = Date.now();
 
 export const apiRouter = Router();
+
+// ═══════════════════════════════════════════════════════════════════════
+// Security: Input Validation Middleware
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Validate gameId parameter
+ * SECURITY: CWE-20 - Prevents injection attacks via malicious gameIds
+ *
+ * Valid format: Alphanumeric with hyphens, max 20 characters
+ * Examples: "401437812", "nfl-2024-playoffs"
+ */
+function validateGameId(req: Request, res: Response, next: NextFunction): void {
+  const { gameId } = req.params;
+
+  // Alphanumeric with hyphens only, max 20 chars
+  if (!gameId || !/^[a-zA-Z0-9-]{1,20}$/.test(gameId)) {
+    res.status(400).json({
+      error: 'Invalid gameId',
+      message: 'gameId must be alphanumeric with hyphens only (max 20 characters)',
+      provided: gameId,
+    });
+    return;
+  }
+
+  next();
+}
+
+/**
+ * Validate matchId parameter (Bundesliga)
+ * SECURITY: CWE-20 - Prevents injection attacks via malicious matchIds
+ *
+ * Valid format: Numeric only, max 10 digits
+ */
+function validateMatchId(req: Request, res: Response, next: NextFunction): void {
+  const { matchId } = req.params;
+
+  // Numeric only, max 10 digits
+  if (!matchId || !/^\d{1,10}$/.test(matchId)) {
+    res.status(400).json({
+      error: 'Invalid matchId',
+      message: 'matchId must be numeric only (max 10 digits)',
+      provided: matchId,
+    });
+    return;
+  }
+
+  next();
+}
+
+/**
+ * Validate matchday parameter (Bundesliga)
+ * SECURITY: CWE-20 - Prevents injection attacks
+ *
+ * Valid range: 1-34 (Bundesliga has max 34 matchdays)
+ */
+function validateMatchday(req: Request, res: Response, next: NextFunction): void {
+  const { matchday } = req.params;
+  const matchdayNum = parseInt(matchday, 10);
+
+  if (isNaN(matchdayNum) || matchdayNum < 1 || matchdayNum > 34) {
+    res.status(400).json({
+      error: 'Invalid matchday',
+      message: 'matchday must be a number between 1 and 34',
+      provided: matchday,
+    });
+    return;
+  }
+
+  next();
+}
+
+/**
+ * Validate teamId parameter
+ * SECURITY: CWE-20 - Prevents injection attacks
+ *
+ * Valid format: Numeric only, max 10 digits
+ */
+function validateTeamId(req: Request, res: Response, next: NextFunction): void {
+  const { teamId } = req.params;
+
+  // Numeric only, max 10 digits
+  if (!teamId || !/^\d{1,10}$/.test(teamId)) {
+    res.status(400).json({
+      error: 'Invalid teamId',
+      message: 'teamId must be numeric only (max 10 digits)',
+      provided: teamId,
+    });
+    return;
+  }
+
+  next();
+}
+
+/**
+ * Validate schedule query parameters
+ * SECURITY: CWE-20 - Prevents injection and resource exhaustion
+ *
+ * Valid ranges:
+ * - year: 2000-2100
+ * - week: 1-22 (NFL has max 22 weeks including playoffs)
+ * - seasonType: 1-4 (preseason=1, regular=2, postseason=3, allstar=4)
+ */
+function validateScheduleParams(req: Request, res: Response, next: NextFunction): void {
+  const { year, week, seasonType } = req.query;
+
+  // Validate year if provided
+  if (year !== undefined) {
+    const yearNum = parseInt(year as string, 10);
+    if (isNaN(yearNum) || yearNum < 2000 || yearNum > 2100) {
+      res.status(400).json({
+        error: 'Invalid year parameter',
+        message: 'year must be a number between 2000 and 2100',
+        provided: year,
+      });
+      return;
+    }
+  }
+
+  // Validate week if provided
+  if (week !== undefined) {
+    const weekNum = parseInt(week as string, 10);
+    if (isNaN(weekNum) || weekNum < 1 || weekNum > 22) {
+      res.status(400).json({
+        error: 'Invalid week parameter',
+        message: 'week must be a number between 1 and 22',
+        provided: week,
+      });
+      return;
+    }
+  }
+
+  // Validate seasonType if provided
+  if (seasonType !== undefined) {
+    const seasonTypeNum = parseInt(seasonType as string, 10);
+    if (isNaN(seasonTypeNum) || seasonTypeNum < 1 || seasonTypeNum > 4) {
+      res.status(400).json({
+        error: 'Invalid seasonType parameter',
+        message: 'seasonType must be a number between 1 and 4 (1=preseason, 2=regular, 3=postseason, 4=allstar)',
+        provided: seasonType,
+      });
+      return;
+    }
+  }
+
+  next();
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // Helper Functions
@@ -87,7 +234,7 @@ apiRouter.get('/scoreboard', async (_req, res) => {
 });
 
 // GET /api/game/:gameId - Get detailed game data
-apiRouter.get('/game/:gameId', async (req, res) => {
+apiRouter.get('/game/:gameId', validateGameId, async (req, res) => {
   try {
     const { gameId } = req.params;
     const result = await espnProxy.fetchGameDetails(gameId);
@@ -105,7 +252,7 @@ apiRouter.get('/game/:gameId', async (req, res) => {
 });
 
 // GET /api/plays/:gameId - Get play-by-play data (faster polling for live events)
-apiRouter.get('/plays/:gameId', async (req, res) => {
+apiRouter.get('/plays/:gameId', validateGameId, async (req, res) => {
   try {
     const { gameId } = req.params;
     const result = await espnProxy.fetchPlays(gameId);
@@ -120,7 +267,7 @@ apiRouter.get('/plays/:gameId', async (req, res) => {
 });
 
 // GET /api/schedule - Get schedule for specific week/season
-apiRouter.get('/schedule', async (req, res) => {
+apiRouter.get('/schedule', validateScheduleParams, async (req, res) => {
   try {
     const { year, week, seasonType } = req.query;
     const result = await espnProxy.fetchSchedule(
@@ -142,7 +289,7 @@ apiRouter.get('/schedule', async (req, res) => {
 });
 
 // GET /api/team/:teamId - Get team info
-apiRouter.get('/team/:teamId', async (req, res) => {
+apiRouter.get('/team/:teamId', validateTeamId, async (req, res) => {
   try {
     const { teamId } = req.params;
     const result = await espnProxy.fetchTeam(teamId);
@@ -179,7 +326,7 @@ apiRouter.get('/bundesliga/current-group', async (req, res) => {
 });
 
 // GET /api/bundesliga/matchday/:matchday - Get all matches for a matchday
-apiRouter.get('/bundesliga/matchday/:matchday', async (req, res) => {
+apiRouter.get('/bundesliga/matchday/:matchday', validateMatchday, async (req, res) => {
   try {
     const { matchday } = req.params;
     const { league = 'bl1', season } = req.query;
@@ -210,7 +357,7 @@ apiRouter.get('/bundesliga/matchday/:matchday', async (req, res) => {
 });
 
 // GET /api/bundesliga/match/:matchId - Get single match details
-apiRouter.get('/bundesliga/match/:matchId', async (req, res) => {
+apiRouter.get('/bundesliga/match/:matchId', validateMatchId, async (req, res) => {
   try {
     const { matchId } = req.params;
     const data = await openligadbProxy.fetchMatch(matchId);
