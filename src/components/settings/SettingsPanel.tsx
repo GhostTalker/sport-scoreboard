@@ -58,8 +58,6 @@ export function SettingsPanel() {
   const viewMode = useSettingsStore((state) => state.viewMode);
   const setViewMode = useSettingsStore((state) => state.setViewMode);
   const setView = useUIStore((state) => state.setView);
-  const currentSport = useSettingsStore((state) => state.currentSport);
-  const currentCompetition = useSettingsStore((state) => state.currentCompetition);
   const { t } = useTranslation();
 
   const handleViewModeChange = (mode: ViewMode) => {
@@ -135,22 +133,6 @@ export function SettingsPanel() {
               <GameSelector />
             </section>
 
-          </div>
-
-          {/* Feedback Section */}
-          <div className="max-w-2xl mx-auto mt-8 pt-6 border-t border-slate-700">
-            <h3 className="text-sm font-semibold text-white/70 mb-2">
-              {t.settings.feedback.title}
-            </h3>
-            <a
-              href={`mailto:kevin.goris@mac.com?subject=Sport-Scoreboard%20Feedback&body=Version:%203.2.1%0ASport:%20${currentSport}%0ACompetition:%20${currentCompetition}%0ABrowser:%20${encodeURIComponent(navigator.userAgent)}%0ADate:%20${new Date().toISOString()}%0A%0A%5BDescribe%20your%20feedback%20here%5D`}
-              className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
-            >
-              {t.settings.feedback.button}
-            </a>
-            <p className="text-xs text-white/40 mt-2">
-              {t.settings.feedback.description}
-            </p>
           </div>
 
           {/* Navigation hint */}

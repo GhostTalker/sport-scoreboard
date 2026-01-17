@@ -21,8 +21,7 @@ export function NFLPlayoffBracket() {
     <div className="h-full w-full bg-slate-900 p-4 overflow-hidden flex flex-col">
       {/* Header */}
       <div className="text-center mb-4">
-        <h2 className="text-2xl font-bold text-white mb-1">NFL Playoffs {bracket.season}</h2>
-        <p className="text-white/50 text-sm">{getRoundDisplayName(bracket.currentRound)}</p>
+        <h2 className="text-2xl font-bold text-white">NFL Playoffs {bracket.season}</h2>
       </div>
 
       {/* Bracket Layout - Three columns: AFC left, Super Bowl center, NFC right */}
@@ -502,19 +501,4 @@ function gameToMatchup(game: NFLGame): PlayoffMatchup {
     startTime: game.startTime,
     venue: game.venue,
   };
-}
-
-function getRoundDisplayName(round: PlayoffBracket['currentRound']): string {
-  switch (round) {
-    case 'wild_card':
-      return 'Wild Card Round';
-    case 'divisional':
-      return 'Divisional Round';
-    case 'conference':
-      return 'Conference Championships';
-    case 'super_bowl':
-      return 'Super Bowl';
-    default:
-      return 'Playoffs';
-  }
 }
