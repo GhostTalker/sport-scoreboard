@@ -18,53 +18,59 @@ export function NFLPlayoffBracket() {
   const bracket = buildPlayoffBracket(availableGames.filter(isNFLGame), currentGame);
 
   return (
-    <div className="h-full w-full bg-slate-900 p-4 overflow-hidden flex flex-col">
-      {/* Header */}
-      <div className="text-center mb-4">
-        <h2 className="text-2xl font-bold text-white">NFL Playoffs {bracket.season}</h2>
-      </div>
-
-      {/* Bracket Layout - Three columns: AFC left, Super Bowl center, NFC right */}
-      <div className="flex-1 flex items-stretch gap-4 min-h-0">
-        {/* Left: AFC Bracket */}
-        <div className="flex-1 flex flex-col">
-          <div className="text-center mb-3">
-            <h3 className="text-xl font-bold text-blue-400">AFC</h3>
-          </div>
-          <div className="flex-1 min-h-0">
-            <ConferenceBracketLeft
-              conference="AFC"
-              wildCard={bracket.afc.wildCard}
-              divisional={bracket.afc.divisional}
-              conferenceGame={bracket.afc.conference}
-            />
-          </div>
+    <div className="h-full w-full bg-slate-900 flex items-center justify-center overflow-hidden">
+      {/* Fixed-size bracket container for iPad mini (1024x768 landscape) */}
+      <div className="flex flex-col" style={{ width: '1000px', height: '680px' }}>
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-white">NFL Playoffs {bracket.season}</h2>
         </div>
 
-        {/* Center: Super Bowl */}
-        <div className="w-64 flex flex-col items-center justify-center">
-          {/* Trophy Image */}
-          <img
-            src="/images/nfl_trophy.png"
-            alt="Super Bowl Trophy"
-            className="w-24 h-24 object-contain mb-2 opacity-80"
-            style={{ filter: 'drop-shadow(0 4px 12px rgba(234,179,8,0.4))' }}
-          />
-          <SuperBowlMatchup matchup={bracket.superBowl} />
-        </div>
-
-        {/* Right: NFC Bracket */}
-        <div className="flex-1 flex flex-col">
-          <div className="text-center mb-3">
-            <h3 className="text-xl font-bold text-red-400">NFC</h3>
+        {/* Bracket Layout - Fixed dimensions */}
+        <div className="flex items-center justify-center gap-4" style={{ height: '620px' }}>
+          {/* Left: AFC Bracket */}
+          <div style={{ width: '340px', height: '100%' }}>
+            <div className="text-center mb-3">
+              <h3 className="text-xl font-bold text-blue-400">AFC</h3>
+            </div>
+            <div style={{ height: 'calc(100% - 32px)' }}>
+              <ConferenceBracketLeft
+                conference="AFC"
+                wildCard={bracket.afc.wildCard}
+                divisional={bracket.afc.divisional}
+                conferenceGame={bracket.afc.conference}
+              />
+            </div>
           </div>
-          <div className="flex-1 min-h-0">
-            <ConferenceBracketRight
-              conference="NFC"
-              wildCard={bracket.nfc.wildCard}
-              divisional={bracket.nfc.divisional}
-              conferenceGame={bracket.nfc.conference}
+
+          {/* Center: Super Bowl - vertically centered between conference finals */}
+          <div className="flex flex-col items-center justify-center" style={{ width: '240px', height: '100%' }}>
+            {/* Trophy Image */}
+            <img
+              src="/images/nfl_trophy.png"
+              alt="Super Bowl Trophy"
+              className="w-32 h-32 object-contain mb-4"
+              style={{
+                filter: 'drop-shadow(0 4px 12px rgba(234,179,8,0.4))',
+                mixBlendMode: 'lighten'
+              }}
             />
+            <SuperBowlMatchup matchup={bracket.superBowl} />
+          </div>
+
+          {/* Right: NFC Bracket */}
+          <div style={{ width: '340px', height: '100%' }}>
+            <div className="text-center mb-3">
+              <h3 className="text-xl font-bold text-red-400">NFC</h3>
+            </div>
+            <div style={{ height: 'calc(100% - 32px)' }}>
+              <ConferenceBracketRight
+                conference="NFC"
+                wildCard={bracket.nfc.wildCard}
+                divisional={bracket.nfc.divisional}
+                conferenceGame={bracket.nfc.conference}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -79,7 +85,7 @@ interface ConferenceBracketProps {
   conferenceGame: PlayoffMatchup | null;
 }
 
-// AFC Bracket - Left side (flows left to right)
+// AFC Bracket - Left side (flows left to right) - Fixed layout
 function ConferenceBracketLeft({ conference, wildCard, divisional, conferenceGame }: ConferenceBracketProps) {
   const wcSlots = Array(3).fill(null).map((_, i) => wildCard[i] || createPlaceholderMatchup('wild_card', conference, i));
   const divSlots = Array(2).fill(null).map((_, i) => divisional[i] || createPlaceholderMatchup('divisional', conference, i));
@@ -87,8 +93,8 @@ function ConferenceBracketLeft({ conference, wildCard, divisional, conferenceGam
 
   return (
     <div className="relative h-full flex">
-      {/* Column 1: Wild Card (with BYE) */}
-      <div className="flex-1 flex flex-col justify-around py-2">
+      {/* Column 1: Wild Card (with BYE) - Fixed width */}
+      <div className="flex flex-col justify-around py-2" style={{ width: '110px' }}>
         <div className="text-center mb-1">
           <p className="text-[10px] text-white/40 font-semibold">WC</p>
         </div>
@@ -105,8 +111,8 @@ function ConferenceBracketLeft({ conference, wildCard, divisional, conferenceGam
         </div>
       </div>
 
-      {/* Column 2: Divisional */}
-      <div className="flex-1 flex flex-col justify-around py-2">
+      {/* Column 2: Divisional - Fixed width */}
+      <div className="flex flex-col justify-around py-2" style={{ width: '110px' }}>
         <div className="text-center mb-1">
           <p className="text-[10px] text-white/40 font-semibold">DIV</p>
         </div>
@@ -119,8 +125,8 @@ function ConferenceBracketLeft({ conference, wildCard, divisional, conferenceGam
         </div>
       </div>
 
-      {/* Column 3: Conference Championship */}
-      <div className="flex-1 flex flex-col justify-center py-2">
+      {/* Column 3: Conference Championship - Fixed width */}
+      <div className="flex flex-col justify-center py-2" style={{ width: '120px' }}>
         <div className="text-center mb-1">
           <p className="text-[10px] text-white/40 font-semibold">CONF</p>
         </div>
@@ -132,7 +138,7 @@ function ConferenceBracketLeft({ conference, wildCard, divisional, conferenceGam
   );
 }
 
-// NFC Bracket - Right side (flows right to left, mirrored)
+// NFC Bracket - Right side (flows right to left, mirrored) - Fixed layout
 function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGame }: ConferenceBracketProps) {
   const wcSlots = Array(3).fill(null).map((_, i) => wildCard[i] || createPlaceholderMatchup('wild_card', conference, i));
   const divSlots = Array(2).fill(null).map((_, i) => divisional[i] || createPlaceholderMatchup('divisional', conference, i));
@@ -140,8 +146,8 @@ function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGa
 
   return (
     <div className="relative h-full flex">
-      {/* Column 3: Conference Championship */}
-      <div className="flex-1 flex flex-col justify-center py-2">
+      {/* Column 3: Conference Championship - Fixed width */}
+      <div className="flex flex-col justify-center py-2" style={{ width: '120px' }}>
         <div className="text-center mb-1">
           <p className="text-[10px] text-white/40 font-semibold">CONF</p>
         </div>
@@ -150,8 +156,8 @@ function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGa
         </div>
       </div>
 
-      {/* Column 2: Divisional */}
-      <div className="flex-1 flex flex-col justify-around py-2">
+      {/* Column 2: Divisional - Fixed width */}
+      <div className="flex flex-col justify-around py-2" style={{ width: '110px' }}>
         <div className="text-center mb-1">
           <p className="text-[10px] text-white/40 font-semibold">DIV</p>
         </div>
@@ -164,8 +170,8 @@ function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGa
         </div>
       </div>
 
-      {/* Column 1: Wild Card (with BYE) */}
-      <div className="flex-1 flex flex-col justify-around py-2">
+      {/* Column 1: Wild Card (with BYE) - Fixed width */}
+      <div className="flex flex-col justify-around py-2" style={{ width: '110px' }}>
         <div className="text-center mb-1">
           <p className="text-[10px] text-white/40 font-semibold">WC</p>
         </div>
