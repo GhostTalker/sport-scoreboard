@@ -471,23 +471,23 @@ function BracketConnectionsRight() {
       {/* Short horizontal from gap middle to DIV box edge at div2 */}
       <line x1={gapConfDiv} y1={div2} x2={divLeft} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
 
-      {/* === Divisional to Wild Card - Top pair === */}
-      {/* Short horizontal from DIV box edge to gap middle */}
-      <line x1={divRight} y1={wc1} x2={gapDivWC} y2={wc1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
-      <line x1={divRight} y1={wc2} x2={gapDivWC} y2={wc2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* === Wild Card to Divisional - Top pair === */}
+      {/* Short horizontal from WC box edge to gap middle */}
+      <line x1={wcLeft} y1={wc1} x2={gapDivWC} y2={wc1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      <line x1={wcLeft} y1={wc2} x2={gapDivWC} y2={wc2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
       {/* Vertical connector at gap middle */}
       <line x1={gapDivWC} y1={wc1} x2={gapDivWC} y2={wc2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
-      {/* Short horizontal from gap middle to WC box edge */}
-      <line x1={gapDivWC} y1={div1} x2={wcLeft} y2={div1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* Short horizontal from gap middle to DIV box edge */}
+      <line x1={gapDivWC} y1={div1} x2={divRight} y2={div1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
 
-      {/* === Divisional to Wild Card - Bottom pair === */}
-      {/* Short horizontal from DIV box edge to gap middle */}
-      <line x1={divRight} y1={wc3} x2={gapDivWC} y2={wc3} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
-      <line x1={divRight} y1={wc4} x2={gapDivWC} y2={wc4} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* === Wild Card to Divisional - Bottom pair === */}
+      {/* Short horizontal from WC box edge to gap middle */}
+      <line x1={wcLeft} y1={wc3} x2={gapDivWC} y2={wc3} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      <line x1={wcLeft} y1={wc4} x2={gapDivWC} y2={wc4} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
       {/* Vertical connector at gap middle */}
       <line x1={gapDivWC} y1={wc3} x2={gapDivWC} y2={wc4} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
-      {/* Short horizontal from gap middle to WC box edge */}
-      <line x1={gapDivWC} y1={div2} x2={wcLeft} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* Short horizontal from gap middle to DIV box edge */}
+      <line x1={gapDivWC} y1={div2} x2={divRight} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
     </svg>
   );
 }
