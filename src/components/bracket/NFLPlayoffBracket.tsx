@@ -368,12 +368,11 @@ function BracketConnectionsLeft() {
   // X coordinates (in viewBox units, 340 = 100%)
   // Layout: WC(0-110) | gap(4) | DIV(114-224) | gap(4) | CONF(228-346)
   // With mx-2 (8px margin): WC box(8-102), DIV box(122-216), CONF box(236-338)
+  // Using BOX CENTERS for proper line connections
   const scale = 100 / 340;
-  const wcRight = 102 * scale;       // Right edge of WC box with margin (30)
-  const divLeft = 122 * scale;       // Left edge of DIV box with margin (35.88)
-  const divRight = 216 * scale;      // Right edge of DIV box with margin (63.53)
-  const confLeft = 236 * scale;      // Left edge of CONF box with margin (69.41)
-  const confRight = 338 * scale;     // Right edge of CONF box with margin (99.41)
+  const wcMid = 55 * scale;          // 16.17 - Center of WC box (8+102)/2
+  const divMid = 169 * scale;        // 49.71 - Center of DIV box (122+216)/2
+  const confMid = 287 * scale;       // 84.38 - Center of CONF box (236+338)/2
 
   return (
     <svg
@@ -384,40 +383,40 @@ function BracketConnectionsLeft() {
     >
       {/* === Wild Card to Divisional - Top pair === */}
       {/* wc1 (BYE at 30) + wc2 (68) -> div1 (51) */}
-      {/* Horizontal from wc1 to just before divLeft */}
-      <line x1={wcRight} y1={wc1} x2={divLeft - 1} y2={wc1} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from wc2 to just before divLeft */}
-      <line x1={wcRight} y1={wc2} x2={divLeft - 1} y2={wc2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Vertical connector just before divLeft from wc1 to wc2 */}
-      <line x1={divLeft - 1} y1={wc1} x2={divLeft - 1} y2={wc2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from vertical connector to divLeft at div1 */}
-      <line x1={divLeft - 1} y1={div1} x2={divLeft} y2={div1} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from wc1 center to divMid */}
+      <line x1={wcMid} y1={wc1} x2={divMid} y2={wc1} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from wc2 center to divMid */}
+      <line x1={wcMid} y1={wc2} x2={divMid} y2={wc2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Vertical connector at divMid from wc1 to wc2 */}
+      <line x1={divMid} y1={wc1} x2={divMid} y2={wc2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from divMid to div1 */}
+      <line x1={divMid} y1={div1} x2={divMid} y2={div1} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
 
       {/* === Wild Card to Divisional - Bottom pair === */}
       {/* wc3 (108) + wc4 (147) -> div2 (128) */}
-      {/* Horizontal from wc3 to just before divLeft */}
-      <line x1={wcRight} y1={wc3} x2={divLeft - 1} y2={wc3} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from wc4 to just before divLeft */}
-      <line x1={wcRight} y1={wc4} x2={divLeft - 1} y2={wc4} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Vertical connector just before divLeft from wc3 to wc4 */}
-      <line x1={divLeft - 1} y1={wc3} x2={divLeft - 1} y2={wc4} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from vertical connector to divLeft at div2 */}
-      <line x1={divLeft - 1} y1={div2} x2={divLeft} y2={div2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from wc3 center to divMid */}
+      <line x1={wcMid} y1={wc3} x2={divMid} y2={wc3} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from wc4 center to divMid */}
+      <line x1={wcMid} y1={wc4} x2={divMid} y2={wc4} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Vertical connector at divMid from wc3 to wc4 */}
+      <line x1={divMid} y1={wc3} x2={divMid} y2={wc4} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from divMid to div2 */}
+      <line x1={divMid} y1={div2} x2={divMid} y2={div2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
 
       {/* === Divisional to Conference === */}
       {/* div1 (51) + div2 (128) -> conf (90) */}
-      {/* Horizontal from div1 to just before confLeft */}
-      <line x1={divRight} y1={div1} x2={confLeft - 1} y2={div1} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from div2 to just before confLeft */}
-      <line x1={divRight} y1={div2} x2={confLeft - 1} y2={div2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Vertical connector just before confLeft from div1 to div2 */}
-      <line x1={confLeft - 1} y1={div1} x2={confLeft - 1} y2={div2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from vertical connector to confLeft at conf */}
-      <line x1={confLeft - 1} y1={conf} x2={confLeft} y2={conf} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from div1 center to confMid */}
+      <line x1={divMid} y1={div1} x2={confMid} y2={div1} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from div2 center to confMid */}
+      <line x1={divMid} y1={div2} x2={confMid} y2={div2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Vertical connector at confMid from div1 to div2 */}
+      <line x1={confMid} y1={div1} x2={confMid} y2={div2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from confMid to conf */}
+      <line x1={confMid} y1={conf} x2={confMid} y2={conf} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
 
       {/* === Conference to Super Bowl === */}
-      {/* conf (90) -> Super Bowl (extends beyond right edge) */}
-      <line x1={confRight} y1={conf} x2={104} y2={conf} stroke="#ef4444" strokeWidth="0.8" opacity="0.8" />
+      {/* conf (90) -> Super Bowl (extends beyond right edge from conf center) */}
+      <line x1={confMid} y1={conf} x2={104} y2={conf} stroke="#ef4444" strokeWidth="0.8" opacity="0.8" />
     </svg>
   );
 }
@@ -440,12 +439,11 @@ function BracketConnectionsRight() {
   // X coordinates (in viewBox units, 340 = 100%)
   // NFC layout (mirrored): CONF(0-118) | gap(4) | DIV(122-232) | gap(4) | WC(236-346)
   // With mx-2 (8px margin): CONF box(8-110), DIV box(130-224), WC box(244-338)
+  // Using BOX CENTERS for proper line connections
   const scale = 100 / 340;
-  const confBoxLeft = 8 * scale;         // Left edge of CONF box with margin (2.35)
-  const confRight = 110 * scale;         // Right edge of CONF box with margin (32.35)
-  const divLeft = 130 * scale;           // Left edge of DIV box with margin (38.24)
-  const divRight = 224 * scale;          // Right edge of DIV box with margin (65.88)
-  const wcLeft = 244 * scale;            // Left edge of WC box with margin (71.76)
+  const confMid = 59 * scale;            // 17.35 - Center of CONF box (8+110)/2
+  const divMid = 177 * scale;            // 52.04 - Center of DIV box (130+224)/2
+  const wcMid = 291 * scale;             // 85.64 - Center of WC box (244+338)/2
 
   return (
     <svg
@@ -455,41 +453,41 @@ function BracketConnectionsRight() {
       preserveAspectRatio="none"
     >
       {/* === Super Bowl to Conference === */}
-      {/* Super Bowl (extends beyond left edge) -> conf box left edge */}
-      <line x1="-4" y1={conf} x2={confBoxLeft} y2={conf} stroke="#60a5fa" strokeWidth="0.8" opacity="0.8" />
+      {/* Super Bowl (extends beyond left edge) -> conf box center */}
+      <line x1="-4" y1={conf} x2={confMid} y2={conf} stroke="#60a5fa" strokeWidth="0.8" opacity="0.8" />
 
       {/* === Conference to Divisional === */}
       {/* div1 (51) + div2 (128) -> conf (90) */}
-      {/* Horizontal from conf to just after divLeft */}
-      <line x1={confRight} y1={conf} x2={divLeft + 1} y2={conf} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Vertical connector just after divLeft from div1 to div2 */}
-      <line x1={divLeft + 1} y1={div1} x2={divLeft + 1} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from divLeft to vertical connector at div1 */}
-      <line x1={divLeft} y1={div1} x2={divLeft + 1} y2={div1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from divLeft to vertical connector at div2 */}
-      <line x1={divLeft} y1={div2} x2={divLeft + 1} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from conf center to divMid */}
+      <line x1={confMid} y1={conf} x2={divMid} y2={conf} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Vertical connector at divMid from div1 to div2 */}
+      <line x1={divMid} y1={div1} x2={divMid} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from divMid to div1 */}
+      <line x1={divMid} y1={div1} x2={divMid} y2={div1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from divMid to div2 */}
+      <line x1={divMid} y1={div2} x2={divMid} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
 
       {/* === Divisional to Wild Card - Top pair === */}
       {/* wc1 (BYE at 30) + wc2 (68) -> div1 (51) */}
-      {/* Horizontal from div1 to just after wcLeft */}
-      <line x1={divRight} y1={div1} x2={wcLeft + 1} y2={div1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Vertical connector just after wcLeft from wc1 to wc2 */}
-      <line x1={wcLeft + 1} y1={wc1} x2={wcLeft + 1} y2={wc2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from wcLeft to vertical connector at wc1 */}
-      <line x1={wcLeft} y1={wc1} x2={wcLeft + 1} y2={wc1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from wcLeft to vertical connector at wc2 */}
-      <line x1={wcLeft} y1={wc2} x2={wcLeft + 1} y2={wc2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from div1 center to wcMid */}
+      <line x1={divMid} y1={div1} x2={wcMid} y2={div1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Vertical connector at wcMid from wc1 to wc2 */}
+      <line x1={wcMid} y1={wc1} x2={wcMid} y2={wc2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from wcMid to wc1 */}
+      <line x1={wcMid} y1={wc1} x2={wcMid} y2={wc1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from wcMid to wc2 */}
+      <line x1={wcMid} y1={wc2} x2={wcMid} y2={wc2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
 
       {/* === Divisional to Wild Card - Bottom pair === */}
       {/* wc3 (108) + wc4 (147) -> div2 (128) */}
-      {/* Horizontal from div2 to just after wcLeft */}
-      <line x1={divRight} y1={div2} x2={wcLeft + 1} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Vertical connector just after wcLeft from wc3 to wc4 */}
-      <line x1={wcLeft + 1} y1={wc3} x2={wcLeft + 1} y2={wc4} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from wcLeft to vertical connector at wc3 */}
-      <line x1={wcLeft} y1={wc3} x2={wcLeft + 1} y2={wc3} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from wcLeft to vertical connector at wc4 */}
-      <line x1={wcLeft} y1={wc4} x2={wcLeft + 1} y2={wc4} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from div2 center to wcMid */}
+      <line x1={divMid} y1={div2} x2={wcMid} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Vertical connector at wcMid from wc3 to wc4 */}
+      <line x1={wcMid} y1={wc3} x2={wcMid} y2={wc4} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from wcMid to wc3 */}
+      <line x1={wcMid} y1={wc3} x2={wcMid} y2={wc3} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from wcMid to wc4 */}
+      <line x1={wcMid} y1={wc4} x2={wcMid} y2={wc4} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
     </svg>
   );
 }
