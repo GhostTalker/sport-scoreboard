@@ -368,7 +368,7 @@ function BracketConnectionsLeft() {
     <svg
       className="absolute inset-0 pointer-events-none"
       style={{ zIndex: 5 }}
-      viewBox="0 0 100 100"
+      viewBox="0 0 100 200"
       preserveAspectRatio="none"
     >
       {/* === VERTICAL MEASUREMENT LINES at X positions === */}
