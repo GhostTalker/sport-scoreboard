@@ -452,6 +452,58 @@ function SuperBowlConnectionLines() {
       viewBox={`0 0 ${totalWidth} ${totalHeight}`}
       preserveAspectRatio="none"
     >
+      {/* DEBUG GRID - Remove after positioning */}
+      {/* Vertical lines every 50px */}
+      {Array.from({ length: Math.floor(totalWidth / 50) + 1 }).map((_, i) => {
+        const x = i * 50;
+        return (
+          <g key={`v-${i}`}>
+            <line
+              x1={x}
+              y1={0}
+              x2={x}
+              y2={totalHeight}
+              stroke="rgba(0,255,0,0.3)"
+              strokeWidth="1"
+            />
+            <text
+              x={x + 2}
+              y={20}
+              fill="lime"
+              fontSize="12"
+              fontFamily="monospace"
+            >
+              {x}
+            </text>
+          </g>
+        );
+      })}
+      {/* Horizontal lines every 50px */}
+      {Array.from({ length: Math.floor(totalHeight / 50) + 1 }).map((_, i) => {
+        const y = i * 50;
+        return (
+          <g key={`h-${i}`}>
+            <line
+              x1={0}
+              y1={y}
+              x2={totalWidth}
+              y2={y}
+              stroke="rgba(0,255,0,0.3)"
+              strokeWidth="1"
+            />
+            <text
+              x={5}
+              y={y - 2}
+              fill="lime"
+              fontSize="12"
+              fontFamily="monospace"
+            >
+              {y}
+            </text>
+          </g>
+        );
+      })}
+
       {/* AFC to Super Bowl - Red pulsing lines with short pattern */}
       {/* Short horizontal from CONF box edge to gap middle */}
       <line
