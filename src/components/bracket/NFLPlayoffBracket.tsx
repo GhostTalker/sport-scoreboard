@@ -350,102 +350,171 @@ function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGa
   );
 }
 
-// Connection lines for AFC bracket - Fixed pixel positions
+// Connection lines for AFC bracket (left side) - flows left to right
+// Uses viewBox for consistent coordinate system matching actual layout
 function BracketConnectionsLeft() {
-  // Layout: WC=110px, gap=1px, DIV=110px, gap=1px, CONF=118px (total 340px)
-  // X positions: WC ends at 110, DIV starts at 111, DIV ends at 221, CONF starts at 222
-  // Y positions with justify-around:
-  //   WC (4 items): 12.5%, 37.5%, 62.5%, 87.5%
-  //   DIV (2 items): 25%, 75%
-  //   CONF (1 item): 50%
+  // Container is 340px wide, height varies but we use viewBox 0-100 for Y
+  // Column layout: WC=110px (0-110), gap=4px, DIV=110px (114-224), gap=4px, CONF=118px (228-340)
+  // (gap-1 = 4px in Tailwind)
+
+  // Each column has:
+  // - Header: ~28px (text-center mb-2 with py-1 inside)
+  // - Content area: remaining height with flex-1 flex-col justify-around
+
+  // Header takes approximately 5% of container height
+  // Content starts at ~5% and ends at ~98% (accounting for py-2 padding)
+  const headerEnd = 6;     // Where content area starts (after header)
+  const contentEnd = 98;   // Where content area ends
+  const contentHeight = contentEnd - headerEnd;
+
+  // WC column: 4 items (BYE + 3 WC games) with justify-around
+  // justify-around formula: item[i] center = headerEnd + contentHeight * (2*i + 1) / (2*n)
+  const wc1 = headerEnd + contentHeight * 1 / 8;   // BYE: ~17.5%
+  const wc2 = headerEnd + contentHeight * 3 / 8;   // WC1: ~40.5%
+  const wc3 = headerEnd + contentHeight * 5 / 8;   // WC2: ~63.5%
+  const wc4 = headerEnd + contentHeight * 7 / 8;   // WC3: ~86.5%
+
+  // DIV column: 2 items with justify-around
+  const div1 = headerEnd + contentHeight * 1 / 4;  // DIV1: ~29%
+  const div2 = headerEnd + contentHeight * 3 / 4;  // DIV2: ~75%
+
+  // CONF column: 1 item centered (uses flex items-center)
+  const conf = headerEnd + contentHeight / 2;      // CONF: ~52%
+
+  // X coordinates (in viewBox units, 340 = 100%)
+  // Scale: 340px container, viewBox 0-100
+  const scale = 100 / 340;
+  const wcRight = 108 * scale;       // Right edge of WC column (~31.8)
+  const gapMid1 = 112 * scale;       // Midpoint of first gap (~32.9)
+  const divLeft = 116 * scale;       // Left edge of DIV column (~34.1)
+  const divRight = 222 * scale;      // Right edge of DIV column (~65.3)
+  const gapMid2 = 226 * scale;       // Midpoint of second gap (~66.5)
+  const confLeft = 230 * scale;      // Left edge of CONF column (~67.6)
+  const confRight = 100;             // Right edge of container
 
   return (
-    <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
-      {/* === Wild Card to Divisional - Top DIV game === */}
-      {/* Top DIV (25%) fed by: #1 BYE (12.5%) + WC Game 1 winner (37.5%) */}
-      {/* Long horizontal line from BYE */}
-      <line x1="110" y1="12.5%" x2="125" y2="12.5%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
-      {/* Long horizontal line from WC Game 1 */}
-      <line x1="110" y1="37.5%" x2="125" y2="37.5%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
-      {/* Vertical connector at x=125 between 12.5% and 37.5% */}
-      <line x1="125" y1="12.5%" x2="125" y2="37.5%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
-      {/* Horizontal continuation from midpoint (25%) to DIV column */}
-      <line x1="125" y1="25%" x2="130" y2="25%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
+    <svg
+      className="absolute inset-0 pointer-events-none"
+      style={{ zIndex: 5 }}
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+    >
+      {/* === Wild Card to Divisional - Top pair === */}
+      {/* BYE (wc1) + WC1 (wc2) -> DIV1 */}
+      {/* Horizontal from BYE */}
+      <line x1={wcRight} y1={wc1} x2={gapMid1} y2={wc1} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from WC1 */}
+      <line x1={wcRight} y1={wc2} x2={gapMid1} y2={wc2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Vertical connector */}
+      <line x1={gapMid1} y1={wc1} x2={gapMid1} y2={wc2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal to DIV1 (from midpoint between wc1 and wc2) */}
+      <line x1={gapMid1} y1={div1} x2={divLeft} y2={div1} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
 
       {/* === Wild Card to Divisional - Bottom pair === */}
-      {/* WC Game 2 (62.5%) + WC Game 3 (87.5%) -> DIV Bottom (75%) */}
-      {/* Long horizontal line from WC Game 2 */}
-      <line x1="110" y1="62.5%" x2="125" y2="62.5%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
-      {/* Long horizontal line from WC Game 3 */}
-      <line x1="110" y1="87.5%" x2="125" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
-      {/* Vertical connector at x=125 between 62.5% and 87.5% */}
-      <line x1="125" y1="62.5%" x2="125" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
-      {/* Horizontal continuation from midpoint (75%) to DIV column */}
-      <line x1="125" y1="75%" x2="130" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
+      {/* WC2 (wc3) + WC3 (wc4) -> DIV2 */}
+      {/* Horizontal from WC2 */}
+      <line x1={wcRight} y1={wc3} x2={gapMid1} y2={wc3} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from WC3 */}
+      <line x1={wcRight} y1={wc4} x2={gapMid1} y2={wc4} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Vertical connector */}
+      <line x1={gapMid1} y1={wc3} x2={gapMid1} y2={wc4} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal to DIV2 */}
+      <line x1={gapMid1} y1={div2} x2={divLeft} y2={div2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
 
       {/* === Divisional to Conference === */}
-      {/* DIV Top (25%) + DIV Bottom (75%) -> CONF (50%) */}
-      {/* Long horizontal line from DIV Top */}
-      <line x1="224" y1="25%" x2="239" y2="25%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
-      {/* Long horizontal line from DIV Bottom */}
-      <line x1="224" y1="75%" x2="239" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
-      {/* Vertical connector at x=239 between 25% and 75% */}
-      <line x1="239" y1="25%" x2="239" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
-      {/* Horizontal continuation from midpoint (50%) to CONF column */}
-      <line x1="239" y1="50%" x2="244" y2="50%" stroke="#ef4444" strokeWidth="2" opacity="0.6" />
+      {/* DIV1 + DIV2 -> CONF */}
+      {/* Horizontal from DIV1 */}
+      <line x1={divRight} y1={div1} x2={gapMid2} y2={div1} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal from DIV2 */}
+      <line x1={divRight} y1={div2} x2={gapMid2} y2={div2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Vertical connector */}
+      <line x1={gapMid2} y1={div1} x2={gapMid2} y2={div2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal to CONF */}
+      <line x1={gapMid2} y1={conf} x2={confLeft} y2={conf} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
 
       {/* === Conference to Super Bowl === */}
-      <line x1="340" y1="50%" x2="350" y2="50%" stroke="#fbbf24" strokeWidth="3" opacity="0.7" />
+      <line x1={confRight} y1={conf} x2="102" y2={conf} stroke="#fbbf24" strokeWidth="0.8" opacity="0.8" />
     </svg>
   );
 }
 
-// Connection lines for NFC bracket - Fixed pixel positions (mirrored)
+// Connection lines for NFC bracket (right side) - flows right to left (mirrored)
+// Uses viewBox for consistent coordinate system matching actual layout
 function BracketConnectionsRight() {
-  // Layout: CONF=118px, gap=1px, DIV=110px, gap=1px, WC=110px (total 340px)
-  // X positions: CONF ends at 118, DIV starts at 119, DIV ends at 229, WC starts at 230
-  // Y positions with justify-around:
-  //   CONF (1 item): 50%
-  //   DIV (2 items): 25%, 75%
-  //   WC (4 items): 12.5%, 37.5%, 62.5%, 87.5%
+  // Container is 340px wide, height varies but we use viewBox 0-100 for Y
+  // NFC column layout (reversed): CONF=118px (0-118), gap=4px, DIV=110px (122-232), gap=4px, WC=110px (236-340)
+
+  // Y positions - same as AFC since the layout structure is identical
+  const headerEnd = 6;
+  const contentEnd = 98;
+  const contentHeight = contentEnd - headerEnd;
+
+  // WC column: 4 items (BYE + 3 WC games) with justify-around
+  const wc1 = headerEnd + contentHeight * 1 / 8;   // BYE: ~17.5%
+  const wc2 = headerEnd + contentHeight * 3 / 8;   // WC1: ~40.5%
+  const wc3 = headerEnd + contentHeight * 5 / 8;   // WC2: ~63.5%
+  const wc4 = headerEnd + contentHeight * 7 / 8;   // WC3: ~86.5%
+
+  // DIV column: 2 items with justify-around
+  const div1 = headerEnd + contentHeight * 1 / 4;  // DIV1: ~29%
+  const div2 = headerEnd + contentHeight * 3 / 4;  // DIV2: ~75%
+
+  // CONF column: 1 item centered
+  const conf = headerEnd + contentHeight / 2;      // CONF: ~52%
+
+  // X coordinates (in viewBox units, 340 = 100%)
+  // NFC layout: CONF(0-118) | gap | DIV(122-232) | gap | WC(236-340)
+  const scale = 100 / 340;
+  const confLeft = 0;                    // Left edge of container
+  const confRight = 116 * scale;         // Right edge of CONF column (~34.1)
+  const gapMid1 = 120 * scale;           // Midpoint of first gap (~35.3)
+  const divLeft = 124 * scale;           // Left edge of DIV column (~36.5)
+  const divRight = 230 * scale;          // Right edge of DIV column (~67.6)
+  const gapMid2 = 234 * scale;           // Midpoint of second gap (~68.8)
+  const wcLeft = 238 * scale;            // Left edge of WC column (~70)
 
   return (
-    <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
+    <svg
+      className="absolute inset-0 pointer-events-none"
+      style={{ zIndex: 5 }}
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+    >
       {/* === Super Bowl to Conference === */}
-      <line x1="-10" y1="50%" x2="0" y2="50%" stroke="#fbbf24" strokeWidth="3" opacity="0.7" />
+      <line x1="-2" y1={conf} x2={confLeft} y2={conf} stroke="#fbbf24" strokeWidth="0.8" opacity="0.8" />
 
       {/* === Conference to Divisional === */}
-      {/* CONF (50%) feeds: DIV Top (25%) + DIV Bottom (75%) */}
-      {/* Long horizontal line from CONF (goes leftward) */}
-      <line x1="118" y1="50%" x2="103" y2="50%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
-      {/* Vertical connector at x=103 between 25% and 75% */}
-      <line x1="103" y1="25%" x2="103" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
-      {/* Horizontal continuation from 25% to DIV column */}
-      <line x1="103" y1="25%" x2="98" y2="25%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
-      {/* Horizontal continuation from 75% to DIV column */}
-      <line x1="103" y1="75%" x2="98" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+      {/* CONF -> DIV1 + DIV2 */}
+      {/* Horizontal from CONF */}
+      <line x1={confRight} y1={conf} x2={gapMid1} y2={conf} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Vertical connector */}
+      <line x1={gapMid1} y1={div1} x2={gapMid1} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal to DIV1 */}
+      <line x1={gapMid1} y1={div1} x2={divLeft} y2={div1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal to DIV2 */}
+      <line x1={gapMid1} y1={div2} x2={divLeft} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
 
       {/* === Divisional to Wild Card - Top pair === */}
-      {/* DIV Top (25%) feeds: #1 BYE (12.5%) + WC Game 1 (37.5%) */}
-      {/* Long horizontal line from DIV Top */}
-      <line x1="229" y1="25%" x2="244" y2="25%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
-      {/* Vertical connector at x=244 between 12.5% and 37.5% */}
-      <line x1="244" y1="12.5%" x2="244" y2="37.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
-      {/* Horizontal continuation to BYE */}
-      <line x1="244" y1="12.5%" x2="249" y2="12.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
-      {/* Horizontal continuation to WC Game 1 */}
-      <line x1="244" y1="37.5%" x2="249" y2="37.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+      {/* DIV1 -> BYE (wc1) + WC1 (wc2) */}
+      {/* Horizontal from DIV1 */}
+      <line x1={divRight} y1={div1} x2={gapMid2} y2={div1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Vertical connector */}
+      <line x1={gapMid2} y1={wc1} x2={gapMid2} y2={wc2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal to BYE */}
+      <line x1={gapMid2} y1={wc1} x2={wcLeft} y2={wc1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal to WC1 */}
+      <line x1={gapMid2} y1={wc2} x2={wcLeft} y2={wc2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
 
       {/* === Divisional to Wild Card - Bottom pair === */}
-      {/* DIV Bottom (75%) feeds: WC Game 2 (62.5%) + WC Game 3 (87.5%) */}
-      {/* Long horizontal line from DIV Bottom */}
-      <line x1="229" y1="75%" x2="244" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
-      {/* Vertical connector at x=244 between 62.5% and 87.5% */}
-      <line x1="244" y1="62.5%" x2="244" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
-      {/* Horizontal continuation to WC Game 2 */}
-      <line x1="244" y1="62.5%" x2="249" y2="62.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
-      {/* Horizontal continuation to WC Game 3 */}
-      <line x1="244" y1="87.5%" x2="249" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+      {/* DIV2 -> WC2 (wc3) + WC3 (wc4) */}
+      {/* Horizontal from DIV2 */}
+      <line x1={divRight} y1={div2} x2={gapMid2} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Vertical connector */}
+      <line x1={gapMid2} y1={wc3} x2={gapMid2} y2={wc4} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal to WC2 */}
+      <line x1={gapMid2} y1={wc3} x2={wcLeft} y2={wc3} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Horizontal to WC3 */}
+      <line x1={gapMid2} y1={wc4} x2={wcLeft} y2={wc4} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
     </svg>
   );
 }
@@ -489,7 +558,7 @@ function MatchupCard({ matchup, compact }: MatchupCardProps) {
   );
 }
 
-// Bye Team Card - displays the #1 seed with a yellow/gold border
+// Bye Team Card - displays the #1 seed with BYE as opponent (styled like MatchupCard)
 interface ByeTeamCardProps {
   team: PlayoffTeam | null;
   conference: 'AFC' | 'NFC';
@@ -499,17 +568,35 @@ function ByeTeamCard({ team, conference: _conference }: ByeTeamCardProps) {
   if (!team) {
     // Placeholder when team not yet determined
     return (
-      <div className="h-12 flex items-center justify-center bg-slate-800/20 rounded border border-yellow-600/30">
-        <span className="text-white/30 text-[10px] font-semibold">#1 BYE</span>
+      <div className="bg-slate-800/80 rounded p-1 border border-slate-700/50 relative z-10">
+        {/* Placeholder Team Row */}
+        <div className="flex items-center gap-1 py-0.5">
+          <div className="w-4 h-4 bg-slate-700/50 rounded"></div>
+          <div className="flex-1">
+            <span className="text-white/20 text-[10px]">#1 TBD</span>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="h-px bg-slate-700/50 my-0.5"></div>
+
+        {/* BYE Row */}
+        <div className="flex items-center gap-1 py-0.5">
+          <div className="w-4 h-4 bg-slate-700/30 rounded"></div>
+          <div className="flex-1">
+            <span className="text-white/30 text-[10px]">BYE</span>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-800/80 rounded p-1 border-2 border-yellow-500/60 relative z-10">
+    <div className="bg-slate-800/80 rounded p-1 border border-slate-700/50 relative z-10">
+      {/* #1 Seed Team Row */}
       <div className="flex items-center gap-1 py-0.5">
         {/* Team Logo */}
-        <div className="w-5 h-5 flex-shrink-0">
+        <div className="w-4 h-4 flex-shrink-0">
           <img
             src={team.logo}
             alt={team.abbreviation}
@@ -522,16 +609,24 @@ function ByeTeamCard({ team, conference: _conference }: ByeTeamCardProps) {
 
         {/* Team Info */}
         <div className="flex-1 min-w-0 flex items-center gap-0.5">
-          <span className="text-[9px] text-yellow-400/80">#1</span>
+          <span className="text-[9px] text-white/30">#1</span>
           <span className="text-[11px] font-semibold text-white truncate">
             {team.abbreviation}
           </span>
         </div>
       </div>
 
-      {/* BYE Label */}
-      <div className="text-center mt-0.5">
-        <span className="text-[8px] text-yellow-400 font-bold">BYE</span>
+      {/* Divider */}
+      <div className="h-px bg-slate-700/50 my-0.5"></div>
+
+      {/* BYE Row (opponent placeholder) */}
+      <div className="flex items-center gap-1 py-0.5">
+        <div className="w-4 h-4 bg-slate-700/30 rounded flex items-center justify-center">
+          <span className="text-white/20 text-[6px]">-</span>
+        </div>
+        <div className="flex-1">
+          <span className="text-[11px] text-white/40 font-medium">BYE</span>
+        </div>
       </div>
     </div>
   );
@@ -557,7 +652,7 @@ function TeamRow({ team, isWinner, status, compact }: TeamRowProps) {
   }
 
   const isComplete = status === 'final';
-  const opacity = isComplete && !isWinner ? 'opacity-40' : '';
+  const opacity = isComplete && !isWinner ? 'opacity-75' : '';
 
   return (
     <div className={`flex items-center gap-1 ${compact ? 'py-0.5' : 'py-1'} ${opacity}`}>
@@ -585,7 +680,7 @@ function TeamRow({ team, isWinner, status, compact }: TeamRowProps) {
 
       {/* Score */}
       {team.score !== undefined && (
-        <div className={`text-sm font-bold tabular-nums ${isWinner ? 'text-white' : 'text-white/40'}`}>
+        <div className={`text-sm font-bold tabular-nums ${isWinner ? 'text-white' : 'text-white/75'}`}>
           {team.score}
         </div>
       )}
@@ -670,7 +765,7 @@ interface SuperBowlTeamDisplayProps {
 
 function SuperBowlTeamDisplay({ team, fallbackLogo, fallbackLabel, isWinner, isComplete }: SuperBowlTeamDisplayProps) {
   const isTBD = !team;
-  const opacity = isComplete && !isWinner && !isTBD ? 'opacity-40' : '';
+  const opacity = isComplete && !isWinner && !isTBD ? 'opacity-75' : '';
 
   return (
     <div className={`flex flex-col items-center gap-1 ${opacity}`} style={{ width: '70px' }}>
