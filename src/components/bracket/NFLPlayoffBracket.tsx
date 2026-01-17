@@ -503,6 +503,49 @@ function SuperBowlConnectionLines() {
         opacity="0.7"
         strokeLinecap="butt"
       />
+
+      {/* DEBUG GRID - Right side only (NFC area) */}
+      {/* Vertical lines every 10px from 500 to 700 */}
+      {Array.from({ length: 21 }, (_, i) => {
+        const x = 500 + i * 10;
+        return (
+          <g key={`grid-${x}`}>
+            <line
+              x1={x}
+              y1={0}
+              x2={x}
+              y2={totalHeight}
+              stroke={x % 50 === 0 ? '#00ff00' : '#00ff00'}
+              strokeWidth={x % 50 === 0 ? '2' : '1'}
+              opacity={x % 50 === 0 ? '0.8' : '0.4'}
+            />
+            {x % 10 === 0 && (
+              <text
+                x={x}
+                y={20}
+                fill="#00ff00"
+                fontSize="12"
+                textAnchor="middle"
+                style={{ fontWeight: 'bold' }}
+              >
+                {x}
+              </text>
+            )}
+          </g>
+        );
+      })}
+
+      {/* Horizontal reference line at confY */}
+      <line
+        x1={500}
+        y1={confY}
+        x2={700}
+        y2={confY}
+        stroke="#ff00ff"
+        strokeWidth="1"
+        opacity="0.6"
+        strokeDasharray="5,5"
+      />
     </svg>
   );
 }
