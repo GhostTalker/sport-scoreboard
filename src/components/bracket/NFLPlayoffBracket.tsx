@@ -362,27 +362,28 @@ function BracketConnectionsLeft() {
   const boxCenterOffset = 3;
 
   // Box TOP positions (where justify-around places them)
+  // Corrected based on precise user measurements from screenshot analysis
   // WC column: 4 items (BYE + 3 WC games) with justify-around
-  const wc1Top = 29;   // BYE team box top
-  const wc2Top = 45;   // first WC game top
-  const wc3Top = 60;   // second WC game top
-  const wc4Top = 83;   // third WC game top
+  const wc1Top = 23;   // BYE team box top (was 29)
+  const wc2Top = 42;   // first WC game top (was 45)
+  const wc3Top = 59;   // second WC game top (was 60)
+  const wc4Top = 81;   // third WC game top (was 83)
 
   // DIV column: 2 items with justify-around
-  const div1Top = 38;  // first divisional game top
-  const div2Top = 72;  // second divisional game top
+  const div1Top = 38;  // first divisional game top (stays same)
+  const div2Top = 70;  // second divisional game top (was 72)
 
   // CONF column: 1 item centered (uses flex items-center)
   const confTop = 52;  // conference game top
 
   // CONNECTION POINTS - at the CENTER of each box (top + offset)
-  const wc1 = wc1Top + boxCenterOffset;   // BYE center at ~34%
-  const wc2 = wc2Top + boxCenterOffset;   // WC1 center at ~50%
-  const wc3 = wc3Top + boxCenterOffset;   // WC2 center at ~65%
-  const wc4 = wc4Top + boxCenterOffset;   // WC3 center at ~88%
-  const div1 = div1Top + boxCenterOffset; // DIV1 center at ~43%
-  const div2 = div2Top + boxCenterOffset; // DIV2 center at ~77%
-  const conf = confTop + boxCenterOffset; // CONF center at ~57%
+  const wc1 = wc1Top + boxCenterOffset;   // BYE center at ~26%
+  const wc2 = wc2Top + boxCenterOffset;   // WC1 center at ~45%
+  const wc3 = wc3Top + boxCenterOffset;   // WC2 center at ~62%
+  const wc4 = wc4Top + boxCenterOffset;   // WC3 center at ~84%
+  const div1 = div1Top + boxCenterOffset; // DIV1 center at ~41%
+  const div2 = div2Top + boxCenterOffset; // DIV2 center at ~73%
+  const conf = confTop + boxCenterOffset; // CONF center at ~55%
 
   // X coordinates (in viewBox units, 340 = 100%)
   // Scale: 340px container, viewBox 0-100
@@ -452,27 +453,28 @@ function BracketConnectionsRight() {
   const boxCenterOffset = 3;
 
   // Box TOP positions (where justify-around places them)
+  // Corrected based on precise user measurements from screenshot analysis
   // WC column: 4 items (BYE + 3 WC games) with justify-around
-  const wc1Top = 29;   // BYE team box top
-  const wc2Top = 45;   // first WC game top
-  const wc3Top = 60;   // second WC game top
-  const wc4Top = 83;   // third WC game top
+  const wc1Top = 23;   // BYE team box top (was 29)
+  const wc2Top = 42;   // first WC game top (was 45)
+  const wc3Top = 59;   // second WC game top (was 60)
+  const wc4Top = 81;   // third WC game top (was 83)
 
   // DIV column: 2 items with justify-around
-  const div1Top = 38;  // first divisional game top
-  const div2Top = 72;  // second divisional game top
+  const div1Top = 38;  // first divisional game top (stays same)
+  const div2Top = 70;  // second divisional game top (was 72)
 
   // CONF column: 1 item centered
   const confTop = 52;  // conference game top
 
   // CONNECTION POINTS - at the CENTER of each box (top + offset)
-  const wc1 = wc1Top + boxCenterOffset;   // BYE center at ~34%
-  const wc2 = wc2Top + boxCenterOffset;   // WC1 center at ~50%
-  const wc3 = wc3Top + boxCenterOffset;   // WC2 center at ~65%
-  const wc4 = wc4Top + boxCenterOffset;   // WC3 center at ~88%
-  const div1 = div1Top + boxCenterOffset; // DIV1 center at ~43%
-  const div2 = div2Top + boxCenterOffset; // DIV2 center at ~77%
-  const conf = confTop + boxCenterOffset; // CONF center at ~57%
+  const wc1 = wc1Top + boxCenterOffset;   // BYE center at ~26%
+  const wc2 = wc2Top + boxCenterOffset;   // WC1 center at ~45%
+  const wc3 = wc3Top + boxCenterOffset;   // WC2 center at ~62%
+  const wc4 = wc4Top + boxCenterOffset;   // WC3 center at ~84%
+  const div1 = div1Top + boxCenterOffset; // DIV1 center at ~41%
+  const div2 = div2Top + boxCenterOffset; // DIV2 center at ~73%
+  const conf = confTop + boxCenterOffset; // CONF center at ~55%
 
   // X coordinates (in viewBox units, 340 = 100%)
   // NFC layout: CONF(0-118) | gap | DIV(122-232) | gap | WC(236-340)
