@@ -361,13 +361,8 @@ function BracketConnectionsLeft() {
   const wcRight = 108 * scale;       // Right edge of WC column (~31.8)
   const divLeft = 116 * scale;       // Left edge of DIV column (~34.1)
 
-  // Y positions to mark
-  const wc1 = 26;   // BYE connection point
-  const wc2 = 45;   // BUF vs JAX connection point
-  const wc3 = 62;   // LAC vs NE connection point
-  const wc4 = 84;   // HOU vs PIT connection point
-  const div1 = 41;  // BUF vs DEN connection point
-  const div2 = 73;  // HOU vs NE connection point
+  // Y positions for grid measurement (every 5% from 25 to 90)
+  const yPositions = [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90];
 
   return (
     <svg
@@ -385,30 +380,13 @@ function BracketConnectionsLeft() {
       <line x1={divLeft} y1={0} x2={divLeft} y2={100} stroke="#00ffff" strokeWidth="0.5" opacity="0.8" />
       <text x={divLeft + 1} y={8} fill="#00ffff" fontSize="3">divLeft ({divLeft.toFixed(1)})</text>
 
-      {/* === HORIZONTAL MEASUREMENT LINES at Y positions === */}
-      {/* wc1 (26) - BYE connection point */}
-      <line x1={0} y1={wc1} x2={100} y2={wc1} stroke="#00ff00" strokeWidth="0.5" opacity="0.8" />
-      <text x={50} y={wc1 - 1} fill="#00ff00" fontSize="3" textAnchor="middle">{wc1} (wc1 - BYE)</text>
-
-      {/* wc2 (45) - BUF vs JAX connection point */}
-      <line x1={0} y1={wc2} x2={100} y2={wc2} stroke="#00ff00" strokeWidth="0.5" opacity="0.8" />
-      <text x={50} y={wc2 - 1} fill="#00ff00" fontSize="3" textAnchor="middle">{wc2} (wc2 - BUF vs JAX)</text>
-
-      {/* wc3 (62) - LAC vs NE connection point */}
-      <line x1={0} y1={wc3} x2={100} y2={wc3} stroke="#00ff00" strokeWidth="0.5" opacity="0.8" />
-      <text x={50} y={wc3 - 1} fill="#00ff00" fontSize="3" textAnchor="middle">{wc3} (wc3 - LAC vs NE)</text>
-
-      {/* wc4 (84) - HOU vs PIT connection point */}
-      <line x1={0} y1={wc4} x2={100} y2={wc4} stroke="#00ff00" strokeWidth="0.5" opacity="0.8" />
-      <text x={50} y={wc4 - 1} fill="#00ff00" fontSize="3" textAnchor="middle">{wc4} (wc4 - HOU vs PIT)</text>
-
-      {/* div1 (41) - BUF vs DEN connection point */}
-      <line x1={0} y1={div1} x2={100} y2={div1} stroke="#ffff00" strokeWidth="0.5" opacity="0.8" />
-      <text x={75} y={div1 - 1} fill="#ffff00" fontSize="3" textAnchor="middle">{div1} (div1 - BUF vs DEN)</text>
-
-      {/* div2 (73) - HOU vs NE connection point */}
-      <line x1={0} y1={div2} x2={100} y2={div2} stroke="#ffff00" strokeWidth="0.5" opacity="0.8" />
-      <text x={75} y={div2 - 1} fill="#ffff00" fontSize="3" textAnchor="middle">{div2} (div2 - HOU vs NE)</text>
+      {/* === HORIZONTAL MEASUREMENT GRID (every 5% from 25 to 90) === */}
+      {yPositions.map((y) => (
+        <g key={y}>
+          <line x1={0} y1={y} x2={100} y2={y} stroke="#00ff00" strokeWidth="0.3" opacity="0.6" />
+          <text x={5} y={y - 0.5} fill="#00ff00" fontSize="2.5">{y}</text>
+        </g>
+      ))}
     </svg>
   );
 }
