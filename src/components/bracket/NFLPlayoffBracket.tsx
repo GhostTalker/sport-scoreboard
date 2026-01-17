@@ -430,7 +430,7 @@ function SuperBowlConnectionLines() {
 
   const totalWidth = 952;
   const totalHeight = 620;
-  const confY = 346; // Y position for Super Bowl connection lines (moved up 1px)
+  const confY = 345; // Y position for Super Bowl connection lines (moved up 2px total)
 
   // X positions - SHORT LINES pattern like other connections
   // Pattern: Box edge → short line → Gap middle → short line → SB box edge
