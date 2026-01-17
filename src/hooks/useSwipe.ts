@@ -2,16 +2,16 @@ import { useSwipeable } from 'react-swipeable';
 import { useUIStore } from '../stores/uiStore';
 import { useGameStore } from '../stores/gameStore';
 import { useSettingsStore } from '../stores/settingsStore';
-import { isNFLGame } from '../types/game';
+import { isNFLGame, isBundesligaGame } from '../types/game';
 
-type View = 'scoreboard' | 'stats' | 'settings' | 'bracket';
+type View = 'scoreboard' | 'stats' | 'settings' | 'bracket' | 'table';
 
 // Base navigation map: from view -> swipe direction -> to view
 const BASE_NAVIGATION: Record<View, Record<string, View | null>> = {
   scoreboard: {
     up: 'stats',
     down: null,
-    left: 'settings',
+    left: null, // Will be 'table' for Bundesliga or 'settings' otherwise
     right: null, // Will be 'bracket' for NFL playoffs
   },
   stats: {
@@ -32,6 +32,12 @@ const BASE_NAVIGATION: Record<View, Record<string, View | null>> = {
     left: 'scoreboard', // Go back to scoreboard
     right: null,
   },
+  table: {
+    up: null,
+    down: null,
+    left: null,
+    right: 'scoreboard', // Go to scoreboard
+  },
 };
 
 export function useSwipe() {
@@ -50,6 +56,11 @@ export function useSwipe() {
   );
   const isBracketAvailable = isBracketAvailableSingle || isBracketAvailableMulti;
 
+  // Check if table view is available (Bundesliga only)
+  const isTableAvailableSingle = currentGame && isBundesligaGame(currentGame);
+  const isTableAvailableMulti = viewMode === 'multi' && availableGames.some((game) => isBundesligaGame(game));
+  const isTableAvailable = isTableAvailableSingle || isTableAvailableMulti;
+
   const handleSwipe = (direction: string) => {
     // Get dynamic navigation based on current game
     const navigation = { ...BASE_NAVIGATION[currentView] };
@@ -58,6 +69,18 @@ export function useSwipe() {
     if (isBracketAvailable) {
       if (currentView === 'scoreboard' || currentView === 'stats') {
         navigation.right = 'bracket';
+      }
+    }
+
+    // Enable table navigation for Bundesliga (left from scoreboard)
+    if (isTableAvailable) {
+      if (currentView === 'scoreboard') {
+        navigation.left = 'table';
+      }
+    } else {
+      // For non-Bundesliga games, left goes to settings
+      if (currentView === 'scoreboard') {
+        navigation.left = 'settings';
       }
     }
 

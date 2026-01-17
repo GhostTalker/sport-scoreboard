@@ -5,11 +5,13 @@ import { MultiGameView } from './components/scoreboard/MultiGameView';
 import { StatsPanel } from './components/stats/StatsPanel';
 import { SettingsPanel } from './components/settings/SettingsPanel';
 import { NFLPlayoffBracket } from './components/bracket/NFLPlayoffBracket';
+import { LiveTable } from './components/table/LiveTable';
 import { SportSelectionScreen } from './components/onboarding/SportSelectionScreen';
 import { VideoOverlay } from './components/celebration/VideoOverlay';
 import { StaleDataBanner } from './components/StaleDataBanner';
 import { useUIStore } from './stores/uiStore';
 import { useSettingsStore } from './stores/settingsStore';
+import { useGameStore } from './stores/gameStore';
 import { useGameData } from './hooks/useGameData';
 import { useScoreChange } from './hooks/useScoreChange';
 import { usePlayByPlay } from './hooks/usePlayByPlay';
@@ -22,6 +24,7 @@ function App() {
   const viewMode = useSettingsStore((state) => state.viewMode);
   const hasSelectedInitialSport = useSettingsStore((state) => state.hasSelectedInitialSport);
   const currentSport = useSettingsStore((state) => state.currentSport);
+  const availableGames = useGameStore((state) => state.availableGames);
 
   // Preload celebration videos at app start
   const { isPreloading, progress } = useVideoPreloader();
@@ -76,6 +79,7 @@ function App() {
           {currentView === 'stats' && <StatsPanel />}
           {currentView === 'settings' && <SettingsPanel />}
           {currentView === 'bracket' && <NFLPlayoffBracket />}
+          {currentView === 'table' && <LiveTable currentGames={availableGames} season={2024} />}
         </div>
       </SwipeContainer>
 
