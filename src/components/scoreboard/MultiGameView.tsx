@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { useSettingsStore } from '../../stores/settingsStore';
-import { useUIStore } from '../../stores/uiStore';
 import { getTitleGraphic } from '../../constants/titleGraphics';
 import type { Game, Team } from '../../types/game';
 import { isNFLGame, isBundesligaGame, isUEFAGame } from '../../types/game';
@@ -16,7 +15,6 @@ export function MultiGameView() {
   const setViewMode = useSettingsStore((state) => state.setViewMode);
   const multiViewFilters = useSettingsStore((state) => state.multiViewFilters);
   const currentCompetition = useSettingsStore((state) => state.currentCompetition);
-  const setView = useUIStore((state) => state.setView);
 
   // Track previous scores to detect changes
   const previousScoresRef = useRef<Map<string, { home: number; away: number }>>(new Map());
@@ -97,9 +95,6 @@ export function MultiGameView() {
 
   // Combine all games with live first, then scheduled, then finished
   const allGames = filteredGames;
-
-  // Check if NFL Playoffs bracket is available
-  const isBracketAvailable = allGames.some(g => isNFLGame(g) && g.seasonType === 3);
 
   // Get the season name from the first game for the header
   const seasonName = allGames[0]
@@ -211,11 +206,6 @@ export function MultiGameView() {
       {/* Games Grid - 2 columns */}
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         <div className={`grid grid-cols-2 ${layoutConfig.gridGap} max-w-6xl mx-auto`}>
-          {/* Playoff Bracket Card - Only for NFL Playoffs */}
-          {isBracketAvailable && (
-            <BracketCard layoutConfig={layoutConfig} onSelect={() => setView('bracket')} />
-          )}
-
           {allGames.map((game) => {
             const scoreChangeData = getScoreChangeData(game.id);
             return (
@@ -249,50 +239,6 @@ interface LayoutConfig {
   teamBoxWidth: string;
   badgeText: string;
   gridGap: string;
-}
-
-interface BracketCardProps {
-  layoutConfig: LayoutConfig;
-  onSelect: () => void;
-}
-
-function BracketCard({ layoutConfig, onSelect }: BracketCardProps) {
-  return (
-    <button
-      onClick={onSelect}
-      className={`rounded-xl px-4 transition-all duration-300 hover:scale-105 ${layoutConfig.cardHeight} flex flex-col justify-center items-center group`}
-      style={{
-        background: 'linear-gradient(135deg, rgba(234,179,8,0.2) 0%, rgba(202,138,4,0.3) 50%, rgba(234,179,8,0.2) 100%)',
-        border: '2px solid rgba(234,179,8,0.5)',
-        boxShadow: '0 8px 32px rgba(234,179,8,0.3), 0 0 40px rgba(234,179,8,0.15)',
-      }}
-    >
-      {/* Icon */}
-      <div className="mb-2">
-        <svg className="w-16 h-16 text-yellow-500 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm15 0h-3v3h-3v-3h-1v8h8v-8z"/>
-        </svg>
-      </div>
-
-      {/* Text */}
-      <div className="text-center">
-        <div className="text-xl font-bold text-yellow-500 mb-1 group-hover:text-yellow-400 transition-colors">
-          Playoff Bracket
-        </div>
-        <div className="text-xs text-yellow-600/80 font-medium">
-          View Full Bracket
-        </div>
-      </div>
-
-      {/* Subtle shine effect on hover */}
-      <div
-        className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
-        style={{
-          background: 'radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%)',
-        }}
-      />
-    </button>
-  );
 }
 
 interface GameCardProps {
