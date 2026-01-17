@@ -359,10 +359,10 @@ function BracketConnectionsLeft() {
   // Y positions - measured from screenshot (viewBox 0-200)
   const wc1 = 30;    // BYE
   const wc2 = 68;    // BUF vs JAX
-  const wc3 = 103;   // LAC vs NE
+  const wc3 = 108;   // LAC vs NE
   const wc4 = 147;   // HOU vs PIT
-  const div1 = 50;   // BUF vs DEN
-  const div2 = 129;  // HOU vs NE
+  const div1 = 51;   // BUF vs DEN
+  const div2 = 128;  // HOU vs NE
   const conf = 90;   // Conference Championship
 
   // X coordinates (in viewBox units, 340 = 100%)
@@ -431,10 +431,10 @@ function BracketConnectionsRight() {
   // Y positions - same as AFC (mirrored layout, same vertical positions)
   const wc1 = 30;    // BYE
   const wc2 = 68;    // Wild Card game 1
-  const wc3 = 103;   // Wild Card game 2
+  const wc3 = 108;   // Wild Card game 2
   const wc4 = 147;   // Wild Card game 3
-  const div1 = 50;   // Divisional game 1
-  const div2 = 129;  // Divisional game 2
+  const div1 = 51;   // Divisional game 1
+  const div2 = 128;  // Divisional game 2
   const conf = 90;   // Conference Championship
 
   // X coordinates (in viewBox units, 340 = 100%)
