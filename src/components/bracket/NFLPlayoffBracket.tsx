@@ -505,28 +505,32 @@ function SuperBowlConnectionLines() {
       />
 
       {/* DEBUG GRID - Extended to cover SB box and NFC area */}
-      {/* Vertical lines every 5px from 350 to 650 */}
-      {Array.from({ length: 61 }, (_, i) => {
-        const x = 350 + i * 5;
+      {/* Vertical lines every 5px from 300 to 700 */}
+      {Array.from({ length: 81 }, (_, i) => {
+        const x = 300 + i * 5;
+        const showLabel = x % 50 === 0;
         return (
           <g key={`grid-${x}`}>
             <line
               x1={x}
-              y1={300}
+              y1={280}
               x2={x}
-              y2={400}
+              y2={420}
               stroke="#00ff00"
-              strokeWidth={x % 10 === 0 ? '2' : '1'}
-              opacity={x % 10 === 0 ? '0.9' : '0.5'}
+              strokeWidth={showLabel ? '3' : (x % 10 === 0 ? '2' : '1')}
+              opacity={showLabel ? '1' : (x % 10 === 0 ? '0.7' : '0.4')}
             />
-            {x % 10 === 0 && (
+            {showLabel && (
               <text
                 x={x}
-                y={290}
+                y={270}
                 fill="#00ff00"
-                fontSize="16"
+                fontSize="24"
                 textAnchor="middle"
-                style={{ fontWeight: 'bold', textShadow: '0 0 3px black' }}
+                fontWeight="bold"
+                stroke="#000000"
+                strokeWidth="3"
+                paintOrder="stroke"
               >
                 {x}
               </text>
