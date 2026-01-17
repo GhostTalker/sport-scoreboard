@@ -1,12 +1,10 @@
 import { useGameStore } from '../../stores/gameStore';
 import { TeamStats } from './TeamStats';
-import { LiveTable } from '../table/LiveTable';
 import { isNFLGame, isTournamentGame } from '../../types/game';
 
 export function StatsPanel() {
   const currentGame = useGameStore((state) => state.currentGame);
   const gameStats = useGameStore((state) => state.gameStats);
-  const availableGames = useGameStore((state) => state.availableGames);
 
   if (!currentGame) {
     return (
@@ -16,15 +14,83 @@ export function StatsPanel() {
     );
   }
 
-  // Show live table for Bundesliga/UEFA instead of stats
+  // Show stats for non-NFL games
   if (!isNFLGame(currentGame)) {
-    // Only show table for Bundesliga (not UEFA/Tournament - they don't have tables)
+    // Show Bundesliga match statistics (goals, cards, etc.)
     if (currentGame.sport === 'bundesliga') {
+      const bundesligaGame = currentGame as any; // BundesligaGame type
+      const goals = bundesligaGame.goals || [];
+
       return (
-        <div className="h-full w-full bg-slate-900 p-6">
-          <LiveTable currentGames={availableGames} season={2024} />
+        <div className="h-full w-full bg-slate-900 p-6 overflow-y-auto">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-white">Spielstatistik</h2>
+            <p className="text-white/50">
+              {currentGame.awayTeam.shortDisplayName} vs {currentGame.homeTeam.shortDisplayName}
+            </p>
+          </div>
+
+          {/* Score */}
+          <div className="flex justify-center gap-8 mb-8">
+            <div className="text-center">
+              <div className="text-white/50 text-sm mb-2">{currentGame.awayTeam.abbreviation}</div>
+              <div className="text-5xl font-bold text-white">{currentGame.awayTeam.score}</div>
+            </div>
+            <div className="text-white/30 text-3xl flex items-center">:</div>
+            <div className="text-center">
+              <div className="text-white/50 text-sm mb-2">{currentGame.homeTeam.abbreviation}</div>
+              <div className="text-5xl font-bold text-white">{currentGame.homeTeam.score}</div>
+            </div>
+          </div>
+
+          {/* Halftime Score */}
+          {bundesligaGame.halftimeScore && (
+            <div className="text-center mb-6 text-white/50 text-sm">
+              Halbzeit: {bundesligaGame.halftimeScore.away} : {bundesligaGame.halftimeScore.home}
+            </div>
+          )}
+
+          {/* Goals */}
+          {goals.length > 0 && (
+            <div className="max-w-2xl mx-auto mb-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Tore</h3>
+              <div className="space-y-2">
+                {goals.map((goal: any, index: number) => (
+                  <div
+                    key={index}
+                    className={`flex items-center gap-4 p-3 rounded bg-slate-800 ${
+                      goal.scorerTeam === 'home' ? 'flex-row-reverse' : ''
+                    }`}
+                  >
+                    <div className="text-white/50 text-sm w-12">{goal.minute}'</div>
+                    <div className="flex-1">
+                      <div className="text-white font-medium">{goal.scorerName}</div>
+                      {(goal.isPenalty || goal.isOwnGoal) && (
+                        <div className="text-xs text-white/50">
+                          {goal.isPenalty && '(Elfmeter)'}
+                          {goal.isOwnGoal && '(Eigentor)'}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-white/50 text-sm">
+                      {goal.scoreAfter.away}:{goal.scoreAfter.home}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* No goals yet */}
+          {goals.length === 0 && currentGame.status === 'in_progress' && (
+            <div className="text-center text-white/50 text-sm mb-6">
+              Noch keine Tore gefallen
+            </div>
+          )}
+
           {/* Swipe hint */}
-          <div className="text-center mt-4 text-white/30 text-sm">
+          <div className="text-center mt-8 text-white/30 text-sm">
             Swipe down to return to scoreboard
           </div>
         </div>
