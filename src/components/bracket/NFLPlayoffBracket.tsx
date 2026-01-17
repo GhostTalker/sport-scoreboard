@@ -366,14 +366,16 @@ function BracketConnectionsLeft() {
   const conf = 90;   // Conference Championship
 
   // X coordinates (in viewBox units, 340 = 100%)
+  // Layout: WC(0-110) | gap(4) | DIV(114-224) | gap(4) | CONF(228-346)
+  // With mx-2 (8px margin): WC box(8-102), DIV box(122-216), CONF box(236-338)
   const scale = 100 / 340;
-  const wcRight = 108 * scale;       // Right edge of WC column (~31.8)
-  const gapMid1 = 111 * scale;       // Midpoint of gap between WC and DIV (adjusted -1px)
-  const divLeft = 116 * scale;       // Left edge of DIV column (~34.1)
-  const divRight = 222 * scale;      // Right edge of DIV column (~65.3)
-  const gapMid2 = 224 * scale;       // Midpoint of gap between DIV and CONF (adjusted -2px)
-  const confLeft = 230 * scale;      // Left edge of CONF column (~67.6)
-  const confRight = 340 * scale;     // Right edge of CONF column (100)
+  const wcRight = 102 * scale;       // Right edge of WC box with margin (30)
+  const gapMid1 = 112 * scale;       // Midpoint of gap between WC and DIV (~32.9)
+  const divLeft = 122 * scale;       // Left edge of DIV box with margin (35.88)
+  const divRight = 216 * scale;      // Right edge of DIV box with margin (63.53)
+  const gapMid2 = 226 * scale;       // Midpoint of gap between DIV and CONF (~66.5)
+  const confLeft = 236 * scale;      // Left edge of CONF box with margin (69.41)
+  const confRight = 338 * scale;     // Right edge of CONF box with margin (99.41)
 
   return (
     <svg
@@ -417,7 +419,7 @@ function BracketConnectionsLeft() {
 
       {/* === Conference to Super Bowl === */}
       {/* conf (90) -> Super Bowl (extends beyond right edge) */}
-      <line x1={confRight} y1={conf} x2={102} y2={conf} stroke="#fbbf24" strokeWidth="0.8" opacity="0.8" />
+      <line x1={confRight} y1={conf} x2={104} y2={conf} stroke="#fbbf24" strokeWidth="0.8" opacity="0.8" />
     </svg>
   );
 }
@@ -438,15 +440,16 @@ function BracketConnectionsRight() {
   const conf = 90;   // Conference Championship
 
   // X coordinates (in viewBox units, 340 = 100%)
-  // NFC layout (mirrored): CONF(0-118) | gap | DIV(122-232) | gap | WC(236-340)
+  // NFC layout (mirrored): CONF(0-118) | gap(4) | DIV(122-232) | gap(4) | WC(236-346)
+  // With mx-2 (8px margin): CONF box(8-110), DIV box(130-224), WC box(244-338)
   const scale = 100 / 340;
-  const confLeft = 0;                    // Left edge of container
-  const confRight = 116 * scale;         // Right edge of CONF column (~34.1)
-  const gapMid1 = 118 * scale;           // Midpoint of first gap (adjusted -2px)
-  const divLeft = 124 * scale;           // Left edge of DIV column (~36.5)
-  const divRight = 230 * scale;          // Right edge of DIV column (~67.6)
-  const gapMid2 = 232 * scale;           // Midpoint of second gap (adjusted -2px)
-  const wcLeft = 238 * scale;            // Left edge of WC column (~70)
+  const confBoxLeft = 8 * scale;         // Left edge of CONF box with margin (2.35)
+  const confRight = 110 * scale;         // Right edge of CONF box with margin (32.35)
+  const gapMid1 = 116 * scale;           // Midpoint of first gap (~34.12)
+  const divLeft = 130 * scale;           // Left edge of DIV box with margin (38.24)
+  const divRight = 224 * scale;          // Right edge of DIV box with margin (65.88)
+  const gapMid2 = 230 * scale;           // Midpoint of second gap (~67.65)
+  const wcLeft = 244 * scale;            // Left edge of WC box with margin (71.76)
 
   return (
     <svg
@@ -456,7 +459,8 @@ function BracketConnectionsRight() {
       preserveAspectRatio="none"
     >
       {/* === Super Bowl to Conference === */}
-      <line x1="-2" y1={conf} x2={confLeft} y2={conf} stroke="#fbbf24" strokeWidth="0.8" opacity="0.8" />
+      {/* Super Bowl (extends beyond left edge) -> conf box left edge */}
+      <line x1="-4" y1={conf} x2={confBoxLeft} y2={conf} stroke="#fbbf24" strokeWidth="0.8" opacity="0.8" />
 
       {/* === Conference to Divisional === */}
       {/* div1 (50) + div2 (129) -> conf (90) */}
