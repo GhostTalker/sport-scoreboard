@@ -424,13 +424,12 @@ function BracketConnectionsLeft() {
 function SuperBowlConnectionLines() {
   // Total width: AFC(340) + gap(16) + SB(240) + gap(16) + NFC(340) = 952px
   // Total height: 620px
-  // Bracket height without header: 620 - 44 = 576px
-  // Conference Championship Y position in bracket viewBox: 90 out of 200 = 45%
-  // Actual Y position: 44 (header) + 576 * 0.45 = 44 + 259.2 = 303px
+  // Conference Championship box center Y position
+  // Looking at the screenshot, the CONF boxes are centered around 360px from top
 
   const totalWidth = 952;
   const totalHeight = 620;
-  const confY = 303; // Conference Championship vertical position (corrected)
+  const confY = 365; // Conference Championship vertical position - center of TBD boxes
 
   // X positions - these need to match the actual box edges
   // AFC bracket: 340px wide, CONF column starts at 228px (with 8px margin = 236px to box edge)
