@@ -389,6 +389,38 @@ function adminAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 /**
+ * GET /api/admin - List available admin endpoints
+ */
+apiRouter.get('/admin', adminAuth, (_req, res) => {
+  res.json({
+    available_endpoints: [
+      {
+        method: 'POST',
+        path: '/api/admin/reset-circuit',
+        description: 'Manually reset ESPN circuit breaker',
+        use_case: 'Use when ESPN is back online but circuit breaker hasn\'t auto-recovered'
+      },
+      {
+        method: 'POST',
+        path: '/api/admin/clear-cache',
+        description: 'Clear cached data',
+        query_params: {
+          service: 'espn | bundesliga | undefined (all)'
+        },
+        warning: 'Will cause a burst of API requests as cache refills'
+      },
+      {
+        method: 'POST',
+        path: '/api/admin/cancel-requests',
+        description: 'Cancel all active ESPN API requests',
+        use_case: 'Emergency use to stop all outgoing requests'
+      }
+    ],
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
  * POST /api/admin/reset-circuit - Manually reset ESPN circuit breaker
  *
  * Use this if you know ESPN is back online but the circuit breaker
