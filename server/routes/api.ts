@@ -364,17 +364,24 @@ apiRouter.get('/health/ready', (_req, res) => {
 
 /**
  * Admin endpoint authentication middleware
- * Only allows access from localhost for security
+ * Only allows access from localhost and server IP for security
+ * TODO: In Kubernetes deployment, replace with proper RBAC/service account auth
  */
 function adminAuth(req: Request, res: Response, next: NextFunction) {
   const ip = req.ip || req.socket.remoteAddress || '';
-  const isLocalhost = ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+  const allowedIps = [
+    '127.0.0.1',
+    '::1',
+    '::ffff:127.0.0.1',
+    '10.1.0.51',           // Production server
+    '::ffff:10.1.0.51',    // IPv6-mapped IPv4
+  ];
 
-  if (!isLocalhost) {
+  if (!allowedIps.includes(ip)) {
     logError(`[Security] Unauthorized admin access attempt from ${ip}`);
     return res.status(403).json({
       error: 'Forbidden',
-      message: 'Admin endpoints are restricted to localhost access only'
+      message: 'Admin endpoints are restricted to authorized IPs only'
     });
   }
 
