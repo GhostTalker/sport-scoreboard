@@ -361,8 +361,8 @@ function BracketConnectionsLeft() {
   const wcRight = 108 * scale;       // Right edge of WC column (~31.8)
   const divLeft = 116 * scale;       // Left edge of DIV column (~34.1)
 
-  // Y positions for grid measurement (every 5% from 25 to 90)
-  const yPositions = [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90];
+  // Y positions for grid measurement (every 5% from 25 to 200)
+  const yPositions = [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200];
 
   return (
     <svg
