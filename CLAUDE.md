@@ -407,6 +407,41 @@ Configure via `pm2-logrotate` module.
 
 ## Version History
 
+### v3.4.0 (2026-01-17) - NFL Playoff Bracket
+**Interactive Playoff Bracket:**
+- Mirrored AFC/NFC layout with Super Bowl in center
+- Visual connection lines between rounds with conference colors (red/blue)
+- Pulsing animations for current round games (4s smooth animation)
+- Static glow effects for completed games
+- Round progression validation: games pulse only when previous round is complete
+- #1 seed BYE indication in Wild Card round
+- Swipe navigation between Scoreboard ↔ Bracket ↔ Settings
+
+**Smart Game State Management:**
+- Wild Card: Always can pulse (first round)
+- Divisional: Pulses only when all Wild Card games are final
+- Championship: Pulses only when all Divisional games are final
+- Super Bowl: Pulses only when both AFC & NFC Championships are final
+- Finished games: Static glow in conference color (no animation)
+
+**Performance Optimizations:**
+- Initial bulk fetch of all playoff games (fetchAllPlayoffGames)
+- Live updates for in-progress games only
+- Finalized games cached to reduce API calls
+- Bracket auto-refreshes when game status changes
+
+**UI/UX Changes:**
+- Removed "Bracket" button from Multi-Game View footer
+- Access bracket via swipe gesture only
+- Pixel-perfect connection line positioning with SVG viewBox
+- Trophy image with golden glow in center
+
+**Technical Implementation:**
+- New component: `src/components/bracket/NFLPlayoffBracket.tsx`
+- CSS animations: `playoff-game-pulse-afc`, `playoff-game-pulse-nfc`, `superbowl-glow-pulse`
+- Round completion detection logic for progressive animations
+- Connection line coordinate system using ViewBox (952x620 total dimensions)
+
 ### v3.3.0 (2026-01-17) - Backend & Frontend Resilience
 **Backend Resilience:**
 - Exponential backoff retry logic for ESPN API (2s -> 5s -> 15s -> 60s)

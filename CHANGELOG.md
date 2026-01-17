@@ -5,6 +5,39 @@ All notable changes to the Sport-Scoreboard project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2026-01-17
+
+### Added - NFL Playoff Bracket
+- **Interactive Playoff Bracket View** for NFL postseason
+  - Mirrored AFC/NFC layout with Super Bowl in center
+  - Visual connection lines between rounds with conference colors
+  - Pulsing animations for current round games
+  - Static glow effects for completed games
+  - Round progression: Wild Card → Divisional → Championship → Super Bowl
+  - #1 seed BYE indication in Wild Card round
+  - Automatic playoff week detection (Wild Card, Divisional, Championship, Super Bowl)
+- **Smart Game State Indicators**
+  - Current round games pulse only when previous round is complete
+  - Finished games show static glow in conference color (red/blue)
+  - Super Bowl pulses only when both Championship games are final
+  - Conference-specific animations (red for AFC, blue for NFC)
+- **Swipe Navigation** between Scoreboard, Bracket, and Settings views
+- **Playoff-Specific Data Flow**
+  - Initial bulk fetch of all playoff games
+  - Live updates for in-progress games only
+  - Finalized games cached to reduce API calls
+  - Bracket auto-refreshes when game status changes
+
+### Changed
+- Removed "Bracket" button from Multi-Game View footer (access via swipe only)
+- Connection line positioning refined for pixel-perfect alignment
+
+### Technical
+- New `NFLPlayoffBracket.tsx` component with mirrored conference layout
+- CSS animations: `playoff-game-pulse-afc/nfc`, `superbowl-glow-pulse`
+- Smart round completion detection for progressive animations
+- ViewBox-based SVG coordinate system for responsive connection lines
+
 ## [3.3.0] - 2026-01-17
 
 ### Added - Backend Resilience

@@ -10,7 +10,9 @@ import { API_ENDPOINTS } from '../constants/api';
  */
 export async function fetchBundesligaTable(season: number = 2024): Promise<OpenLigaDBTableEntry[]> {
   try {
-    const response = await fetch(`${API_ENDPOINTS.bundesligaTable}?season=${season}`);
+    // OpenLigaDB expects season as path parameter, not query parameter
+    // Format: /getbltable/bl1/2024
+    const response = await fetch(`${API_ENDPOINTS.bundesligaTable}/${season}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch table: ${response.statusText}`);
     }
