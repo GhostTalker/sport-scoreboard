@@ -2,10 +2,10 @@
 ## Sport-Scoreboard: Video Wall Edition
 ### Version 3.2 → 4.0 Roadmap
 
-**Document Version:** 1.0
-**Date:** 2026-01-16
+**Document Version:** 1.1
+**Date:** 2026-01-17
 **Author:** Claude Code + User (Co-Authored)
-**Project Status:** Active Development (v3.2.0 in Production)
+**Project Status:** Active Development (v3.3.0 in Production)
 
 ---
 
@@ -117,9 +117,11 @@ So that I can focus on enjoying the party.
 
 ---
 
-### v3.3.0 - "Resilience for Parties" (Week 3-8)
-**Release Date:** 2026-03-13 (6 weeks)
+### v3.3.0 - "Resilience for Parties" - COMPLETED 2026-01-17
+**Release Date:** 2026-01-17 (Completed)
 **Theme:** Never fail during an event
+
+> **Implementation Status:** All Track 2 features have been implemented and are ready for production deployment.
 
 #### Track 1: Error Handling & Recovery
 **User Story:**
@@ -136,9 +138,9 @@ So that guests never see a blank screen during an event.
    - Fallback to cached data with "Last updated X mins ago" banner
 
    **Acceptance Criteria:**
-   - [ ] ESPN API 503 error → App shows cached data within 2s
-   - [ ] Error banner displays with timestamp
-   - [ ] Auto-recovery when API returns (green checkmark animation)
+   - [x] ESPN API 503 error -> App shows cached data within 2s
+   - [x] Error banner displays with timestamp
+   - [x] Auto-recovery when API returns (green checkmark animation)
 
 2. ✅ **Offline Mode / Stale Data Strategy** (1 week)
    - Save last successful API response to localStorage
@@ -146,9 +148,9 @@ So that guests never see a blank screen during an event.
    - Background retry every 30s until success
 
    **Acceptance Criteria:**
-   - [ ] Network disconnected → Shows last known state immediately
-   - [ ] Banner: "Using cached data from [time]" with orange color
-   - [ ] Automatically resumes live updates when network returns
+   - [x] Network disconnected -> Shows last known state immediately
+   - [x] Banner: "Using cached data from [time]" with orange color
+   - [x] Automatically resumes live updates when network returns
 
 3. ✅ **Request Timeout Configuration** (2 days)
    - All fetch() calls: 10-second timeout
@@ -156,9 +158,9 @@ So that guests never see a blank screen during an event.
    - Loading indicators for slow responses
 
    **Acceptance Criteria:**
-   - [ ] API request > 10s → Timeout error, retry
-   - [ ] Switching sports cancels pending requests
-   - [ ] No memory leaks from abandoned fetches
+   - [x] API request > 10s -> Timeout error, retry
+   - [x] Switching sports cancels pending requests
+   - [x] No memory leaks from abandoned fetches
 
 4. ✅ **Better Loading States** (3 days)
    - Skeleton screens during initial load
@@ -167,9 +169,9 @@ So that guests never see a blank screen during an event.
    - Progress bar for plugin loading
 
    **Acceptance Criteria:**
-   - [ ] First load shows skeleton, not blank screen
-   - [ ] Plugin switch shows progress (0-100%)
-   - [ ] Network slow (3G) → Clear loading feedback
+   - [x] First load shows skeleton, not blank screen
+   - [x] Plugin switch shows progress (0-100%)
+   - [x] Network slow (3G) -> Clear loading feedback
 
 #### Track 2: Memory & Performance
 **User Story:**
@@ -187,9 +189,9 @@ So that I can host all-day football marathons worry-free.
    - Expose cache metrics in /api/health
 
    **Acceptance Criteria:**
-   - [ ] Cache never exceeds 100MB
-   - [ ] /api/health shows: { cacheSize: 45MB, entries: 127, hitRate: 0.87 }
-   - [ ] Old entries evicted automatically
+   - [x] Cache never exceeds 100MB
+   - [x] /api/health shows: { cacheSize: 45MB, entries: 127, hitRate: 0.87 }
+   - [x] Old entries evicted automatically
 
 6. ✅ **Fix setTimeout Cleanup in useScoreChange** (2 days)
    - Add useEffect cleanup for celebration timeout
@@ -197,9 +199,9 @@ So that I can host all-day football marathons worry-free.
    - Track active timeouts in ref
 
    **Acceptance Criteria:**
-   - [ ] Component unmount → No lingering timeouts
-   - [ ] Rapid score changes → Only latest timeout runs
-   - [ ] Memory profiler shows no leaks after 1000 score updates
+   - [x] Component unmount -> No lingering timeouts
+   - [x] Rapid score changes -> Only latest timeout runs
+   - [x] Memory profiler shows no leaks after 1000 score updates
 
 7. ✅ **Graceful Shutdown Handler** (2 days)
    - Handle SIGTERM signal in Express
@@ -207,9 +209,9 @@ So that I can host all-day football marathons worry-free.
    - Wait max 5s, then force shutdown
 
    **Acceptance Criteria:**
-   - [ ] PM2 restart → Active requests complete gracefully
-   - [ ] No "connection reset" errors during deployment
-   - [ ] Health check passes within 3s of restart
+   - [x] PM2 restart -> Active requests complete gracefully
+   - [x] No "connection reset" errors during deployment
+   - [x] Health check passes within 3s of restart
 
 **Success Metrics for v3.3.0:**
 - 24-hour soak test: Memory stays under 150MB
@@ -497,5 +499,5 @@ Week  Track 1: Quick Wins    Track 2: Resilience        Track 3: Quality
 
 **END OF PRD**
 
-*Last Updated: 2026-01-16*
-*Next Review: After v3.2.1 deployment*
+*Last Updated: 2026-01-17*
+*Next Review: After v3.4.0 deployment*

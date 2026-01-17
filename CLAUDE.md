@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Version:** 3.2.1
+**Version:** 3.3.0
 
 A modular multi-sport scoreboard application designed for iPad mini 6 and video wall displays. The app features a plugin-based architecture supporting multiple sports (NFL, Bundesliga, and more). It fetches real-time game data from various APIs, displays team logos, scores, game situations, and statistics with dynamic backgrounds.
 
@@ -185,6 +185,84 @@ The app uses German date/time formatting:
 - Time format: 24-hour clock
 - Implemented via browser's `Intl.DateTimeFormat` with locale 'de-DE'
 
+## Resilience & Error Handling (v3.3.0+)
+
+### Backend Resilience
+
+**Exponential Backoff & Circuit Breaker** (`server/services/espnProxy.ts`):
+- Retry failed ESPN API requests with increasing delays: 2s -> 5s -> 15s -> 60s
+- Circuit breaker opens after 3 consecutive failures
+- Stale cache fallback: 5 minutes for live data, 1 hour for schedules
+- Circuit breaker states:
+  - `CLOSED` - Normal operation, requests pass through
+  - `OPEN` - Blocking all requests, returning cached data
+  - `HALF_OPEN` - Testing recovery with single request
+
+**LRU Cache** (`server/services/cache.ts`):
+- 100MB limit per service (ESPN, OpenLigaDB)
+- Automatic eviction of least recently used entries
+- Metrics tracking: `size`, `entries`, `hitRate`, `hits`, `misses`
+- Cache keys include query parameters for proper isolation
+
+**Request Timeout**:
+- 10-second timeout on all external API requests
+- AbortController for request cancellation
+- Methods: `cancelRequest(requestId)`, `cancelAllRequests()`
+- Prevents memory leaks from abandoned fetch operations
+
+**Graceful Shutdown**:
+- SIGTERM/SIGINT signal handling for PM2 and Docker
+- 5-second graceful shutdown window
+- Active requests complete before process exit
+- Prevents connection reset errors during deployment
+
+**Health Endpoints**:
+- `GET /api/health` - Full status with cache metrics and circuit breaker state
+  ```json
+  {
+    "status": "healthy",
+    "uptime": 43200,
+    "memory": { "used": "145MB", "limit": "500MB" },
+    "cache": { "espn": { "size": "45MB", "entries": 127, "hitRate": 0.87 } },
+    "circuitBreaker": { "state": "CLOSED", "failures": 0 }
+  }
+  ```
+- `GET /api/health/live` - Simple liveness probe (200 OK)
+- `GET /api/health/ready` - Readiness check (returns 503 if degraded)
+
+**Admin Endpoints** (for emergency use):
+- `POST /api/admin/reset-circuit` - Manually reset circuit breaker
+- `POST /api/admin/clear-cache?service=espn` - Clear ESPN cache
+- `POST /api/admin/clear-cache?service=openligadb` - Clear OpenLigaDB cache
+- `POST /api/admin/cancel-requests` - Cancel all active requests
+
+### Frontend Resilience
+
+**Offline Mode** (`src/services/cacheService.ts`):
+- LocalStorage cache persistence for API responses
+- TTL configuration: 24 hours for scoreboard, 1 hour for game details
+- Automatic fallback to cached data on API errors
+- Background retry every 30 seconds until success
+- Green checkmark animation on recovery
+
+**Stale Data Banner**:
+- Orange warning banner when showing cached data
+- Displays "Using cached data from X seconds ago"
+- Auto-dismisses when fresh data is retrieved
+- Encourages user awareness without blocking functionality
+
+**Loading States** (`src/components/LoadingSkeleton.tsx`):
+- Skeleton screens for MainScoreboard, GameCard, StatsPanel
+- Shimmer animation for smooth visual feedback
+- Instant skeleton display instead of blank screen
+- Prevents layout shift when data loads
+
+**Memory Leak Prevention** (`src/hooks/useScoreChange.ts`):
+- Proper setTimeout cleanup on component unmount
+- Active timeout tracking with Set data structure
+- Cleanup on game change to prevent stale celebration timeouts
+- Prevents memory accumulation during long viewing sessions
+
 ## Development Guidelines
 
 ### When Adding New Features
@@ -328,6 +406,28 @@ Configure via `pm2-logrotate` module.
 
 
 ## Version History
+
+### v3.3.0 (2026-01-17) - Backend & Frontend Resilience
+**Backend Resilience:**
+- Exponential backoff retry logic for ESPN API (2s -> 5s -> 15s -> 60s)
+- Circuit breaker pattern (opens after 3 failures, 30s cooldown)
+- Request timeout configuration (10s default with AbortController)
+- Graceful shutdown handler for zero-downtime deployments
+- LRU cache with 100MB size limit per service
+- Enhanced health endpoints (/api/health, /api/health/live, /api/health/ready)
+- Admin endpoints for manual intervention
+
+**Frontend Resilience:**
+- Offline mode with stale data fallback via LocalStorage
+- Stale data warning banner with auto-retry
+- Skeleton loading screens with shimmer effects
+- Fixed setTimeout cleanup in useScoreChange (memory leak prevention)
+
+**New Files:**
+- `server/services/cache.ts` - LRU cache service
+- `src/stores/cacheStore.ts` - Frontend cache state
+- `src/services/cacheService.ts` - LocalStorage persistence
+- `src/components/LoadingSkeleton.tsx` - Skeleton components
 
 ### v3.2.1 (2026-01-17) - Security Hardening & Error Handling
 **Security Improvements:**

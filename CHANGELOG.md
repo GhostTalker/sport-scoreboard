@@ -5,6 +5,77 @@ All notable changes to the Sport-Scoreboard project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2026-01-17
+
+### Added - Backend Resilience
+- **Exponential Backoff Retry Logic** for ESPN API requests
+  - Retry delays: 2s -> 5s -> 15s -> 60s
+  - Configurable max retries and delay multiplier
+  - Prevents thundering herd during API recovery
+- **Circuit Breaker Pattern** for external API calls
+  - Opens after 3 consecutive failures
+  - 30-second cooldown before half-open state
+  - Automatic recovery testing with single request
+  - States: CLOSED (normal), OPEN (blocking), HALF_OPEN (testing)
+- **Request Timeout Configuration** (10s default)
+  - AbortController for request cancellation
+  - `cancelRequest(requestId)` method for individual cancellation
+  - `cancelAllRequests()` method for bulk cancellation
+  - Prevents memory leaks from abandoned fetches
+- **Graceful Shutdown Handler** for zero-downtime deployments
+  - SIGTERM/SIGINT signal handling
+  - 5-second graceful shutdown window
+  - Active requests complete before process exit
+  - PM2 and Docker compatible
+- **LRU Cache with Size Limits** (`server/services/cache.ts`)
+  - 100MB limit per service (ESPN, OpenLigaDB)
+  - Automatic eviction of least recently used entries
+  - Cache metrics: size, entries, hitRate, hits, misses
+- **Enhanced Health Endpoints**
+  - `GET /api/health` - Full status with cache metrics and circuit breaker state
+  - `GET /api/health/live` - Simple liveness probe (200 OK)
+  - `GET /api/health/ready` - Readiness check (503 if degraded)
+- **Admin Endpoints** for manual intervention
+  - `POST /api/admin/reset-circuit` - Manually reset circuit breaker
+  - `POST /api/admin/clear-cache?service=espn` - Clear service cache
+  - `POST /api/admin/cancel-requests` - Cancel all active requests
+
+### Added - Frontend Resilience
+- **Offline Mode with Stale Data Fallback** (`src/services/cacheService.ts`)
+  - LocalStorage cache persistence
+  - 24-hour TTL for scoreboard data
+  - 1-hour TTL for game details
+  - Automatic fallback on API errors
+- **Stale Data Warning Banner**
+  - Orange banner with "Using cached data from X seconds ago"
+  - Auto-retry every 30 seconds in background
+  - Green checkmark animation on recovery
+- **Skeleton Loading Screens** (`src/components/LoadingSkeleton.tsx`)
+  - MainScoreboard skeleton with shimmer effect
+  - GameCard skeleton for MultiView
+  - StatsPanel skeleton for statistics view
+  - Instant skeleton display instead of blank screen
+- **Fixed setTimeout Cleanup** in useScoreChange hook
+  - Proper cleanup on component unmount
+  - Active timeout tracking with Set
+  - Cleanup on game change to prevent stale timeouts
+
+### Changed
+- ESPN proxy now uses LRU cache instead of unbounded Map
+- API errors show cached data instead of blank screen
+- Cache store (`src/stores/cacheStore.ts`) manages frontend cache state
+
+### Technical
+- **Dependencies Added:**
+  - `lru-cache@^10.x` for memory-bounded caching
+- **New Files:**
+  - `server/services/cache.ts` - LRU cache service with metrics
+  - `src/stores/cacheStore.ts` - Frontend cache state management
+  - `src/services/cacheService.ts` - LocalStorage cache persistence
+  - `src/components/LoadingSkeleton.tsx` - Skeleton loading components
+
+---
+
 ## [3.2.1] - 2026-01-17
 
 ### Security
@@ -135,6 +206,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **v3.3.0** - Backend & frontend resilience: exponential backoff, circuit breaker, LRU cache, offline mode, skeleton loading
 - **v3.2.1** - Security hardening: CORS restriction, rate limiting, non-root deployment, error boundary
 - **v3.2.0** - UEFA Champions League plugin, hybrid API system for Bundesliga
 - **v3.1.1** - Code cleanup, logo updates, type safety improvements (-530 lines)

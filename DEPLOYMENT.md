@@ -10,6 +10,8 @@ This document provides comprehensive instructions for deploying the Sport-Scoreb
 - [Application Deployment](#application-deployment)
 - [PM2 Configuration](#pm2-configuration)
 - [PM2 Log Rotation](#pm2-log-rotation)
+- [Health Monitoring](#health-monitoring-v330)
+- [Emergency Admin Operations](#emergency-admin-operations)
 - [Security Configuration](#security-configuration)
 - [Updating the Application](#updating-the-application)
 - [Troubleshooting](#troubleshooting)
@@ -232,6 +234,231 @@ pm2 conf pm2-logrotate
 
 ---
 
+## Health Monitoring (v3.3.0+)
+
+The application provides comprehensive health endpoints for monitoring and orchestration platforms.
+
+### Health Endpoints
+
+#### Liveness Probe
+
+Simple check to verify the server process is running. Use for Kubernetes liveness probes or basic uptime monitoring.
+
+```bash
+curl http://10.1.0.51:3001/api/health/live
+# Returns: 200 OK with { "status": "ok" }
+```
+
+#### Readiness Probe
+
+Checks if the application is ready to serve traffic. Returns 503 if the circuit breaker is open or the system is degraded.
+
+```bash
+curl http://10.1.0.51:3001/api/health/ready
+# Returns: 200 OK if healthy
+# Returns: 503 Service Unavailable if degraded
+```
+
+#### Full Health Check
+
+Comprehensive status including cache metrics, circuit breaker state, memory usage, and uptime.
+
+```bash
+curl http://10.1.0.51:3001/api/health
+```
+
+**Example Response:**
+```json
+{
+  "status": "healthy",
+  "uptime": 43200,
+  "memory": {
+    "used": "145MB",
+    "limit": "500MB",
+    "percentage": 29
+  },
+  "cache": {
+    "espn": {
+      "size": "45MB",
+      "entries": 127,
+      "hitRate": 0.87,
+      "hits": 1523,
+      "misses": 227
+    },
+    "openligadb": {
+      "size": "12MB",
+      "entries": 34,
+      "hitRate": 0.92,
+      "hits": 892,
+      "misses": 78
+    }
+  },
+  "circuitBreaker": {
+    "state": "CLOSED",
+    "failures": 0,
+    "lastFailure": null
+  },
+  "lastUpdate": "2026-01-17T18:45:23Z"
+}
+```
+
+### External Monitoring Setup
+
+#### UptimeRobot (Free Tier)
+
+1. Create account at [UptimeRobot](https://uptimerobot.com/)
+2. Add new monitor:
+   - **Monitor Type:** HTTP(s)
+   - **URL:** `http://10.1.0.51:3001/api/health/live`
+   - **Monitoring Interval:** 5 minutes
+   - **Alert Contacts:** Your email
+3. Create status page for event health dashboard
+
+#### Kubernetes Integration
+
+```yaml
+# Example Kubernetes deployment snippet
+livenessProbe:
+  httpGet:
+    path: /api/health/live
+    port: 3001
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /api/health/ready
+    port: 3001
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  failureThreshold: 2
+```
+
+#### PM2 Health Monitoring
+
+```bash
+# Check process status
+pm2 list
+
+# Monitor CPU/memory in real-time
+pm2 monit
+
+# View recent logs
+pm2 logs nfl-scoreboard --lines 50
+
+# Combine with health endpoint
+watch -n 30 'curl -s http://localhost:3001/api/health | jq .'
+```
+
+---
+
+## Emergency Admin Operations
+
+These endpoints are for emergency use when the application is experiencing issues. They are not rate-limited but should be used sparingly.
+
+### Reset Circuit Breaker
+
+If the ESPN API recovers but the circuit breaker remains open, manually reset it:
+
+```bash
+curl -X POST http://10.1.0.51:3001/api/admin/reset-circuit
+# Returns: { "success": true, "message": "Circuit breaker reset to CLOSED state" }
+```
+
+**When to use:**
+- API is responding but circuit breaker is stuck in OPEN state
+- After investigating and resolving the root cause of failures
+
+### Clear Cache
+
+If cached data is corrupted or stale beyond acceptable limits:
+
+```bash
+# Clear ESPN cache
+curl -X POST "http://10.1.0.51:3001/api/admin/clear-cache?service=espn"
+# Returns: { "success": true, "message": "ESPN cache cleared", "entriesRemoved": 127 }
+
+# Clear OpenLigaDB cache
+curl -X POST "http://10.1.0.51:3001/api/admin/clear-cache?service=openligadb"
+# Returns: { "success": true, "message": "OpenLigaDB cache cleared", "entriesRemoved": 34 }
+```
+
+**When to use:**
+- Cached data is showing incorrect scores
+- After API schema changes that cause parsing errors
+- During development/testing
+
+### Cancel Active Requests
+
+If the application is hanging due to stuck requests:
+
+```bash
+curl -X POST http://10.1.0.51:3001/api/admin/cancel-requests
+# Returns: { "success": true, "message": "Cancelled N active requests" }
+```
+
+**When to use:**
+- Application is unresponsive
+- Multiple requests are timing out
+- Before restarting as a less disruptive alternative
+
+### Pre-Party Validation Script
+
+Run this 1 hour before events to verify system health:
+
+```bash
+#!/bin/bash
+# pre-party-check.sh
+
+echo "Checking system readiness..."
+
+# Check server uptime
+UPTIME=$(curl -s http://10.1.0.51:3001/api/health | jq -r '.uptime')
+if [ "$UPTIME" -gt 3600 ]; then
+  echo "[OK] Server uptime: $((UPTIME/3600)) hours"
+else
+  echo "[WARN] Server uptime: $((UPTIME/60)) minutes (recently restarted)"
+fi
+
+# Check memory usage
+MEMORY=$(curl -s http://10.1.0.51:3001/api/health | jq -r '.memory.percentage')
+if [ "$MEMORY" -lt 80 ]; then
+  echo "[OK] Memory usage: ${MEMORY}%"
+else
+  echo "[WARN] Memory usage: ${MEMORY}% (consider restart)"
+fi
+
+# Check ESPN API
+ESPN_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://10.1.0.51:3001/api/scoreboard)
+if [ "$ESPN_STATUS" -eq 200 ]; then
+  echo "[OK] ESPN API: Responding"
+else
+  echo "[FAIL] ESPN API: Status $ESPN_STATUS"
+fi
+
+# Check circuit breaker
+CB_STATE=$(curl -s http://10.1.0.51:3001/api/health | jq -r '.circuitBreaker.state')
+if [ "$CB_STATE" = "CLOSED" ]; then
+  echo "[OK] Circuit breaker: CLOSED (normal)"
+else
+  echo "[WARN] Circuit breaker: $CB_STATE"
+fi
+
+# Check cache hit rate
+HIT_RATE=$(curl -s http://10.1.0.51:3001/api/health | jq -r '.cache.espn.hitRate')
+if (( $(echo "$HIT_RATE > 0.7" | bc -l) )); then
+  echo "[OK] Cache hit rate: $(echo "$HIT_RATE * 100" | bc)%"
+else
+  echo "[WARN] Cache hit rate: $(echo "$HIT_RATE * 100" | bc)% (low)"
+fi
+
+echo ""
+echo "System ready for party!"
+```
+
+---
+
 ## Security Configuration
 
 ### CORS Origins
@@ -441,4 +668,4 @@ Update your local SSH config or deployment scripts to use `scoreboard-app` inste
 
 ---
 
-**Last Updated:** 2026-01-17 (v3.2.1)
+**Last Updated:** 2026-01-17 (v3.3.0)

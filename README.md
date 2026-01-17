@@ -5,10 +5,10 @@
 A modern, responsive web application for displaying live NFL and Bundesliga games with dynamic backgrounds, team logos, statistics, celebration videos, and German localization.
 
 ![Status](https://img.shields.io/badge/Status-Production-green)
-![Version](https://img.shields.io/badge/Version-3.2.1-blue)
+![Version](https://img.shields.io/badge/Version-3.3.0-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-> **What's New in v3.2.1:** Security hardening (CORS restriction, API rate limiting), non-root deployment user, error boundary component, feedback button, PM2 log rotation
+> **What's New in v3.3.0:** Backend & frontend resilience - exponential backoff with circuit breaker, LRU cache with 100MB limit, offline mode with stale data fallback, skeleton loading screens, enhanced health endpoints for monitoring
 
 ---
 
@@ -16,6 +16,7 @@ A modern, responsive web application for displaying live NFL and Bundesliga game
 
 - [Screenshots](#-screenshots)
 - [Features](#-features)
+- [Resilience Features](#resilience-features-v330)
 - [Usage](#-usage)
 - [Tech Stack](#-tech-stack)
 - [Installation](#-installation)
@@ -169,6 +170,18 @@ Different gradient designs based on game type:
 - **All modern browsers** - Chrome, Safari, Firefox, Edge
 - **Touch-optimized** - Large touch targets, swipe gestures
 - **Performance** - Optimized rendering performance, browser cache
+
+### Resilience Features (v3.3.0+)
+
+Built for reliability during live events and all-day viewing marathons:
+
+- **Exponential Backoff** - Automatic retry with increasing delays (2s -> 5s -> 15s -> 60s)
+- **Circuit Breaker** - Prevents cascading failures (opens after 3 failures, 30s cooldown)
+- **Offline Mode** - Shows cached data when API is unavailable with stale data warning
+- **Memory-Safe Caching** - LRU cache with 100MB limit prevents memory exhaustion
+- **Graceful Shutdown** - Zero-downtime deployments for PM2 and Docker
+- **Enhanced Monitoring** - Health endpoints for Kubernetes, PM2, and external monitoring
+- **Skeleton Loading** - Instant visual feedback instead of blank screens
 
 ---
 

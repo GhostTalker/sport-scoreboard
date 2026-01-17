@@ -7,6 +7,7 @@ import { SettingsPanel } from './components/settings/SettingsPanel';
 import { NFLPlayoffBracket } from './components/bracket/NFLPlayoffBracket';
 import { SportSelectionScreen } from './components/onboarding/SportSelectionScreen';
 import { VideoOverlay } from './components/celebration/VideoOverlay';
+import { StaleDataBanner } from './components/StaleDataBanner';
 import { useUIStore } from './stores/uiStore';
 import { useSettingsStore } from './stores/settingsStore';
 import { useGameData } from './hooks/useGameData';
@@ -64,6 +65,9 @@ function App() {
 
   return (
     <div className="h-full w-full bg-slate-900 text-white overflow-hidden">
+      {/* Stale Data Warning Banner */}
+      <StaleDataBanner />
+
       <SwipeContainer>
         {/* Main Views */}
         <div className="h-full w-full relative">

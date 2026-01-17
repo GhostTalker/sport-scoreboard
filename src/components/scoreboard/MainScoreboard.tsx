@@ -5,6 +5,7 @@ import { TeamDisplay } from './TeamDisplay';
 import { GameSituation } from './GameSituation';
 import { getTitleGraphic } from '../../constants/titleGraphics';
 import { DebugPanel } from '../debug/DebugPanel';
+import { MainScoreboardSkeleton } from '../LoadingSkeleton';
 import { version } from '../../../package.json';
 import { isNFLGame, isBundesligaGame, isUEFAGame } from '../../types/game';
 
@@ -44,7 +45,7 @@ export function MainScoreboard() {
   }, []);
 
   if (isLoading && !currentGame) {
-    return <LoadingState />;
+    return <MainScoreboardSkeleton />;
   }
 
   if (error && !currentGame) {
@@ -551,20 +552,6 @@ function ScoreBox({ score, teamColor }: ScoreBoxProps) {
           background: `linear-gradient(90deg, transparent, #${teamColor}, transparent)`,
         }}
       />
-    </div>
-  );
-}
-
-function LoadingState() {
-  return (
-    <div className="h-full w-full flex items-center justify-center bg-slate-900">
-      <div className="flex flex-col items-center gap-4">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500" />
-          <div className="absolute inset-0 animate-ping rounded-full h-16 w-16 border border-blue-500/30" />
-        </div>
-        <p className="text-white/70 text-xl">Loading game data...</p>
-      </div>
     </div>
   );
 }
