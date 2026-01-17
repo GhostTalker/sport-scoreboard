@@ -43,6 +43,11 @@ function NavigationHints({ directions, currentView, viewMode, isBracketAvailable
   // Show bracket hint on scoreboard and stats during NFL playoffs
   const showBracketHint = isBracketAvailable && (currentView === 'scoreboard' || currentView === 'stats');
 
+  // Don't show hints in bracket view (keep it clean)
+  if (currentView === 'bracket') {
+    return null;
+  }
+
   // Don't show hints in multi-game view (has its own footer hint)
   if (currentView === 'scoreboard' && viewMode === 'multi') {
     return null;

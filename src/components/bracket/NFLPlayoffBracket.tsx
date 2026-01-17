@@ -27,13 +27,13 @@ export function NFLPlayoffBracket() {
         </div>
 
         {/* Bracket Layout - Fixed dimensions */}
-        <div className="flex items-center justify-center gap-4" style={{ height: '620px' }}>
+        <div className="flex items-start justify-center gap-4" style={{ height: '620px' }}>
           {/* Left: AFC Bracket */}
           <div style={{ width: '340px', height: '100%' }}>
-            <div className="text-center mb-3">
+            <div className="text-center mb-3 bg-blue-600/20 rounded-lg py-2 border border-blue-500/30">
               <h3 className="text-xl font-bold text-blue-400">AFC</h3>
             </div>
-            <div style={{ height: 'calc(100% - 32px)' }}>
+            <div style={{ height: 'calc(100% - 44px)' }}>
               <ConferenceBracketLeft
                 conference="AFC"
                 wildCard={bracket.afc.wildCard}
@@ -43,8 +43,8 @@ export function NFLPlayoffBracket() {
             </div>
           </div>
 
-          {/* Center: Super Bowl - vertically centered between conference finals */}
-          <div className="flex flex-col items-center justify-center" style={{ width: '240px', height: '100%' }}>
+          {/* Center: Super Bowl - vertically centered */}
+          <div className="flex flex-col items-center" style={{ width: '240px', height: '100%', paddingTop: '180px' }}>
             {/* Trophy Image */}
             <img
               src="/images/nfl_trophy.png"
@@ -60,10 +60,10 @@ export function NFLPlayoffBracket() {
 
           {/* Right: NFC Bracket */}
           <div style={{ width: '340px', height: '100%' }}>
-            <div className="text-center mb-3">
+            <div className="text-center mb-3 bg-red-600/20 rounded-lg py-2 border border-red-500/30">
               <h3 className="text-xl font-bold text-red-400">NFC</h3>
             </div>
-            <div style={{ height: 'calc(100% - 32px)' }}>
+            <div style={{ height: 'calc(100% - 44px)' }}>
               <ConferenceBracketRight
                 conference="NFC"
                 wildCard={bracket.nfc.wildCard}
@@ -92,11 +92,11 @@ function ConferenceBracketLeft({ conference, wildCard, divisional, conferenceGam
   const confSlot = conferenceGame || createPlaceholderMatchup('conference', conference, 0);
 
   return (
-    <div className="relative h-full flex">
+    <div className="relative h-full flex gap-1">
       {/* Column 1: Wild Card (with BYE) - Fixed width */}
-      <div className="flex flex-col justify-around py-2" style={{ width: '110px' }}>
-        <div className="text-center mb-1">
-          <p className="text-[10px] text-white/40 font-semibold">WC</p>
+      <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '110px' }}>
+        <div className="text-center mb-2 bg-blue-500/20 rounded mx-1 py-1">
+          <p className="text-[10px] text-blue-300 font-bold">WILD CARD</p>
         </div>
         <div className="flex-1 flex flex-col justify-around">
           {/* #1 Seed BYE */}
@@ -112,9 +112,9 @@ function ConferenceBracketLeft({ conference, wildCard, divisional, conferenceGam
       </div>
 
       {/* Column 2: Divisional - Fixed width */}
-      <div className="flex flex-col justify-around py-2" style={{ width: '110px' }}>
-        <div className="text-center mb-1">
-          <p className="text-[10px] text-white/40 font-semibold">DIV</p>
+      <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '110px' }}>
+        <div className="text-center mb-2 bg-blue-500/20 rounded mx-1 py-1">
+          <p className="text-[10px] text-blue-300 font-bold">DIVISIONAL</p>
         </div>
         <div className="flex-1 flex flex-col justify-around">
           {divSlots.map((matchup, idx) => (
@@ -126,14 +126,19 @@ function ConferenceBracketLeft({ conference, wildCard, divisional, conferenceGam
       </div>
 
       {/* Column 3: Conference Championship - Fixed width */}
-      <div className="flex flex-col justify-center py-2" style={{ width: '120px' }}>
-        <div className="text-center mb-1">
-          <p className="text-[10px] text-white/40 font-semibold">CONF</p>
+      <div className="flex flex-col justify-center py-2 bg-slate-800/10 rounded-lg" style={{ width: '118px' }}>
+        <div className="text-center mb-2 bg-blue-500/20 rounded mx-1 py-1">
+          <p className="text-[10px] text-blue-300 font-bold">AFC CHAMP</p>
         </div>
-        <div className="mx-2">
-          <MatchupCard matchup={confSlot} compact />
+        <div className="flex-1 flex items-center">
+          <div className="mx-2 w-full">
+            <MatchupCard matchup={confSlot} compact />
+          </div>
         </div>
       </div>
+
+      {/* SVG Connection Lines - Fixed positions */}
+      <BracketConnectionsLeft />
     </div>
   );
 }
@@ -145,21 +150,23 @@ function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGa
   const confSlot = conferenceGame || createPlaceholderMatchup('conference', conference, 0);
 
   return (
-    <div className="relative h-full flex">
+    <div className="relative h-full flex gap-1">
       {/* Column 3: Conference Championship - Fixed width */}
-      <div className="flex flex-col justify-center py-2" style={{ width: '120px' }}>
-        <div className="text-center mb-1">
-          <p className="text-[10px] text-white/40 font-semibold">CONF</p>
+      <div className="flex flex-col justify-center py-2 bg-slate-800/10 rounded-lg" style={{ width: '118px' }}>
+        <div className="text-center mb-2 bg-red-500/20 rounded mx-1 py-1">
+          <p className="text-[10px] text-red-300 font-bold">NFC CHAMP</p>
         </div>
-        <div className="mx-2">
-          <MatchupCard matchup={confSlot} compact />
+        <div className="flex-1 flex items-center">
+          <div className="mx-2 w-full">
+            <MatchupCard matchup={confSlot} compact />
+          </div>
         </div>
       </div>
 
       {/* Column 2: Divisional - Fixed width */}
-      <div className="flex flex-col justify-around py-2" style={{ width: '110px' }}>
-        <div className="text-center mb-1">
-          <p className="text-[10px] text-white/40 font-semibold">DIV</p>
+      <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '110px' }}>
+        <div className="text-center mb-2 bg-red-500/20 rounded mx-1 py-1">
+          <p className="text-[10px] text-red-300 font-bold">DIVISIONAL</p>
         </div>
         <div className="flex-1 flex flex-col justify-around">
           {divSlots.map((matchup, idx) => (
@@ -171,9 +178,9 @@ function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGa
       </div>
 
       {/* Column 1: Wild Card (with BYE) - Fixed width */}
-      <div className="flex flex-col justify-around py-2" style={{ width: '110px' }}>
-        <div className="text-center mb-1">
-          <p className="text-[10px] text-white/40 font-semibold">WC</p>
+      <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '110px' }}>
+        <div className="text-center mb-2 bg-red-500/20 rounded mx-1 py-1">
+          <p className="text-[10px] text-red-300 font-bold">WILD CARD</p>
         </div>
         <div className="flex-1 flex flex-col justify-around">
           {/* #1 Seed BYE */}
@@ -187,7 +194,67 @@ function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGa
           ))}
         </div>
       </div>
+
+      {/* SVG Connection Lines - Fixed positions */}
+      <BracketConnectionsRight />
     </div>
+  );
+}
+
+// Connection lines for AFC bracket - Fixed pixel positions
+function BracketConnectionsLeft() {
+  return (
+    <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
+      {/* Wild Card to Divisional - Lines from WC games to DIV games */}
+      {/* WC Game 1 (37.5%) + WC Game 2 (62.5%) -> DIV Game 1 (25%) */}
+      <line x1="110" y1="37.5%" x2="145" y2="37.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="110" y1="62.5%" x2="145" y2="62.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="145" y1="37.5%" x2="145" y2="62.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="145" y1="50%" x2="165" y2="25%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+
+      {/* BYE (12.5%) + WC Game 3 (87.5%) -> DIV Game 2 (75%) */}
+      <line x1="110" y1="12.5%" x2="145" y2="12.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="110" y1="87.5%" x2="145" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="145" y1="12.5%" x2="145" y2="87.5%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="145" y1="50%" x2="165" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+
+      {/* Divisional to Conference - Both DIV games to CONF */}
+      <line x1="220" y1="25%" x2="255" y2="25%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="220" y1="75%" x2="255" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="255" y1="25%" x2="255" y2="75%" stroke="#60a5fa" strokeWidth="2" opacity="0.5" />
+      <line x1="255" y1="50%" x2="280" y2="50%" stroke="#60a5fa" strokeWidth="2.5" opacity="0.6" />
+
+      {/* Conference to Super Bowl */}
+      <line x1="338" y1="50%" x2="360" y2="50%" stroke="#fbbf24" strokeWidth="3" opacity="0.7" />
+    </svg>
+  );
+}
+
+// Connection lines for NFC bracket - Fixed pixel positions (mirrored)
+function BracketConnectionsRight() {
+  return (
+    <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
+      {/* Conference to Super Bowl */}
+      <line x1="0" y1="50%" x2="22" y2="50%" stroke="#fbbf24" strokeWidth="3" opacity="0.7" />
+
+      {/* Conference to Divisional */}
+      <line x1="58" y1="50%" x2="83" y2="50%" stroke="#ef4444" strokeWidth="2.5" opacity="0.6" />
+      <line x1="83" y1="25%" x2="83" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="83" y1="25%" x2="118" y2="25%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="83" y1="75%" x2="118" y2="75%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+
+      {/* Divisional to Wild Card - Top pair */}
+      <line x1="173" y1="25%" x2="193" y2="50%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="193" y1="37.5%" x2="193" y2="62.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="193" y1="37.5%" x2="228" y2="37.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="193" y1="62.5%" x2="228" y2="62.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+
+      {/* Divisional to Wild Card - Bottom pair */}
+      <line x1="173" y1="75%" x2="193" y2="50%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="193" y1="12.5%" x2="193" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="193" y1="12.5%" x2="228" y2="12.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+      <line x1="193" y1="87.5%" x2="228" y2="87.5%" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+    </svg>
   );
 }
 
