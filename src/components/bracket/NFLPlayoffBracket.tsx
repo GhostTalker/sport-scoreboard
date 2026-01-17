@@ -432,16 +432,18 @@ function SuperBowlConnectionLines() {
   const totalHeight = 620;
   const confY = 303; // Same Y as Conference Championship boxes
 
-  // X positions - SHORT LINES like other connections (box edge to box edge only)
-  // AFC bracket: CONF box ends at 332px (340 - 8px margin)
-  // NFC bracket: CONF box starts at 620px (612 + 8px margin)
-  const afcConfRight = 332; // Right edge of AFC CONF box
-  const nfcConfLeft = 620; // Left edge of NFC CONF box
+  // X positions - SHORT LINES pattern like other connections
+  // Pattern: Box edge → short line → Gap middle → short line → SB box middle
 
-  // Super Bowl box edges (with padding ~20px from SB area edges)
-  // SB area: 356 to 596 (240px wide)
-  const sbBoxLeft = 376; // Left edge of SB box (356 + 20px padding)
-  const sbBoxRight = 576; // Right edge of SB box (596 - 20px padding)
+  // AFC side
+  const afcConfRight = 332; // Right edge of AFC CONF box
+  const afcGapMid = 348;    // Middle of gap between AFC (340) and SB area (356): (340+356)/2
+  const sbBoxLeft = 376;    // Left edge of SB box (356 + 20px padding)
+
+  // NFC side
+  const nfcConfLeft = 620;  // Left edge of NFC CONF box
+  const nfcGapMid = 604;    // Middle of gap between SB area (596) and NFC (612): (596+612)/2
+  const sbBoxRight = 576;   // Right edge of SB box (596 - 20px padding)
 
   return (
     <svg
@@ -450,28 +452,54 @@ function SuperBowlConnectionLines() {
       viewBox={`0 0 ${totalWidth} ${totalHeight}`}
       preserveAspectRatio="none"
     >
-      {/* AFC to Super Bowl - Red pulsing line */}
+      {/* AFC to Super Bowl - Red pulsing lines with short pattern */}
+      {/* Short horizontal from CONF box edge to gap middle */}
       <line
         x1={afcConfRight}
+        y1={confY}
+        x2={afcGapMid}
+        y2={confY}
+        className="superbowl-line-pulse-afc"
+        stroke="#ef4444"
+        strokeWidth="1.5"
+        opacity="0.7"
+        strokeLinecap="butt"
+      />
+      {/* Short horizontal from gap middle to SB box edge */}
+      <line
+        x1={afcGapMid}
         y1={confY}
         x2={sbBoxLeft}
         y2={confY}
         className="superbowl-line-pulse-afc"
         stroke="#ef4444"
-        strokeWidth="3"
+        strokeWidth="1.5"
         opacity="0.7"
         strokeLinecap="butt"
       />
 
-      {/* NFC to Super Bowl - Blue pulsing line */}
+      {/* NFC to Super Bowl - Blue pulsing lines with short pattern */}
+      {/* Short horizontal from CONF box edge to gap middle */}
       <line
         x1={nfcConfLeft}
+        y1={confY}
+        x2={nfcGapMid}
+        y2={confY}
+        className="superbowl-line-pulse-nfc"
+        stroke="#60a5fa"
+        strokeWidth="1.5"
+        opacity="0.7"
+        strokeLinecap="butt"
+      />
+      {/* Short horizontal from gap middle to SB box edge */}
+      <line
+        x1={nfcGapMid}
         y1={confY}
         x2={sbBoxRight}
         y2={confY}
         className="superbowl-line-pulse-nfc"
         stroke="#60a5fa"
-        strokeWidth="3"
+        strokeWidth="1.5"
         opacity="0.7"
         strokeLinecap="butt"
       />
