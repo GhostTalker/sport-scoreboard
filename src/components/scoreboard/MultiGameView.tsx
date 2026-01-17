@@ -248,10 +248,8 @@ export function MultiGameView() {
         </div>
       </div>
 
-      {/* Navigation hint - Footer */}
+      {/* Version info - Footer */}
       <div className="flex-shrink-0 pb-2 flex items-center justify-center gap-4 text-white/20 text-xs">
-        <span>Arrow Keys to navigate</span>
-        <span>|</span>
         <span>v{version}</span>
       </div>
     </div>

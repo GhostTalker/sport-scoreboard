@@ -492,9 +492,9 @@ export function MainScoreboard() {
         )}
       </div>
 
-      {/* Navigation hint - very subtle */}
+      {/* Version info - very subtle */}
       <div className="absolute bottom-3 left-0 right-0 text-center text-white/20 text-xs">
-        Arrow Keys to navigate | v{version}
+        v{version}
       </div>
       
       {/* Debug Panel */}

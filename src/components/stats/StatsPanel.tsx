@@ -91,11 +91,6 @@ export function StatsPanel() {
               Noch keine Tore gefallen
             </div>
           )}
-
-          {/* Swipe hint */}
-          <div className="text-center mt-8 text-white/30 text-sm">
-            Swipe down to return to scoreboard
-          </div>
         </div>
       );
     }
@@ -111,9 +106,6 @@ export function StatsPanel() {
             <p className="text-white/50 text-xl mb-2">Turnierbaum</p>
             <p className="text-white/30 text-sm">{tournamentGame.round}</p>
             <p className="text-white/30 text-xs mt-4">Tournament bracket - Coming soon</p>
-            <div className="text-center mt-8 text-white/30 text-sm">
-              Swipe down to return to scoreboard
-            </div>
           </div>
         );
       }
@@ -136,9 +128,6 @@ export function StatsPanel() {
     return (
       <div className="h-full w-full flex flex-col items-center justify-center bg-slate-900 p-6">
         <p className="text-white/50 text-xl mb-2">Keine Statistiken verfügbar</p>
-        <div className="text-center mt-8 text-white/30 text-sm">
-          Swipe down to return to scoreboard
-        </div>
       </div>
     );
   }
@@ -203,11 +192,6 @@ export function StatsPanel() {
           </div>
         </div>
       )}
-
-      {/* Swipe hint */}
-      <div className="text-center mt-8 text-white/30 text-sm">
-        Swipe down to return to scoreboard
-      </div>
     </div>
   );
 }

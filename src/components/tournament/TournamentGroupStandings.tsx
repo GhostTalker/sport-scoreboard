@@ -185,11 +185,6 @@ export function TournamentGroupStandings({
           </div>
         </div>
       </div>
-
-      {/* Swipe hint */}
-      <div className="text-center mt-2 text-white/30 text-xs">
-        Swipe down to return to scoreboard
-      </div>
     </div>
   );
 }
