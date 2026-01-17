@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { useSwipe, getAvailableDirections } from '../../hooks/useSwipe';
 import { useGameStore } from '../../stores/gameStore';
+import { useSettingsStore } from '../../stores/settingsStore';
 import { isNFLGame } from '../../types/game';
 
 interface SwipeContainerProps {
@@ -10,6 +11,7 @@ interface SwipeContainerProps {
 export function SwipeContainer({ children }: SwipeContainerProps) {
   const { handlers, currentView } = useSwipe();
   const currentGame = useGameStore((state) => state.currentGame);
+  const viewMode = useSettingsStore((state) => state.viewMode);
   const availableDirections = getAvailableDirections(currentView);
 
   // Check if bracket is available for NFL playoffs
@@ -23,6 +25,7 @@ export function SwipeContainer({ children }: SwipeContainerProps) {
       <NavigationHints
         directions={availableDirections}
         currentView={currentView}
+        viewMode={viewMode}
         isBracketAvailable={isBracketAvailable}
       />
     </div>
@@ -32,15 +35,22 @@ export function SwipeContainer({ children }: SwipeContainerProps) {
 interface NavigationHintsProps {
   directions: string[];
   currentView: string;
+  viewMode?: 'single' | 'multi';
   isBracketAvailable?: boolean;
 }
 
-function NavigationHints({ directions, currentView, isBracketAvailable }: NavigationHintsProps) {
+function NavigationHints({ directions, currentView, viewMode, isBracketAvailable }: NavigationHintsProps) {
   // Show bracket hint on scoreboard and stats during NFL playoffs
   const showBracketHint = isBracketAvailable && (currentView === 'scoreboard' || currentView === 'stats');
 
-  // Don't show hints on main scoreboard (keep it clean) unless bracket is available
+  // Don't show hints on scoreboard (single or multi) unless bracket is available
+  // MultiGameView has its own footer hint
   if (currentView === 'scoreboard' && !showBracketHint) {
+    return null;
+  }
+
+  // Don't show hints in multi-game view (has its own footer hint)
+  if (currentView === 'scoreboard' && viewMode === 'multi') {
     return null;
   }
 
@@ -64,7 +74,7 @@ function NavigationHints({ directions, currentView, isBracketAvailable }: Naviga
         </div>
       )}
       
-      {directions.includes('left') && (
+      {directions.includes('left') && !showBracketHint && (
         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center text-white/40">
           <span className="text-xs mr-1">Settings (Arrow Left)</span>
           <svg className="w-5 h-5 -rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,7 +82,7 @@ function NavigationHints({ directions, currentView, isBracketAvailable }: Naviga
           </svg>
         </div>
       )}
-      
+
       {directions.includes('right') && currentView === 'bracket' && (
         <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center text-white/40">
           <svg className="w-5 h-5 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -194,22 +194,21 @@ function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGa
 function BracketConnectionsLeft() {
   return (
     <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-      {/* Wild Card to Divisional - Top */}
-      <line x1="33%" y1="20%" x2="50%" y2="20%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="33%" y1="35%" x2="50%" y2="35%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="50%" y1="20%" x2="50%" y2="35%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="50%" y1="27.5%" x2="66%" y2="27.5%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      {/* Wild Card to Divisional - Top pair (WC game 1 + 2 -> DIV game 1) */}
+      <line x1="33%" y1="30%" x2="50%" y2="30%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="33%" y1="50%" x2="50%" y2="50%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="50%" y1="30%" x2="50%" y2="50%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="50%" y1="40%" x2="66%" y2="40%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
 
-      {/* Wild Card to Divisional - Bottom */}
-      <line x1="33%" y1="65%" x2="50%" y2="65%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="33%" y1="80%" x2="50%" y2="80%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="50%" y1="65%" x2="50%" y2="80%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="50%" y1="72.5%" x2="66%" y2="72.5%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      {/* Wild Card to Divisional - Bottom pair (BYE + WC game 3 -> DIV game 2) */}
+      <line x1="33%" y1="70%" x2="50%" y2="70%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="50%" y1="50%" x2="50%" y2="70%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="50%" y1="60%" x2="66%" y2="60%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
 
       {/* Divisional to Conference */}
-      <line x1="66%" y1="27.5%" x2="83%" y2="27.5%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="66%" y1="72.5%" x2="83%" y2="72.5%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="83%" y1="27.5%" x2="83%" y2="72.5%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="66%" y1="40%" x2="83%" y2="40%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="66%" y1="60%" x2="83%" y2="60%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="83%" y1="40%" x2="83%" y2="60%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
       <line x1="83%" y1="50%" x2="100%" y2="50%" stroke="#475569" strokeWidth="2" opacity="0.5" />
     </svg>
   );
@@ -221,21 +220,20 @@ function BracketConnectionsRight() {
     <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
       {/* Conference to Divisional */}
       <line x1="0%" y1="50%" x2="17%" y2="50%" stroke="#475569" strokeWidth="2" opacity="0.5" />
-      <line x1="17%" y1="27.5%" x2="17%" y2="72.5%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="17%" y1="27.5%" x2="34%" y2="27.5%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="17%" y1="72.5%" x2="34%" y2="72.5%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="17%" y1="40%" x2="17%" y2="60%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="17%" y1="40%" x2="34%" y2="40%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="17%" y1="60%" x2="34%" y2="60%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
 
-      {/* Divisional to Wild Card - Top */}
-      <line x1="34%" y1="27.5%" x2="50%" y2="27.5%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="50%" y1="20%" x2="50%" y2="35%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="50%" y1="20%" x2="67%" y2="20%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="50%" y1="35%" x2="67%" y2="35%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      {/* Divisional to Wild Card - Top pair (DIV game 1 -> WC game 1 + 2) */}
+      <line x1="34%" y1="40%" x2="50%" y2="40%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="50%" y1="30%" x2="50%" y2="50%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="50%" y1="30%" x2="67%" y2="30%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="50%" y1="50%" x2="67%" y2="50%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
 
-      {/* Divisional to Wild Card - Bottom */}
-      <line x1="34%" y1="72.5%" x2="50%" y2="72.5%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="50%" y1="65%" x2="50%" y2="80%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="50%" y1="65%" x2="67%" y2="65%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
-      <line x1="50%" y1="80%" x2="67%" y2="80%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      {/* Divisional to Wild Card - Bottom pair (DIV game 2 -> WC game 3 + BYE) */}
+      <line x1="34%" y1="60%" x2="50%" y2="60%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="50%" y1="50%" x2="50%" y2="70%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
+      <line x1="50%" y1="70%" x2="67%" y2="70%" stroke="#475569" strokeWidth="1.5" opacity="0.4" />
     </svg>
   );
 }
