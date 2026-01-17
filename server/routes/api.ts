@@ -363,12 +363,31 @@ apiRouter.get('/health/ready', (_req, res) => {
 // ═══════════════════════════════════════════════════════════════════════
 
 /**
+ * Admin endpoint authentication middleware
+ * Only allows access from localhost for security
+ */
+function adminAuth(req: Request, res: Response, next: NextFunction) {
+  const ip = req.ip || req.socket.remoteAddress || '';
+  const isLocalhost = ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+
+  if (!isLocalhost) {
+    logError(`[Security] Unauthorized admin access attempt from ${ip}`);
+    return res.status(403).json({
+      error: 'Forbidden',
+      message: 'Admin endpoints are restricted to localhost access only'
+    });
+  }
+
+  next();
+}
+
+/**
  * POST /api/admin/reset-circuit - Manually reset ESPN circuit breaker
  *
  * Use this if you know ESPN is back online but the circuit breaker
  * hasn't auto-recovered yet (e.g., after a long outage)
  */
-apiRouter.post('/admin/reset-circuit', (_req, res) => {
+apiRouter.post('/admin/reset-circuit', adminAuth, (_req, res) => {
   espnProxy.resetCircuitBreaker();
   res.json({
     success: true,
@@ -385,7 +404,7 @@ apiRouter.post('/admin/reset-circuit', (_req, res) => {
  *
  * Use with caution - will cause a burst of API requests as cache refills
  */
-apiRouter.post('/admin/clear-cache', (req, res) => {
+apiRouter.post('/admin/clear-cache', adminAuth, (req, res) => {
   const { service } = req.query;
 
   if (service === 'espn' || !service) {
@@ -408,7 +427,7 @@ apiRouter.post('/admin/clear-cache', (req, res) => {
  * Use during emergencies to immediately stop all outgoing requests
  * (e.g., if ESPN is causing timeouts that block shutdown)
  */
-apiRouter.post('/admin/cancel-requests', (_req, res) => {
+apiRouter.post('/admin/cancel-requests', adminAuth, (_req, res) => {
   espnProxy.cancelAllRequests();
   res.json({
     success: true,
