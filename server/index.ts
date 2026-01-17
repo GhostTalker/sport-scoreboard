@@ -43,17 +43,15 @@ const allowedOrigins = [
 // CORS configuration factory - will be applied to /api routes only
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    // SECURITY: Health check endpoints bypass CORS checks
-    // These endpoints need to be accessible for monitoring tools
-    // Development: Allow no-origin requests for testing
+    // SECURITY: No origin = same-origin request (browser on same domain)
+    // These are safe and MUST be allowed
+    // Examples: Browser @ http://10.1.0.51:3001 → API @ http://10.1.0.51:3001/api
+    //           curl/tools (no Origin header) for monitoring/testing
     if (!origin) {
-      if (process.env.NODE_ENV === 'production') {
-        logError('[SECURITY] Blocked request with no Origin header in production');
-        return callback(new Error('Not allowed by CORS - Origin header required'));
-      }
       return callback(null, true);
     }
 
+    // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
