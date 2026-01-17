@@ -241,9 +241,9 @@ function ConferenceBracketLeft({ conference, wildCard, divisional, conferenceGam
   const confSlot = conferenceGame || createPlaceholderMatchup('conference', conference, 0);
 
   return (
-    <div className="relative h-full flex gap-1">
+    <div className="relative h-full flex gap-0.5">
       {/* Column 1: Wild Card (with BYE) - Fixed width */}
-      <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '110px' }}>
+      <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '112px' }}>
         <div className="text-center mb-2 bg-red-500/20 rounded mx-1 py-1">
           <p className="text-[10px] text-red-300 font-bold">WILD CARD</p>
         </div>
@@ -261,7 +261,7 @@ function ConferenceBracketLeft({ conference, wildCard, divisional, conferenceGam
       </div>
 
       {/* Column 2: Divisional - Fixed width */}
-      <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '110px' }}>
+      <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '112px' }}>
         <div className="text-center mb-2 bg-red-500/20 rounded mx-1 py-1">
           <p className="text-[10px] text-red-300 font-bold">DIVISIONAL</p>
         </div>
@@ -275,7 +275,7 @@ function ConferenceBracketLeft({ conference, wildCard, divisional, conferenceGam
       </div>
 
       {/* Column 3: Conference Championship - Fixed width */}
-      <div className="flex flex-col justify-center py-2 bg-slate-800/10 rounded-lg" style={{ width: '118px' }}>
+      <div className="flex flex-col justify-center py-2 bg-slate-800/10 rounded-lg" style={{ width: '112px' }}>
         <div className="text-center mb-2 bg-red-500/20 rounded mx-1 py-1">
           <p className="text-[10px] text-red-300 font-bold">AFC CHAMP</p>
         </div>
@@ -299,9 +299,9 @@ function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGa
   const confSlot = conferenceGame || createPlaceholderMatchup('conference', conference, 0);
 
   return (
-    <div className="relative h-full flex gap-1">
+    <div className="relative h-full flex gap-0.5">
       {/* Column 3: Conference Championship - Fixed width */}
-      <div className="flex flex-col justify-center py-2 bg-slate-800/10 rounded-lg" style={{ width: '118px' }}>
+      <div className="flex flex-col justify-center py-2 bg-slate-800/10 rounded-lg" style={{ width: '112px' }}>
         <div className="text-center mb-2 bg-blue-500/20 rounded mx-1 py-1">
           <p className="text-[10px] text-blue-300 font-bold">NFC CHAMP</p>
         </div>
@@ -313,7 +313,7 @@ function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGa
       </div>
 
       {/* Column 2: Divisional - Fixed width */}
-      <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '110px' }}>
+      <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '112px' }}>
         <div className="text-center mb-2 bg-blue-500/20 rounded mx-1 py-1">
           <p className="text-[10px] text-blue-300 font-bold">DIVISIONAL</p>
         </div>
@@ -327,7 +327,7 @@ function ConferenceBracketRight({ conference, wildCard, divisional, conferenceGa
       </div>
 
       {/* Column 1: Wild Card (with BYE) - Fixed width */}
-      <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '110px' }}>
+      <div className="flex flex-col py-2 bg-slate-800/10 rounded-lg" style={{ width: '112px' }}>
         <div className="text-center mb-2 bg-blue-500/20 rounded mx-1 py-1">
           <p className="text-[10px] text-blue-300 font-bold">WILD CARD</p>
         </div>
@@ -366,13 +366,17 @@ function BracketConnectionsLeft() {
   const conf = 90;   // Conference Championship
 
   // X coordinates (in viewBox units, 340 = 100%)
-  // Layout: WC(0-110) | gap(4) | DIV(114-224) | gap(4) | CONF(228-346)
-  // With mx-2 (8px margin): WC box(8-102), DIV box(122-216), CONF box(236-338)
-  // Using BOX CENTERS for proper line connections
+  // Layout: WC(0-112) | gap(2) | DIV(114-226) | gap(2) | CONF(228-340)
+  // With mx-2 (8px margin): WC box(8-104), DIV box(122-218), CONF box(236-332)
+  // Using BOX EDGES and SHORT LINES (like example image)
   const scale = 100 / 340;
-  const wcMid = 55 * scale;          // 16.17 - Center of WC box (8+102)/2
-  const divMid = 169 * scale;        // 49.71 - Center of DIV box (122+216)/2
-  const confMid = 287 * scale;       // 84.38 - Center of CONF box (236+338)/2
+  const wcRight = 104 * scale;       // 30.59 - Right edge of WC box
+  const gap1Mid = 113 * scale;       // 33.22 - Middle of gap between WC and DIV
+  const divLeft = 122 * scale;       // 35.88 - Left edge of DIV box
+  const divRight = 218 * scale;      // 64.12 - Right edge of DIV box
+  const gap2Mid = 227 * scale;       // 66.74 - Middle of gap between DIV and CONF
+  const confLeft = 236 * scale;      // 69.41 - Left edge of CONF box
+  const confRight = 332 * scale;     // 97.65 - Right edge of CONF box (for Super Bowl line)
 
   return (
     <svg
@@ -383,40 +387,37 @@ function BracketConnectionsLeft() {
     >
       {/* === Wild Card to Divisional - Top pair === */}
       {/* wc1 (BYE at 30) + wc2 (68) -> div1 (51) */}
-      {/* Horizontal from wc1 center to divMid */}
-      <line x1={wcMid} y1={wc1} x2={divMid} y2={wc1} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from wc2 center to divMid */}
-      <line x1={wcMid} y1={wc2} x2={divMid} y2={wc2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Vertical connector at divMid from wc1 to wc2 */}
-      <line x1={divMid} y1={wc1} x2={divMid} y2={wc2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from divMid to div1 */}
-      <line x1={divMid} y1={div1} x2={divMid} y2={div1} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Short horizontal from WC box edge to gap middle */}
+      <line x1={wcRight} y1={wc1} x2={gap1Mid} y2={wc1} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      <line x1={wcRight} y1={wc2} x2={gap1Mid} y2={wc2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* Vertical connector at gap middle */}
+      <line x1={gap1Mid} y1={wc1} x2={gap1Mid} y2={wc2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* Short horizontal from gap middle to DIV box edge */}
+      <line x1={gap1Mid} y1={div1} x2={divLeft} y2={div1} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
 
       {/* === Wild Card to Divisional - Bottom pair === */}
       {/* wc3 (108) + wc4 (147) -> div2 (128) */}
-      {/* Horizontal from wc3 center to divMid */}
-      <line x1={wcMid} y1={wc3} x2={divMid} y2={wc3} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from wc4 center to divMid */}
-      <line x1={wcMid} y1={wc4} x2={divMid} y2={wc4} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Vertical connector at divMid from wc3 to wc4 */}
-      <line x1={divMid} y1={wc3} x2={divMid} y2={wc4} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from divMid to div2 */}
-      <line x1={divMid} y1={div2} x2={divMid} y2={div2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Short horizontal from WC box edge to gap middle */}
+      <line x1={wcRight} y1={wc3} x2={gap1Mid} y2={wc3} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      <line x1={wcRight} y1={wc4} x2={gap1Mid} y2={wc4} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* Vertical connector at gap middle */}
+      <line x1={gap1Mid} y1={wc3} x2={gap1Mid} y2={wc4} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* Short horizontal from gap middle to DIV box edge */}
+      <line x1={gap1Mid} y1={div2} x2={divLeft} y2={div2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
 
       {/* === Divisional to Conference === */}
       {/* div1 (51) + div2 (128) -> conf (90) */}
-      {/* Horizontal from div1 center to confMid */}
-      <line x1={divMid} y1={div1} x2={confMid} y2={div1} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from div2 center to confMid */}
-      <line x1={divMid} y1={div2} x2={confMid} y2={div2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Vertical connector at confMid from div1 to div2 */}
-      <line x1={confMid} y1={div1} x2={confMid} y2={div2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from confMid to conf */}
-      <line x1={confMid} y1={conf} x2={confMid} y2={conf} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" />
+      {/* Short horizontal from DIV box edge to gap middle */}
+      <line x1={divRight} y1={div1} x2={gap2Mid} y2={div1} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      <line x1={divRight} y1={div2} x2={gap2Mid} y2={div2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* Vertical connector at gap middle */}
+      <line x1={gap2Mid} y1={div1} x2={gap2Mid} y2={div2} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* Short horizontal from gap middle to CONF box edge */}
+      <line x1={gap2Mid} y1={conf} x2={confLeft} y2={conf} stroke="#ef4444" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
 
       {/* === Conference to Super Bowl === */}
-      {/* conf (90) -> Super Bowl (extends beyond right edge from conf center) */}
-      <line x1={confMid} y1={conf} x2={104} y2={conf} stroke="#ef4444" strokeWidth="0.8" opacity="0.8" />
+      {/* conf (90) -> Super Bowl (from CONF box edge to center) */}
+      <line x1={confRight} y1={conf} x2={104} y2={conf} stroke="#ef4444" strokeWidth="0.8" opacity="0.8" strokeLinecap="butt" />
     </svg>
   );
 }
@@ -437,13 +438,17 @@ function BracketConnectionsRight() {
   const conf = 90;   // Conference Championship
 
   // X coordinates (in viewBox units, 340 = 100%)
-  // NFC layout (mirrored): CONF(0-118) | gap(4) | DIV(122-232) | gap(4) | WC(236-346)
-  // With mx-2 (8px margin): CONF box(8-110), DIV box(130-224), WC box(244-338)
-  // Using BOX CENTERS for proper line connections
+  // NFC layout (mirrored): CONF(0-112) | gap(2) | DIV(114-226) | gap(2) | WC(228-340)
+  // With mx-2 (8px margin): CONF box(8-104), DIV box(122-218), WC box(236-332)
+  // Using BOX EDGES and SHORT LINES (like example image)
   const scale = 100 / 340;
-  const confMid = 59 * scale;            // 17.35 - Center of CONF box (8+110)/2
-  const divMid = 177 * scale;            // 52.04 - Center of DIV box (130+224)/2
-  const wcMid = 291 * scale;             // 85.64 - Center of WC box (244+338)/2
+  const confLeft = 8 * scale;        // 2.35 - Left edge of CONF box
+  const confRight = 104 * scale;     // 30.59 - Right edge of CONF box
+  const gapConfDiv = 113 * scale;    // 33.22 - Middle of gap between CONF and DIV
+  const divLeft = 122 * scale;       // 35.88 - Left edge of DIV box
+  const divRight = 218 * scale;      // 64.12 - Right edge of DIV box
+  const gapDivWC = 227 * scale;      // 66.74 - Middle of gap between DIV and WC
+  const wcLeft = 236 * scale;        // 69.41 - Left edge of WC box
 
   return (
     <svg
@@ -453,41 +458,36 @@ function BracketConnectionsRight() {
       preserveAspectRatio="none"
     >
       {/* === Super Bowl to Conference === */}
-      {/* Super Bowl (extends beyond left edge) -> conf box center */}
-      <line x1="-4" y1={conf} x2={confMid} y2={conf} stroke="#60a5fa" strokeWidth="0.8" opacity="0.8" />
+      {/* Super Bowl (extends beyond left edge) -> conf box left edge */}
+      <line x1="-4" y1={conf} x2={confLeft} y2={conf} stroke="#60a5fa" strokeWidth="0.8" opacity="0.8" strokeLinecap="butt" />
 
       {/* === Conference to Divisional === */}
-      {/* div1 (51) + div2 (128) -> conf (90) */}
-      {/* Horizontal from conf center to divMid */}
-      <line x1={confMid} y1={conf} x2={divMid} y2={conf} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Vertical connector at divMid from div1 to div2 */}
-      <line x1={divMid} y1={div1} x2={divMid} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from divMid to div1 */}
-      <line x1={divMid} y1={div1} x2={divMid} y2={div1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from divMid to div2 */}
-      <line x1={divMid} y1={div2} x2={divMid} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Short horizontal from CONF box edge to gap middle */}
+      <line x1={confRight} y1={conf} x2={gapConfDiv} y2={conf} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* Vertical connector at gap middle from div1 to div2 */}
+      <line x1={gapConfDiv} y1={div1} x2={gapConfDiv} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* Short horizontal from gap middle to DIV box edge at div1 */}
+      <line x1={gapConfDiv} y1={div1} x2={divLeft} y2={div1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* Short horizontal from gap middle to DIV box edge at div2 */}
+      <line x1={gapConfDiv} y1={div2} x2={divLeft} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
 
       {/* === Divisional to Wild Card - Top pair === */}
-      {/* wc1 (BYE at 30) + wc2 (68) -> div1 (51) */}
-      {/* Horizontal from div1 center to wcMid */}
-      <line x1={divMid} y1={div1} x2={wcMid} y2={div1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Vertical connector at wcMid from wc1 to wc2 */}
-      <line x1={wcMid} y1={wc1} x2={wcMid} y2={wc2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from wcMid to wc1 */}
-      <line x1={wcMid} y1={wc1} x2={wcMid} y2={wc1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from wcMid to wc2 */}
-      <line x1={wcMid} y1={wc2} x2={wcMid} y2={wc2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Short horizontal from DIV box edge to gap middle */}
+      <line x1={divRight} y1={wc1} x2={gapDivWC} y2={wc1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      <line x1={divRight} y1={wc2} x2={gapDivWC} y2={wc2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* Vertical connector at gap middle */}
+      <line x1={gapDivWC} y1={wc1} x2={gapDivWC} y2={wc2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* Short horizontal from gap middle to WC box edge */}
+      <line x1={gapDivWC} y1={div1} x2={wcLeft} y2={div1} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
 
       {/* === Divisional to Wild Card - Bottom pair === */}
-      {/* wc3 (108) + wc4 (147) -> div2 (128) */}
-      {/* Horizontal from div2 center to wcMid */}
-      <line x1={divMid} y1={div2} x2={wcMid} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Vertical connector at wcMid from wc3 to wc4 */}
-      <line x1={wcMid} y1={wc3} x2={wcMid} y2={wc4} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from wcMid to wc3 */}
-      <line x1={wcMid} y1={wc3} x2={wcMid} y2={wc3} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
-      {/* Horizontal from wcMid to wc4 */}
-      <line x1={wcMid} y1={wc4} x2={wcMid} y2={wc4} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" />
+      {/* Short horizontal from DIV box edge to gap middle */}
+      <line x1={divRight} y1={wc3} x2={gapDivWC} y2={wc3} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      <line x1={divRight} y1={wc4} x2={gapDivWC} y2={wc4} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* Vertical connector at gap middle */}
+      <line x1={gapDivWC} y1={wc3} x2={gapDivWC} y2={wc4} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
+      {/* Short horizontal from gap middle to WC box edge */}
+      <line x1={gapDivWC} y1={div2} x2={wcLeft} y2={div2} stroke="#60a5fa" strokeWidth="0.6" opacity="0.7" strokeLinecap="butt" />
     </svg>
   );
 }
