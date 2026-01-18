@@ -67,11 +67,12 @@ const corsOptions = {
 // SECURITY: API Rate Limiting
 // ═══════════════════════════════════════════════════════════════════════
 // Protect against abuse and excessive API calls to ESPN proxy
-// Limit: 100 requests per 15 minutes per IP address
+// TESTING: Increased limit to 1000 for development/testing
+// TODO: Reset to 100 requests/15min before final production deployment
 // Standard headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,  // 15 minutes
-  max: 100,                   // Max 100 requests per window
+  max: 1000,                  // Max 1000 requests per window (TESTING - normally 100)
   standardHeaders: true,      // Return rate limit info in `RateLimit-*` headers
   legacyHeaders: false,       // Disable `X-RateLimit-*` headers (use standard instead)
   message: 'Too many requests from this IP, please try again later',
