@@ -5,6 +5,46 @@ All notable changes to the Sport-Scoreboard project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.1] - 2026-01-18
+
+### Added
+- **System Health Monitoring Tab** in Settings
+  - Real-time backend health visualization
+  - Uptime and memory usage display
+  - API service status (ESPN, OpenLigaDB) with circuit breaker state
+  - Cache performance metrics (hit rate, size, entries)
+  - Auto-refresh every 10 seconds
+  - Manual refresh button
+  - New component: `src/components/settings/SystemHealth.tsx`
+  - New service: `src/services/healthApi.ts`
+
+### Changed
+- **Bundesliga Plugin v1.2.0** (v1.0.0 → v1.2.0)
+  - Blitztabelle header now centered for better visual alignment
+  - Zone-colored table rows based on placement (Champion: purple, CL: blue, EL: orange, ECL: green, Relegation: yellow, Relegation: red)
+  - Pulsing animation only for teams currently playing in live games
+  - No pulsing for teams with finished games
+  - Removed strikethrough old points display
+  - Clean points display showing only current live points
+  - Points always displayed in white (no blue highlight)
+  - Background colors use 15% opacity of zone color
+- **Logo Separation** for different UI contexts
+  - Added `sportSelectionIcon` field to plugin manifest
+  - Sport selection screen uses large `/title/*.png` logos
+  - Settings/PluginManager uses compact `/logos/Logo_*.png` logos
+  - Non-breaking change with fallback to `icon` if `sportSelectionIcon` not provided
+- **Sport Selection Screen Optimizations**
+  - Reduced element sizes to fit all 5 plugins without scrolling
+  - Logo: h-96 → h-48 for header, h-32 → h-20 for sport icons
+  - Card padding reduced: p-12 → p-6
+  - Font sizes reduced: text-4xl → text-2xl
+  - Spacing optimized: gap-8 → gap-4
+  - Top-centered alignment for tablet display (removed vertical centering)
+  - Added 3-column layout for large screens (lg:grid-cols-3)
+
+### Fixed
+- TypeScript unused variable warnings in LiveTable component
+
 ## [3.5.0] - 2026-01-18
 
 ### Added

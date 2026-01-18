@@ -407,6 +407,50 @@ Configure via `pm2-logrotate` module.
 
 ## Version History
 
+### v3.5.1 (2026-01-18) - System Health & Bundesliga UX Improvements
+**System Health Monitoring:**
+- New System Health tab in Settings menu
+- Real-time backend health visualization with auto-refresh (10s interval)
+- Uptime and memory usage metrics
+- API service status monitoring (ESPN, OpenLigaDB)
+- Circuit breaker state display (CLOSED/OPEN/HALF_OPEN)
+- Cache performance metrics (hit rate, size, entries)
+- Manual refresh button for on-demand updates
+- New components: `src/components/settings/SystemHealth.tsx`, `src/services/healthApi.ts`
+
+**Bundesliga Plugin v1.2.0:**
+- Blitztabelle header centered for better visual alignment
+- Zone-colored table rows based on league placement:
+  - Champion (1st): Purple background
+  - Champions League (2-4): Blue background
+  - Europa League (5th): Orange background
+  - Europa Conference League (6th): Green background
+  - Relegation (16th): Yellow background
+  - Relegation (17-18): Red background
+- Pulsing animation exclusively for teams currently in live games (in_progress, halftime, end_period status)
+- No pulsing for teams with finished games
+- Removed strikethrough old points display
+- Clean points display showing only current live points (always white)
+- Background colors use 15% opacity of zone color for subtle effect
+
+**Logo Separation:**
+- Added `sportSelectionIcon` field to plugin manifest (optional)
+- Sport selection screen uses large iconic logos from `/title/` directory
+- Settings/PluginManager uses compact professional logos from `/logos/` directory
+- Non-breaking change with fallback to `icon` if `sportSelectionIcon` not provided
+- All 5 plugins updated with both logo variants
+
+**Sport Selection Screen Optimization:**
+- Reduced element sizes to fit all 5 plugins without scrolling on tablet
+- Header logo: h-96 kept as requested, text: text-2xl → text-xl
+- Sport icons: h-32 → h-20
+- Card padding: p-12 → p-6
+- Font sizes: text-4xl → text-2xl, text-xl → text-base
+- Spacing optimized: gap-8 → gap-4, all margins reduced
+- Top-centered alignment for tablet display (removed vertical centering)
+- Added 3-column layout for large screens (lg:grid-cols-3)
+- Better use of viewport space on iPad mini 6
+
 ### v3.4.0 (2026-01-17) - NFL Playoff Bracket
 **Interactive Playoff Bracket:**
 - Mirrored AFC/NFC layout with Super Bowl in center
