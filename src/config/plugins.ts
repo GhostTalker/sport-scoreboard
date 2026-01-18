@@ -29,7 +29,7 @@ export const PLUGIN_DEFINITIONS: PluginDefinition[] = [
   {
     manifest: {
       id: 'nfl',
-      version: '1.0.0',
+      version: '2.0.0',
       name: 'NFL Plugin',
       displayName: 'NFL',
       description: 'American Football',

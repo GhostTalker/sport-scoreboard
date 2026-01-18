@@ -5,6 +5,96 @@ All notable changes to the Sport-Scoreboard project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0] - 2026-01-18
+
+### Added
+- **Loading Skeletons** for all major views
+  - `MultiGameViewSkeleton`: 6-card grid with shimmer effect
+  - `LiveTableSkeleton`: 18-row table placeholder
+  - `NFLPlayoffBracketSkeleton`: Full bracket structure with animated shimmer
+  - Instant visual feedback instead of blank screens during data fetch
+- **UEFA Aggregate Score Display** for 2-leg knockout matches
+  - Automatic detection of Round of 16, Quarter-finals, Semi-finals
+  - Shows cumulative score across both legs (e.g., "3-2 on aggregate")
+  - Current leg indicator (1st Leg / 2nd Leg)
+  - Individual leg scores with home/away context
+  - Winner determination with away goals rule support
+- **Red Card Celebration System** for Bundesliga
+  - Integration with API-Football for live card events
+  - `useCardEvents` hook polls every 30 seconds during live matches
+  - Detects red cards and yellow-red cards
+  - Triggers celebration overlay with card-specific videos
+  - Deduplication to prevent duplicate celebrations
+- **Sport-Specific Cache Keys**
+  - Separate localStorage keys per sport: `scoreboard_cache_nfl`, `scoreboard_cache_bundesliga`
+  - Prevents NFL and Bundesliga data mixing in cache
+  - Legacy cache cleanup on first load (`cleanupLegacyCache()`)
+  - Game details cache: `game_details_cache_{sport}_{gameId}`
+- **Professional Sport Logos** in Settings Menu
+  - NFL: `/logos/Logo_NFL.png`
+  - Bundesliga: `/logos/Logo_Bundesliga.png`
+  - UEFA Champions League: `/logos/Logo_UEFA.png`
+  - FIFA World Cup: `/logos/Logo_FIFA_VM.svg`
+  - UEFA Euro: `/logos/Logo_UEFA_EM.png`
+
+### Fixed
+- **CRITICAL: HTTP 500 Error on Production** (Same-Origin CORS Issue)
+  - Browser requests from `http://10.1.0.51:3001` to `/api` don't send Origin header
+  - CORS middleware incorrectly rejected same-origin requests as unsafe
+  - Fix: Allow requests without Origin header (they are inherently safe)
+  - Impact: Production was completely down, all API requests returned 500
+- **Race Condition Fixes** during sport/competition switching
+  - **AbortController Pattern**: Cancel in-flight requests when user switches sports
+  - **Request Validation**: Validate sport/competition matches before accepting fetch results
+  - **Store Validation**: Reject cross-sport game updates in `gameStore.setCurrentGame()`
+  - **Signal Propagation**: Pass AbortSignal through entire fetch chain (espnApi, adapters)
+  - Prevents stale data from overwriting current selection
+- **Overtime Games Not Displayed** (Bills vs Broncos Playoff Game)
+  - Status `end_period` (end of regulation before OT) not treated as live
+  - Auto-selection logic missing after race condition fixes
+  - Fix: Added auto-selection (prioritize live > scheduled > final)
+  - Fix: Treat `end_period` as live status for polling and details fetch
+  - Modified: `useGameData.ts`, `gameStore.ts`, `espnApi.ts`
+- **Error Handling for All Sport Plugins**
+  - Extended `BaseSoccerAdapter` with cache helper methods
+  - Modified `openligadbProxy.ts` to return `X-Cache-Status` headers
+  - All soccer plugins now report errors via `useCacheStore`
+  - Consistent error banners across NFL, Bundesliga, UEFA, WorldCup, Euro
+
+### Changed
+- **Navigation Hints Removed**
+  - Removed all on-screen swipe/keyboard navigation hints
+  - Functionality preserved: swipe gestures and arrow keys still work
+  - Cleaner UI, less visual clutter
+  - Modified: `SwipeContainer.tsx`, `StatsPanel.tsx`, `MainScoreboard.tsx`, `MultiGameView.tsx`
+- **Rate Limit Increased for Testing**
+  - Changed from 100 requests/15min to 1000 requests/15min
+  - Temporary increase for development/testing phase
+  - TODO: Reset to 100 before final production deployment
+- **Repository Renamed**
+  - GitHub: `nfl-scoreboard` → `sport-scoreboard`
+  - Git remote URL updated to reflect multi-sport nature
+- **Code Cleanup**
+  - Deleted 13 temporary analysis files (RACE_CONDITION_*.md, QA_*.md, test scripts)
+  - Removed obsolete test scripts (test-cors.sh, test-rate-limit.sh/ps1)
+  - Cleaner repository structure
+
+### Technical
+- **NFL Plugin v2.0.0** - Major version bump
+  - Race condition fixes with AbortSignal support
+  - Loading skeleton integration
+  - Overtime game status handling
+  - Sport-specific cache keys
+- All sport adapters now implement `fetchScoreboard(signal?: AbortSignal)`
+- Cache service methods now require `sport` parameter
+- Store validation prevents cross-sport data pollution
+
+### Breaking Changes
+- Cache service API changed: All methods now require `sport` parameter
+  - `saveScoreboardToCache(games, sport)`
+  - `getScoreboardFromCache(sport)`
+  - Legacy caches are automatically cleaned up on first load
+
 ## [3.4.0] - 2026-01-17
 
 ### Added - NFL Playoff Bracket
