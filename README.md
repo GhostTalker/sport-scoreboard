@@ -449,8 +449,8 @@ Starting with v3.2.1, the application should be deployed using a dedicated non-r
 ```bash
 # Create deployment user (run as root once)
 useradd -m -s /bin/bash scoreboard-app
-mkdir -p /srv/GhostGit/nfl-scoreboard
-chown -R scoreboard-app:scoreboard-app /srv/GhostGit/nfl-scoreboard
+mkdir -p /srv/repo/sport-scoreboard
+chown -R scoreboard-app:scoreboard-app /srv/repo/sport-scoreboard
 
 # Set up SSH key for scoreboard-app user
 su - scoreboard-app
@@ -467,7 +467,7 @@ The project includes a deployment script for quick updates:
 ssh scoreboard-app@10.1.0.51
 
 # Run deployment
-cd /srv/GhostGit/nfl-scoreboard
+cd /srv/repo/sport-scoreboard
 ./deploy.sh
 ```
 
@@ -503,7 +503,7 @@ NODE_ENV=production npm run start:prod
 
 #### Update Process
 ```bash
-cd /srv/GhostGit/nfl-scoreboard
+cd /srv/repo/sport-scoreboard
 git pull
 npm install
 npm run build

@@ -60,7 +60,7 @@ Run these commands as root:
 useradd -m -s /bin/bash scoreboard-app
 
 # Create the application directory
-mkdir -p /srv/GhostGit/nfl-scoreboard
+mkdir -p /srv/repo/sport-scoreboard
 
 # Set ownership
 chown -R scoreboard-app:scoreboard-app /srv/GhostGit
@@ -517,7 +517,7 @@ ufw enable
 
 ```bash
 ssh scoreboard-app@10.1.0.51
-cd /srv/GhostGit/nfl-scoreboard
+cd /srv/repo/sport-scoreboard
 ./deploy.sh
 ```
 
@@ -525,7 +525,7 @@ cd /srv/GhostGit/nfl-scoreboard
 
 ```bash
 ssh scoreboard-app@10.1.0.51
-cd /srv/GhostGit/nfl-scoreboard
+cd /srv/repo/sport-scoreboard
 
 # Pull latest changes
 git pull origin master
@@ -543,7 +543,7 @@ pm2 restart ecosystem.config.cjs
 ### Remote Deployment (from Windows)
 
 ```bash
-ssh -i "C:\Users\Pit\OneDrive\Dokumente\Security\SSH Keys\MadClusterNet\id_rsa" scoreboard-app@10.1.0.51 "cd /srv/GhostGit/nfl-scoreboard && ./deploy.sh"
+ssh -i "C:\Users\Pit\OneDrive\Dokumente\Security\SSH Keys\MadClusterNet\id_rsa" scoreboard-app@10.1.0.51 "cd /srv/repo/sport-scoreboard && ./deploy.sh"
 ```
 
 ---
@@ -591,10 +591,10 @@ pm2 save
 
 ```bash
 # Ensure scoreboard-app owns the directory
-sudo chown -R scoreboard-app:scoreboard-app /srv/GhostGit/nfl-scoreboard
+sudo chown -R scoreboard-app:scoreboard-app /srv/repo/sport-scoreboard
 
 # Check file permissions
-ls -la /srv/GhostGit/nfl-scoreboard
+ls -la /srv/repo/sport-scoreboard
 ```
 
 ---
@@ -608,7 +608,7 @@ If upgrading from v3.2.0 to v3.2.1, follow these steps:
 ```bash
 # As root on the server
 useradd -m -s /bin/bash scoreboard-app
-chown -R scoreboard-app:scoreboard-app /srv/GhostGit/nfl-scoreboard
+chown -R scoreboard-app:scoreboard-app /srv/repo/sport-scoreboard
 
 # Set up SSH key for the new user
 su - scoreboard-app
@@ -629,7 +629,7 @@ pm2 set pm2-logrotate:compress true
 ### 3. Update Application
 
 ```bash
-cd /srv/GhostGit/nfl-scoreboard
+cd /srv/repo/sport-scoreboard
 git pull origin master
 npm install
 npm run build

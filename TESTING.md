@@ -199,14 +199,14 @@ pm2 conf pm2-logrotate
 #   rotateModule: true
 
 # Check log directory
-ls -lh /srv/GhostGit/nfl-scoreboard/logs/
+ls -lh /srv/repo/sport-scoreboard/logs/
 
 # Check current logs
-ls -lh /srv/GhostGit/nfl-scoreboard/logs/*.log
+ls -lh /srv/repo/sport-scoreboard/logs/*.log
 # Expected: out.log and err.log should exist and be < 10MB
 
 # Check rotated logs (if any)
-ls -lh /srv/GhostGit/nfl-scoreboard/logs/*.gz
+ls -lh /srv/repo/sport-scoreboard/logs/*.gz
 # Expected: Compressed rotated logs with timestamps
 
 # View recent logs
@@ -216,7 +216,7 @@ pm2 logs nfl-scoreboard --lines 20
 **Expected Results:**
 - ✅ pm2-logrotate module installed
 - ✅ Configuration matches requirements
-- ✅ Log directory exists: `/srv/GhostGit/nfl-scoreboard/logs/`
+- ✅ Log directory exists: `/srv/repo/sport-scoreboard/logs/`
 - ✅ Log files exist: `out.log`, `err.log`
 - ✅ Log files < 10MB each
 - ✅ Rotation occurs when size exceeds 10MB
@@ -255,7 +255,7 @@ whoami
 # Expected: scoreboard-app
 
 # Test 3: Check app directory ownership
-ls -la /srv/GhostGit/nfl-scoreboard
+ls -la /srv/repo/sport-scoreboard
 # Expected: Owner = scoreboard-app, Group = scoreboard-app
 
 # Test 4: Check PM2 process ownership
@@ -264,7 +264,7 @@ ps aux | grep "node.*start:prod"
 # Expected: Process running as scoreboard-app user (not root)
 
 # Test 5: Test deployment script
-cd /srv/GhostGit/nfl-scoreboard
+cd /srv/repo/sport-scoreboard
 ./deploy.sh
 # Expected: Completes without errors, no sudo required
 
@@ -296,7 +296,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for full setup instructions.
 
 **1. Deploy v3.2.1**
 ```bash
-ssh scoreboard-app@10.1.0.51 "cd /srv/GhostGit/nfl-scoreboard && ./deploy.sh"
+ssh scoreboard-app@10.1.0.51 "cd /srv/repo/sport-scoreboard && ./deploy.sh"
 ```
 
 **2. Run All Feature Tests (30 minutes)**
@@ -320,7 +320,7 @@ pm2 status
 # Expected: Memory < 500M, uptime stable
 
 # Monitor log file sizes
-watch -n 60 'ls -lh /srv/GhostGit/nfl-scoreboard/logs/'
+watch -n 60 'ls -lh /srv/repo/sport-scoreboard/logs/'
 ```
 
 **4. Stress Test (Optional)**
@@ -453,8 +453,8 @@ pm2 save
 **Fix:**
 ```bash
 # As root
-chown -R scoreboard-app:scoreboard-app /srv/GhostGit/nfl-scoreboard
-chmod -R 755 /srv/GhostGit/nfl-scoreboard
+chown -R scoreboard-app:scoreboard-app /srv/repo/sport-scoreboard
+chmod -R 755 /srv/repo/sport-scoreboard
 ```
 
 ### Error Boundary Not Catching Errors

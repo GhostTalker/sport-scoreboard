@@ -296,7 +296,7 @@ The app uses German date/time formatting:
 
 The app is designed to run on a Linux server:
 
-1. Clone repo to server (e.g., `/srv/GhostGit/nfl-scoreboard`)
+1. Clone repo to server (e.g., `/srv/repo/sport-scoreboard`)
 2. `npm install && npm run build`
 3. `NODE_ENV=production npm run start:prod`
 4. Access via `http://<server-ip>:3001` from iPad/browser
@@ -311,7 +311,7 @@ The app is designed to run on a Linux server:
 
 **Deployment Command**:
 ```bash
-ssh -i "C:\Users\Pit\OneDrive\Dokumente\Security\SSH Keys\MadClusterNet\id_rsa" scoreboard-app@10.1.0.51 "cd /srv/GhostGit/nfl-scoreboard && ./deploy.sh"
+ssh -i "C:\Users\Pit\OneDrive\Dokumente\Security\SSH Keys\MadClusterNet\id_rsa" scoreboard-app@10.1.0.51 "cd /srv/repo/sport-scoreboard && ./deploy.sh"
 ```
 
 For persistent deployment, use PM2:
@@ -341,7 +341,7 @@ chmod 700 /home/scoreboard-app/.ssh
 chmod 600 /home/scoreboard-app/.ssh/authorized_keys
 
 # Transfer app ownership
-chown -R scoreboard-app:scoreboard-app /srv/GhostGit/nfl-scoreboard
+chown -R scoreboard-app:scoreboard-app /srv/repo/sport-scoreboard
 
 # Optional: Disable root SSH login (recommended)
 # Edit /etc/ssh/sshd_config: PermitRootLogin no
