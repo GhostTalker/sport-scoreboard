@@ -47,64 +47,64 @@ export function SportSelectionScreen() {
   };
 
   return (
-    <div className="h-full w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-8">
-      <div className="max-w-4xl w-full">
+    <div className="h-full w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+      <div className="max-w-5xl w-full">
         {/* Header with Scoreboard Logo */}
-        <div className="text-center mb-4">
-          <div className="-mb-20 flex justify-center">
+        <div className="text-center mb-2">
+          <div className="-mb-8 flex justify-center">
             <img
               src="/title/scoreboard-logo.png"
               alt="Sport-Scoreboard"
-              className="h-96 w-auto object-contain"
+              className="h-48 w-auto object-contain"
               style={{
                 filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))',
               }}
             />
           </div>
-          <p className="text-2xl text-white/70">
+          <p className="text-xl text-white/70">
             Wähle deine Sportart
           </p>
         </div>
 
         {/* Sport Selection Cards - Dynamic from Plugins */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {plugins.map(plugin => {
             const classes = getPluginClasses(plugin.id);
             return (
               <button
                 key={plugin.id}
                 onClick={() => handleSportSelection(plugin.id)}
-                className={`group relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-12 border-4 border-slate-700 ${classes.border} transition-all duration-300 hover:scale-105 hover:shadow-2xl ${classes.shadow}`}
+                className={`group relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border-2 border-slate-700 ${classes.border} transition-all duration-300 hover:scale-105 hover:shadow-2xl ${classes.shadow}`}
               >
                 {/* Plugin Icon/Logo */}
                 <div className="text-center">
-                  <div className="mb-6 flex justify-center transform group-hover:scale-110 transition-transform duration-300">
+                  <div className="mb-3 flex justify-center transform group-hover:scale-110 transition-transform duration-300">
                     <img
                       src={plugin.sportSelectionIcon || plugin.icon}
                       alt={plugin.displayName}
-                      className="h-32 w-auto object-contain"
+                      className="h-20 w-auto object-contain"
                     />
                   </div>
-                  <h2 className="text-4xl font-bold text-white mb-3">
+                  <h2 className="text-2xl font-bold text-white mb-2">
                     {plugin.displayName}
                   </h2>
-                  <p className="text-xl text-white/60 mb-4">
+                  <p className="text-base text-white/60 mb-2">
                     {plugin.description}
                   </p>
-                  <div className="text-sm text-white/40">
+                  <div className="text-xs text-white/40">
                     {plugin.celebrationTypes.length} Celebration Types
                   </div>
                 </div>
 
                 {/* Glow effect on hover */}
-                <div className={`absolute inset-0 bg-gradient-to-br from-transparent to-transparent ${classes.gradientFrom} ${classes.gradientTo} rounded-3xl transition-all duration-300`} />
+                <div className={`absolute inset-0 bg-gradient-to-br from-transparent to-transparent ${classes.gradientFrom} ${classes.gradientTo} rounded-2xl transition-all duration-300`} />
               </button>
             );
           })}
         </div>
 
         {/* Footer note */}
-        <div className="text-center mt-12 text-white/40 text-sm">
+        <div className="text-center mt-4 text-white/40 text-xs">
           Du kannst die Sportart jederzeit in den Einstellungen ändern
         </div>
       </div>
