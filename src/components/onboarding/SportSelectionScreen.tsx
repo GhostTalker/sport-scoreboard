@@ -80,7 +80,7 @@ export function SportSelectionScreen() {
                 <div className="text-center">
                   <div className="mb-6 flex justify-center transform group-hover:scale-110 transition-transform duration-300">
                     <img
-                      src={plugin.icon}
+                      src={plugin.sportSelectionIcon || plugin.icon}
                       alt={plugin.displayName}
                       className="h-32 w-auto object-contain"
                     />

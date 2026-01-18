@@ -12,7 +12,8 @@ export interface PluginManifest {
   // Display
   displayName: string;           // 'NFL'
   description: string;           // 'American Football'
-  icon: string;                  // '/plugins/nfl/icon.png'
+  icon: string;                  // '/logos/Logo_NFL.png' (for Settings/PluginManager)
+  sportSelectionIcon?: string;   // '/title/nfl-logo.png' (for initial sport selection screen)
 
   // Capabilities
   hasStats: boolean;
