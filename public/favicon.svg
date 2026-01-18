@@ -1,10 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#002244"/>
-      <stop offset="100%" style="stop-color:#C60C30"/>
+      <stop offset="0%" style="stop-color:#1e3a8a"/>
+      <stop offset="100%" style="stop-color:#3b82f6"/>
     </linearGradient>
   </defs>
+  <!-- Background -->
   <rect width="100" height="100" rx="15" fill="url(#bg)"/>
-  <text x="50" y="65" font-family="Arial Black, Arial, sans-serif" font-size="50" fill="white" text-anchor="middle" font-weight="bold">NFL</text>
+
+  <!-- Stadium/Scoreboard Icon -->
+  <g transform="translate(20, 25)">
+    <!-- Scoreboard Screen -->
+    <rect x="5" y="5" width="50" height="30" rx="3" fill="white" opacity="0.9"/>
+
+    <!-- Score Display -->
+    <rect x="12" y="12" width="8" height="16" fill="#1e3a8a"/>
+    <rect x="25" y="12" width="8" height="16" fill="#1e3a8a"/>
+    <rect x="38" y="12" width="8" height="16" fill="#1e3a8a"/>
+
+    <!-- Stadium Base -->
+    <path d="M 0 40 L 10 50 L 50 50 L 60 40 Z" fill="white" opacity="0.8"/>
+
+    <!-- Letter S -->
+    <text x="30" y="30" font-family="Arial Black, Arial, sans-serif" font-size="18" fill="#1e3a8a" text-anchor="middle" font-weight="bold">S</text>
+  </g>
 </svg>

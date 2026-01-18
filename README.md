@@ -1,12 +1,14 @@
-# 🏈 NFL Scoreboard
+# ⚽🏈 Sport-Scoreboard
 
-**Live NFL Scoreboard for iPad mini 6 and Video Wall Display**
+**Multi-Sport Live Scoreboard for iPad mini 6 and Video Wall Display**
 
-A modern, responsive web application for displaying live NFL games with dynamic backgrounds, team logos, statistics, celebration videos, and German localization.
+A modern, responsive web application for displaying live NFL and Bundesliga games with dynamic backgrounds, team logos, statistics, celebration videos, and German localization.
 
 ![Status](https://img.shields.io/badge/Status-Production-green)
-![Version](https://img.shields.io/badge/Version-1.5.0-blue)
+![Version](https://img.shields.io/badge/Version-3.3.0-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
+
+> **What's New in v3.3.0:** Backend & frontend resilience - exponential backoff with circuit breaker, LRU cache with 100MB limit, offline mode with stale data fallback, skeleton loading screens, enhanced health endpoints for monitoring
 
 ---
 
@@ -14,11 +16,13 @@ A modern, responsive web application for displaying live NFL games with dynamic 
 
 - [Screenshots](#-screenshots)
 - [Features](#-features)
+- [Resilience Features](#resilience-features-v330)
 - [Usage](#-usage)
 - [Tech Stack](#-tech-stack)
 - [Installation](#-installation)
 - [Getting Started](#-getting-started)
 - [Deployment](#-deployment)
+- [Security](#-security)
 - [Project Structure](#-project-structure)
 - [Configuration](#-configuration)
 - [Development](#-development)
@@ -167,6 +171,18 @@ Different gradient designs based on game type:
 - **Touch-optimized** - Large touch targets, swipe gestures
 - **Performance** - Optimized rendering performance, browser cache
 
+### Resilience Features (v3.3.0+)
+
+Built for reliability during live events and all-day viewing marathons:
+
+- **Exponential Backoff** - Automatic retry with increasing delays (2s -> 5s -> 15s -> 60s)
+- **Circuit Breaker** - Prevents cascading failures (opens after 3 failures, 30s cooldown)
+- **Offline Mode** - Shows cached data when API is unavailable with stale data warning
+- **Memory-Safe Caching** - LRU cache with 100MB limit prevents memory exhaustion
+- **Graceful Shutdown** - Zero-downtime deployments for PM2 and Docker
+- **Enhanced Monitoring** - Health endpoints for Kubernetes, PM2, and external monitoring
+- **Skeleton Loading** - Instant visual feedback instead of blank screens
+
 ---
 
 ## 🎮 Usage
@@ -283,6 +299,14 @@ For developers and testing:
   - `/scoreboard` - Current scores
   - `/schedule` - Season schedule & playoff weeks
   - `/summary` - Detailed game statistics
+- **OpenLigaDB API** - Bundesliga data (primary)
+  - Match results, goals, cards, events
+  - Polling interval: 15 seconds (1000 req/hour limit)
+- **API-Football** - Bundesliga live minutes (optional)
+  - Accurate match minute sync for live games
+  - Free tier: 100 requests/day
+  - Phase-based polling: 10min normal, 1min critical (injury time, restarts)
+  - See [Bundesliga Setup](#bundesliga-api-setup) for configuration
 
 ### Tools & DevOps
 - **ESLint** - Code Linting
@@ -302,8 +326,8 @@ For developers and testing:
 
 ### Step 1: Clone repository
 ```bash
-git clone https://github.com/GhostTalker/nfl-scoreboard.git
-cd nfl-scoreboard
+git clone https://github.com/GhostTalker/sport-scoreboard.git
+cd sport-scoreboard
 ```
 
 ### Step 2: Install dependencies
@@ -340,15 +364,110 @@ Server runs on: `http://localhost:3001`
 
 ---
 
+## ⚽ Bundesliga API Setup
+
+The Bundesliga plugin uses a **hybrid API approach** for optimal accuracy and cost-efficiency:
+
+### Primary API: OpenLigaDB (Free, Required)
+- Provides match results, goals, cards, and events
+- Polled every **15 seconds** during live matches
+- No API key required
+- Rate limit: 1000 requests/hour (community project)
+
+### Secondary API: API-Football (Optional, Recommended)
+- Provides accurate **live match minutes** for running games
+- Fixes issues with delayed kickoffs, interruptions, and injury time
+- Free tier: **100 requests/day**
+- Smart polling strategy:
+  - **Normal phases (0-44, 51-89 min):** 10-minute interval
+  - **Critical phases (injury time, restarts):** 1-minute interval
+  - Typical Saturday matchday: ~75 requests
+
+### Setup Instructions
+
+#### 1. Without API-Football (Basic)
+The app works without API-Football, but match minutes are **estimated** based on:
+- Kickoff time + elapsed time
+- Last goal minute (from OpenLigaDB)
+
+This can lead to inaccuracies during:
+- Delayed kickoffs
+- Match interruptions (VAR, injuries)
+- Injury time variations
+- Second-half restart delays
+
+#### 2. With API-Football (Recommended)
+For accurate live minutes, sign up for a free API key:
+
+1. Go to [API-Football](https://www.api-football.com/)
+2. Create a free account (100 requests/day)
+3. Copy your API key from the dashboard
+4. Create a `.env` file in the project root:
+   ```bash
+   cp .env.example .env
+   ```
+5. Add your API key:
+   ```env
+   VITE_API_FOOTBALL_KEY=your_api_key_here
+   ```
+6. Restart the development server
+
+**Note:** The `.env` file is git-ignored and will not be committed.
+
+### How It Works
+
+The hybrid system intelligently combines both APIs:
+
+```
+OpenLigaDB (every 15s)          API-Football (phase-based)
+        ↓                                ↓
+   Goals, Cards, Events          Live Match Minute
+        ↓                                ↓
+        └────────→ Merged Game Data ←────┘
+                         ↓
+              Accurate Live Display
+```
+
+**Match Minute Priority:**
+1. **API-Football sync** + elapsed time since sync (most accurate)
+2. **Last goal minute** (from OpenLigaDB) + elapsed time
+3. **Kickoff time** + elapsed time (fallback)
+
+**Request Budget (Saturday with 3 timeslots):**
+- Normal phases: 3 timeslots × 5 checks = 15 requests
+- Critical phases: 3 timeslots × 20 checks = 60 requests
+- **Total: ~75 requests** (within 100/day limit)
+
+---
+
 ## 🌐 Deployment
+
+### Deployment User (v3.2.1+)
+
+Starting with v3.2.1, the application should be deployed using a dedicated non-root user for improved security:
+
+```bash
+# Create deployment user (run as root once)
+useradd -m -s /bin/bash scoreboard-app
+mkdir -p /srv/repo/sport-scoreboard
+chown -R scoreboard-app:scoreboard-app /srv/repo/sport-scoreboard
+
+# Set up SSH key for scoreboard-app user
+su - scoreboard-app
+mkdir -p ~/.ssh
+# Add your public key to ~/.ssh/authorized_keys
+```
 
 ### Automatic Deployment (Recommended)
 
 The project includes a deployment script for quick updates:
 
 ```bash
-# On the server
-cd /srv/GhostGit/nfl-scoreboard
+# SSH to server as scoreboard-app user
+ssh scoreboard-app@10.1.0.51
+
+# Run deployment
+cd /srv/repo/sport-scoreboard
 ./deploy.sh
 ```
 
@@ -362,13 +481,13 @@ The script automatically executes:
 
 #### Initial Setup
 ```bash
-# SSH to server
-ssh user@linux-server
+# SSH to server as scoreboard-app user
+ssh scoreboard-app@linux-server
 
 # Clone project
 cd /srv/GhostGit
-git clone https://github.com/GhostTalker/nfl-scoreboard.git
-cd nfl-scoreboard
+git clone https://github.com/GhostTalker/sport-scoreboard.git
+cd sport-scoreboard
 
 # Install dependencies
 npm install
@@ -384,7 +503,7 @@ NODE_ENV=production npm run start:prod
 
 #### Update Process
 ```bash
-cd /srv/GhostGit/nfl-scoreboard
+cd /srv/repo/sport-scoreboard
 git pull
 npm install
 npm run build
@@ -393,7 +512,7 @@ NODE_ENV=production npm run start:prod
 
 #### With PM2 (Recommended)
 ```bash
-# Install PM2
+# Install PM2 globally
 npm install -g pm2
 
 # Start app
@@ -408,17 +527,95 @@ pm2 list
 pm2 logs nfl-scoreboard
 ```
 
+#### PM2 Log Rotation (v3.2.1+)
+```bash
+# Install log rotation module
+pm2 install pm2-logrotate
+
+# Configure rotation settings
+pm2 set pm2-logrotate:max_size 10M
+pm2 set pm2-logrotate:retain 7
+pm2 set pm2-logrotate:compress true
+pm2 set pm2-logrotate:dateFormat YYYY-MM-DD_HH-mm-ss
+pm2 set pm2-logrotate:rotateModule true
+```
+
 ### Access
 - **Local**: `http://localhost:3001`
 - **Network**: `http://<YOUR-SERVER-IP>:3001`
 - **iPad**: Browser to `http://<YOUR-SERVER-IP>:3001`
+
+> **Note:** CORS is restricted to local network origins. See [Security](#-security) for details.
+
+---
+
+## 🔒 Security
+
+This application is designed for **private network deployment** (home LAN, office network). The following security measures are in place as of v3.2.1:
+
+### CORS Configuration
+
+Cross-Origin Resource Sharing is restricted to trusted origins only:
+
+```typescript
+// Allowed origins (server/index.ts)
+const allowedOrigins = [
+  'http://localhost:5173',      // Vite dev server
+  'http://localhost:3001',      // Production local
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3001',
+  'http://10.1.0.51:3001',      // Production server
+];
+```
+
+**Important:** If you deploy to a different IP address, update the `allowedOrigins` array in `server/index.ts`.
+
+### API Rate Limiting
+
+All API endpoints are protected by rate limiting to prevent abuse:
+
+| Setting | Value |
+|---------|-------|
+| Window | 15 minutes |
+| Max Requests | 100 per IP |
+| Response on Limit | 429 Too Many Requests |
+
+Normal usage (polling every 10-15 seconds) stays well within these limits.
+
+### Non-Root Deployment
+
+The application runs under a dedicated `scoreboard-app` user with minimal privileges:
+
+- No sudo access required for normal operation
+- Owns only the application directory
+- Cannot modify system files
+- PM2 runs as the same non-root user
+
+### Threat Model
+
+This application assumes:
+- Deployment on a **trusted private network**
+- No exposure to the public internet
+- Users are trusted (family, colleagues)
+
+**Not recommended for:**
+- Public-facing deployments
+- Untrusted network environments
+- Production systems requiring authentication
+
+### Feedback & Bug Reports
+
+Use the Feedback button in Settings to report issues. The mailto link automatically includes:
+- Application version
+- Current sport/competition
+- Browser information
 
 ---
 
 ## 📁 Project Structure
 
 ```
-nfl-scoreboard/
+sport-scoreboard/
 ├── public/                  # Static Assets
 │   ├── videos/              # Celebration Videos
 │   │   ├── touchdown.mp4
@@ -694,7 +891,7 @@ This project is licensed under the **MIT License**.
 **GhostTalker**
 
 - GitHub: [@GhostTalker](https://github.com/GhostTalker)
-- Repository: [nfl-scoreboard](https://github.com/GhostTalker/nfl-scoreboard)
+- Repository: [sport-scoreboard](https://github.com/GhostTalker/sport-scoreboard)
 
 ---
 
@@ -709,6 +906,148 @@ This project is licensed under the **MIT License**.
 ---
 
 ## 📝 Changelog
+
+### v2.0.8 (2026-01-16)
+- 🐛 **Critical Bugfix - Bundesliga Loading**
+  - ✅ Fixed race condition in setInitialSportSelection
+    - Now sets currentSport, currentCompetition, and hasSelectedInitialSport in ONE atomic update
+    - Prevents useGameData from fetching before competition is properly set
+    - Bundesliga games now load immediately when selected
+- 🎨 **Updated Sport Selection Screen Graphics**
+  - ✅ Main title now uses `/title/scoreboard-logo.png`
+  - ✅ NFL card now uses `/title/nfl-logo.png`
+  - ✅ Bundesliga card now uses `/title/bundesliga-logo.png`
+  - Professional PNG graphics replace SVG icons
+
+### v2.0.7 (2026-01-16)
+- 🐛 **Critical Bugfixes**
+  - ✅ Fixed sport selection screen - now shows again for all users
+    - Migration version upgraded to 7
+    - Forces all users to see sport selection on next visit
+  - ✅ Fixed Bundesliga games loading on initial selection
+    - Changed navigation from Settings to Scoreboard after sport selection
+    - Games now load immediately when Bundesliga is selected
+- 🎨 **Team Color Corrections**
+  - ✅ Hamburger SV - Already correct (Blue)
+  - ✅ SC Freiburg - Changed from Red to Black/White
+  - ✅ Eintracht Frankfurt - Changed from Red to Black/Red
+  - ✅ RB Leipzig - Changed from Red to White/Red
+
+### v2.0.6 (2026-01-16)
+- 🐛 **Critical Bugfixes**
+  - ✅ Fixed SingleView - GameSituation no longer disappears after few seconds
+    - Preserved `situation` field when merging game details
+    - Situation data now persists across API updates
+  - ✅ Fixed MultiView - Score colons now vertically aligned
+    - Changed from Flexbox to CSS Grid layout (grid-cols-[1fr_auto_1fr])
+    - Score section always centered regardless of team name box heights
+  - ✅ Fixed DebugPanel - Added Bundesliga graphics testing
+    - NFL Season Types: Game Day, Preseason, Wild Card, Divisional, Conference, Super Bowl
+    - Bundesliga Season Types: Bundesliga, DFB-Pokal, DFB-Pokal Finale
+- 🏆 **DFB-Pokal Finale Detection**
+  - ✅ Automatic detection when only 1 game in round AND venue is Berlin
+  - ✅ Shows special `dfbpokalfinale.png` title graphic for finale
+  - ✅ Works in both SingleView and MultiView
+
+### v2.0.5 (2026-01-16)
+- 🎨 **UI Fixes**
+  - ✅ Fixed MultiView grid - all boxes now equal size (removed col-span-2)
+  - ✅ Last odd game no longer spans full width
+- 🖼️ **Logo Fixes**
+  - ✅ St. Pauli logo - now uses local `/logo/st-pauli.png`
+  - ✅ Union Berlin logo - now uses local `/logo/union.png`
+  - ✅ No more CORS issues or white backgrounds
+- 🏆 **Title Graphics**
+  - ✅ Bundesliga games use `/title/bundesliga.png`
+  - ✅ DFB-Pokal games use `/title/dfbpokal.png`
+  - ✅ DFB-Pokal Finale uses `/title/dfbpokalfinale.png`
+- 🚀 **Sport Selection Screen**
+  - ✅ FIXED: Now force-shows for ALL users on hard-refresh
+  - ✅ Migration version upgraded to 6
+  - ✅ Removes cached `hasSelectedInitialSport` value
+
+### v2.0.4 (2026-01-16)
+- 🐛 **Critical Bugfixes**
+  - ✅ Fixed St. Pauli logo - now uses correct Wikipedia PNG (team ID 98)
+  - ✅ Fixed Union Berlin logo - transparent PNG without white background
+  - ✅ Fixed MultiView title - shows "BUNDESLIGA" or "DFB-POKAL" instead of "GAMEDAY"
+  - ✅ Fixed DFB-Pokal loading - competition switch now loads correct games
+  - ✅ Fixed MultiView grid symmetry - last odd game now spans full width
+  - ✅ Fixed sport selection screen - now always appears on hard-refresh
+- ⚽ **Bundesliga Improvements**
+  - ✅ Competition change listener in useGameData - live reloading on competition switch
+  - ✅ Competition-based filtering after fetchScoreboard()
+  - ✅ Migration forces all users through sport selection screen (better onboarding)
+
+### v2.0.3 (2026-01-16)
+- ⚽ **DFB-Pokal Support**
+  - ✅ Fixed DFB-Pokal showing separate games from Bundesliga
+  - ✅ Adapter now fetches both Bundesliga (bl1) and DFB-Pokal (dfb) games
+  - ✅ Competition filter in useGameData filters games correctly
+  - ✅ Both competitions work independently
+- 🏴‍☠️ **St. Pauli Fix**
+  - ✅ Created custom St. Pauli logo (SVG) to fix CORS issues
+  - ✅ Team ID 98 now displays correct brown color (#6A4029)
+  - ✅ Local logo fallback for reliable display
+- 📱 **Dynamic Browser Title**
+  - ✅ Title updates based on selected sport (NFL/Bundesliga)
+  - ✅ Clears browser cache issues
+- 🖼️ **Title Graphics**
+  - ✅ Bundesliga and DFB-Pokal SVG graphics display correctly
+  - ✅ Fixed fallback logic in getTitleGraphic()
+
+### v2.0.2 (2026-01-16)
+- ⚽ **Bundesliga Improvements**
+  - ✅ Fixed St. Pauli team ID (98) and colors (brown)
+  - ✅ Corrected all Bundesliga team IDs to match OpenLigaDB
+  - ✅ Dynamic season calculation (auto-detects 2025/2026 season)
+  - ✅ Added Bundesliga and DFB-Pokal title graphics (SVG)
+- 🎨 **Rebranding**
+  - ✅ Renamed from "NFL Scoreboard" to "Sport-Scoreboard"
+  - ✅ Updated all documentation and UI text
+  - ✅ Multi-sport branding throughout the app
+- 🖼️ **Sport Selection Screen**
+  - ✅ Replaced emoji icons with custom SVG graphics
+  - ✅ Better visibility and professional look
+  - ✅ Football and soccer ball icons
+
+### v2.0.1 (2025-01-16)
+- 🐛 **Bundesliga Bugfixes**
+  - ✅ Fixed OpenLigaDB API property casing issues (camelCase vs PascalCase)
+  - ✅ Added explicit season parameter (2024) to matchday API requests
+  - ✅ Bundesliga games now display correctly for current matchday
+  - ✅ DFB-Pokal competition support working
+- 🎮 **Debug Controls**
+  - ✅ Sport-aware celebration buttons (NFL vs Bundesliga)
+  - ✅ Dynamic API status display (ESPN API vs OpenLigaDB API)
+  - ✅ Fixed period display for both sports
+- 🎨 **Onboarding**
+  - ✅ Initial sport selection screen for new users
+  - ✅ Beautiful card-based UI with sport logos
+  - ✅ Existing users automatically skip onboarding
+
+### v2.0.0 (2025-01-13)
+- 🌍 **Multi-Sport Support**
+  - ✅ Complete multi-sport architecture with NFL and Bundesliga support
+  - ✅ Two-tier sport selection: Sport (NFL/Bundesliga) → Competition (Bundesliga/DFB-Pokal)
+  - ✅ Polymorphic type system with discriminated unions (NFLGame | BundesligaGame)
+  - ✅ Sport adapter pattern for clean abstraction
+  - ✅ 100% NFL functionality preserved - parallel operation
+- ⚽ **Bundesliga Integration**
+  - ✅ OpenLigaDB API integration with 15-second caching
+  - ✅ Live matchday data for Bundesliga and DFB-Pokal
+  - ✅ All 18 Bundesliga teams with authentic team colors
+  - ✅ Soccer-specific features: matchday structure, goals tracking, cards
+  - ✅ Extended celebration types: goals, penalties, own goals, red/yellow cards
+- 🎨 **UI Enhancements**
+  - ✅ New SportSelector component for sport/competition switching
+  - ✅ Dynamic celebration settings that adapt to selected sport
+  - ✅ Sport-aware data fetching with automatic state clearing on switch
+- 🏗️ **Architecture**
+  - ✅ Created 10 new files (adapters, types, components, services)
+  - ✅ Modified 15 existing files with type guards and sport awareness
+  - ✅ Backend multi-sport routing with separate proxy services
+  - ✅ Enhanced health endpoint with cache stats for both sports
 
 ### v1.5.0 (2025-01-12)
 - 🎬 **Celebration Updates**

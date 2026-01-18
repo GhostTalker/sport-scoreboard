@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { CelebrationType } from '../types/game';
 
-type View = 'scoreboard' | 'stats' | 'settings';
+type View = 'scoreboard' | 'stats' | 'settings' | 'bracket' | 'table';
 
 interface CelebrationOverlay {
   visible: boolean;

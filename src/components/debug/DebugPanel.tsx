@@ -5,13 +5,19 @@ interface DebugPanelProps {
   onBackgroundChange: (background: string) => void;
 }
 
-const SEASON_TYPES = [
+const NFL_SEASON_TYPES = [
   'GAME DAY',
   'PRESEASON',
   'WILD CARD',
   'DIVISIONAL ROUND',
   'CONFERENCE CHAMPIONSHIP',
   'SUPER BOWL',
+];
+
+const BUNDESLIGA_SEASON_TYPES = [
+  'BUNDESLIGA',
+  'DFB-POKAL',
+  'DFB-POKAL FINALE',
 ];
 
 const BACKGROUND_TYPES = [
@@ -65,16 +71,34 @@ export function DebugPanel({ onSeasonChange, onBackgroundChange }: DebugPanelPro
       {/* Title Graphics Selector */}
       <div className="mb-4">
         <label className="text-white/80 text-sm font-semibold mb-2 block">
-          Title Graphic
+          NFL Title Graphics
         </label>
-        <div className="grid grid-cols-2 gap-2">
-          {SEASON_TYPES.map((season) => (
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          {NFL_SEASON_TYPES.map((season) => (
             <button
               key={season}
               onClick={() => handleSeasonChange(season)}
               className={`px-3 py-2 rounded text-sm transition-colors ${
                 selectedSeason === season
                   ? 'bg-purple-600 text-white'
+                  : 'bg-gray-800 text-white/70 hover:bg-gray-700'
+              }`}
+            >
+              {season}
+            </button>
+          ))}
+        </div>
+        <label className="text-white/80 text-sm font-semibold mb-2 block">
+          Bundesliga Title Graphics
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          {BUNDESLIGA_SEASON_TYPES.map((season) => (
+            <button
+              key={season}
+              onClick={() => handleSeasonChange(season)}
+              className={`px-3 py-2 rounded text-sm transition-colors ${
+                selectedSeason === season
+                  ? 'bg-green-600 text-white'
                   : 'bg-gray-800 text-white/70 hover:bg-gray-700'
               }`}
             >

@@ -1,8 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSwipeable } from 'react-swipeable';
 import { useGameStore } from '../../stores/gameStore';
 import { useSettingsStore } from '../../stores/settingsStore';
+import { useUIStore } from '../../stores/uiStore';
 import { getTitleGraphic } from '../../constants/titleGraphics';
+import { MultiGameViewSkeleton } from '../LoadingSkeleton';
 import type { Game, Team } from '../../types/game';
+import { isNFLGame, isBundesligaGame, isUEFAGame } from '../../types/game';
 import { version } from '../../../package.json';
 
 // Track games with recent score changes (game ID -> { timestamp, scoringTeam })
@@ -10,9 +14,34 @@ type ScoreChangeMap = Map<string, { timestamp: number; scoringTeam: 'home' | 'aw
 
 export function MultiGameView() {
   const availableGames = useGameStore((state) => state.availableGames);
+  const isLoading = useGameStore((state) => state.isLoading);
   const confirmGameSelection = useGameStore((state) => state.confirmGameSelection);
   const setViewMode = useSettingsStore((state) => state.setViewMode);
   const multiViewFilters = useSettingsStore((state) => state.multiViewFilters);
+  const currentCompetition = useSettingsStore((state) => state.currentCompetition);
+  const setView = useUIStore((state) => state.setView);
+
+  // Check if bracket view is available (NFL playoffs - any game with seasonType 3)
+  const isNFLPlayoffs = availableGames.some(
+    (game) => isNFLGame(game) && game.seasonType === 3
+  );
+
+  // Swipe handlers for bracket navigation
+  const swipeHandlers = useSwipeable({
+    onSwipedRight: () => {
+      if (isNFLPlayoffs) {
+        setView('bracket');
+      }
+    },
+    onSwipedLeft: () => {
+      setView('settings');
+    },
+    trackMouse: false,
+    trackTouch: true,
+    delta: 50,
+    preventScrollOnSwipe: true,
+    swipeDuration: 500,
+  });
 
   // Track previous scores to detect changes
   const previousScoresRef = useRef<Map<string, { home: number; away: number }>>(new Map());
@@ -76,10 +105,13 @@ export function MultiGameView() {
     return () => clearInterval(interval);
   }, []);
 
+  // Filter by competition first
+  const competitionGames = availableGames.filter(g => g.competition === currentCompetition);
+
   // Group games by status
-  const liveGames = availableGames.filter(g => g.status === 'in_progress' || g.status === 'halftime');
-  const scheduledGames = availableGames.filter(g => g.status === 'scheduled');
-  const finishedGames = availableGames.filter(g => g.status === 'final');
+  const liveGames = competitionGames.filter(g => g.status === 'in_progress' || g.status === 'halftime');
+  const scheduledGames = competitionGames.filter(g => g.status === 'scheduled');
+  const finishedGames = competitionGames.filter(g => g.status === 'final');
 
   // Apply filters from settings
   const filteredGames = [
@@ -92,44 +124,60 @@ export function MultiGameView() {
   const allGames = filteredGames;
 
   // Get the season name from the first game for the header
-  const seasonName = allGames[0]?.seasonName || 'GAME DAY';
+  const seasonName = allGames[0]
+    ? isNFLGame(allGames[0])
+      ? allGames[0].seasonName || 'GAME DAY'
+      : isBundesligaGame(allGames[0])
+      ? allGames[0].competition === 'bundesliga'
+        ? 'BUNDESLIGA'
+        : allGames[0].competition === 'dfb-pokal'
+        ? (() => {
+            // DFB-Pokal Finale detection: only 1 game in round AND in Berlin
+            const dfbGames = allGames.filter(isBundesligaGame).filter(g => g.competition === 'dfb-pokal');
+            const isFinale = dfbGames.length === 1 &&
+                            (allGames[0].venue?.toLowerCase().includes('berlin') || false);
+            return isFinale ? 'DFB-POKAL FINALE' : 'DFB-POKAL';
+          })()
+        : 'DFB-POKAL'
+      : 'GAME DAY'
+    : 'GAME DAY';
   const titleGraphic = getTitleGraphic(seasonName);
 
   // Calculate dynamic sizing based on number of games
   const getLayoutConfig = (gameCount: number) => {
     if (gameCount <= 6) {
       return {
-        cardHeight: 'h-[165px]',
-        logoSize: 'w-20 h-20',
-        logoInner: 'w-14 h-14',
-        scoreSize: 'text-4xl',
-        scoreMinW: 'min-w-[50px]',
-        teamBoxWidth: 'w-24',
-        badgeText: 'text-sm',
-        gridGap: 'gap-5',
-      };
-    } else if (gameCount <= 10) {
-      return {
-        cardHeight: 'h-[150px]',
-        logoSize: 'w-18 h-18',
-        logoInner: 'w-12 h-12',
-        scoreSize: 'text-4xl',
-        scoreMinW: 'min-w-[48px]',
-        teamBoxWidth: 'w-22',
-        badgeText: 'text-xs',
-        gridGap: 'gap-4',
-      };
-    } else {
-      // 11+ games - compact mode
-      return {
-        cardHeight: 'h-[135px]',
+        cardHeight: 'h-[140px]',
         logoSize: 'w-16 h-16',
         logoInner: 'w-11 h-11',
         scoreSize: 'text-3xl',
         scoreMinW: 'min-w-[45px]',
-        teamBoxWidth: 'w-20',
+        teamBoxWidth: 'w-22',
         badgeText: 'text-xs',
         gridGap: 'gap-4',
+      };
+    } else if (gameCount <= 10) {
+      return {
+        cardHeight: 'h-[130px]',
+        logoSize: 'w-14 h-14',
+        logoInner: 'w-9 h-9',
+        scoreSize: 'text-3xl',
+        scoreMinW: 'min-w-[45px]',
+        teamBoxWidth: 'w-20',
+        badgeText: 'text-xs',
+        gridGap: 'gap-3',
+      };
+    } else {
+      // 11+ games - compact mode
+      return {
+        cardHeight: 'h-[120px]',
+        logoSize: 'w-12 h-12',
+        logoInner: 'w-8 h-8',
+        scoreSize: 'text-2xl',
+        scoreMinW: 'min-w-[40px]',
+        teamBoxWidth: 'w-18',
+        badgeText: 'text-xs',
+        gridGap: 'gap-3',
       };
     }
   };
@@ -149,6 +197,11 @@ export function MultiGameView() {
     return { hasChange: isRecent, scoringTeam: isRecent ? changeData.scoringTeam : null };
   };
 
+  // Show skeleton during initial loading or when no games are loaded yet
+  if (isLoading || availableGames.length === 0) {
+    return <MultiGameViewSkeleton cardCount={6} />;
+  }
+
   if (allGames.length === 0) {
     return (
       <div className="h-full w-full flex items-center justify-center bg-slate-900">
@@ -159,6 +212,7 @@ export function MultiGameView() {
 
   return (
     <div
+      {...swipeHandlers}
       className="h-full w-full flex flex-col overflow-hidden"
       style={{
         background: `
@@ -169,12 +223,12 @@ export function MultiGameView() {
       }}
     >
       {/* Title Graphic Header */}
-      <div className="flex-shrink-0 pt-4 pb-3 flex justify-center">
+      <div className="flex-shrink-0 pt-2 pb-2 flex justify-center">
         {titleGraphic && (
           <img
             src={titleGraphic}
             alt={seasonName}
-            className="h-48 w-auto object-contain drop-shadow-2xl"
+            className="h-40 w-auto object-contain drop-shadow-2xl"
             style={{
               filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.8))',
             }}
@@ -201,9 +255,9 @@ export function MultiGameView() {
         </div>
       </div>
 
-      {/* Navigation hint - Footer */}
-      <div className="flex-shrink-0 pb-2 text-center text-white/20 text-xs">
-        Arrow Keys to navigate | v{version}
+      {/* Version info - Footer */}
+      <div className="flex-shrink-0 pb-2 flex items-center justify-center gap-4 text-white/20 text-xs">
+        <span>v{version}</span>
       </div>
     </div>
   );
@@ -233,6 +287,14 @@ function GameCard({ game, onSelect, hasScoreChange, scoringTeam, layoutConfig }:
   const isFinal = game.status === 'final';
   const isScheduled = game.status === 'scheduled';
   const isHalftime = game.status === 'halftime';
+
+  // Determine team display order: Bundesliga/UEFA = Home left, NFL = Away left
+  const isSoccer = isBundesligaGame(game) || isUEFAGame(game);
+  const leftTeam = isSoccer ? game.homeTeam : game.awayTeam;
+  const rightTeam = isSoccer ? game.awayTeam : game.homeTeam;
+  // Map scoringTeam to display position
+  const leftScored = isSoccer ? scoringTeam === 'home' : scoringTeam === 'away';
+  const rightScored = isSoccer ? scoringTeam === 'away' : scoringTeam === 'home';
 
   const formatTime = (dateStr?: string) => {
     if (!dateStr) return 'TBD';
@@ -298,12 +360,12 @@ function GameCard({ game, onSelect, hasScoreChange, scoringTeam, layoutConfig }:
       <div className="flex justify-center mb-0.5 w-full">
         {isLive && !isHalftime && (
           <div
-            className={`px-3 py-1 rounded-full ${layoutConfig.badgeText} font-bold tracking-wide bg-red-600/90 text-white`}
+            className={`px-2 py-0.5 rounded-full ${layoutConfig.badgeText} font-bold tracking-wide bg-red-600/90 text-white`}
             style={{ boxShadow: '0 0 15px rgba(220,38,38,0.5)' }}
           >
-            <span className="inline-flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-              {game.clock.periodName} {game.clock.displayValue}
+            <span className="inline-flex items-center gap-1">
+              <span className="w-1 h-1 bg-white rounded-full animate-pulse" />
+              {game.clock?.periodName} {game.clock?.displayValue}
             </span>
           </div>
         )}
@@ -330,23 +392,25 @@ function GameCard({ game, onSelect, hasScoreChange, scoringTeam, layoutConfig }:
         )}
       </div>
 
-      {/* Teams and Score - Centered Layout */}
-      <div className="flex items-center justify-center gap-3 w-full">
-        {/* Away Team */}
-        <TeamBadge
-          team={game.awayTeam}
-          isFinal={isFinal}
-          isWinner={game.awayTeam.score > game.homeTeam.score}
-          layoutConfig={layoutConfig}
-          hasScored={scoringTeam === 'away'}
-        />
+      {/* Teams and Score - Centered Layout with Grid for vertical alignment */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 w-full">
+        {/* Left Team (Home for Bundesliga, Away for NFL) */}
+        <div className="flex justify-end">
+          <TeamBadge
+            team={leftTeam}
+            isFinal={isFinal}
+            isWinner={leftTeam.score > rightTeam.score}
+            layoutConfig={layoutConfig}
+            hasScored={leftScored}
+          />
+        </div>
 
         {/* Score Display - Centered - Fixed width for consistency */}
-        <div className="flex items-center justify-center gap-1.5 min-w-[120px]">
-          {/* Away Score */}
+        <div className="flex items-center justify-center gap-1.5 min-w-[120px] self-center">
+          {/* Left Score */}
           <span
             className={`${layoutConfig.scoreSize} font-black ${layoutConfig.scoreMinW} text-right ${
-              isFinal && game.awayTeam.score > game.homeTeam.score
+              isFinal && leftTeam.score > rightTeam.score
                 ? 'text-white'
                 : isFinal
                 ? 'text-white/50'
@@ -355,10 +419,10 @@ function GameCard({ game, onSelect, hasScoreChange, scoringTeam, layoutConfig }:
                 : 'text-white'
             }`}
             style={{
-              textShadow: isScheduled ? 'none' : `0 0 15px #${game.awayTeam.color}80`,
+              textShadow: isScheduled ? 'none' : `0 0 15px #${leftTeam.color}80`,
             }}
           >
-            {isScheduled ? '-' : game.awayTeam.score}
+            {isScheduled ? '-' : leftTeam.score}
           </span>
 
           {/* Separator Dots */}
@@ -367,10 +431,10 @@ function GameCard({ game, onSelect, hasScoreChange, scoringTeam, layoutConfig }:
             <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
           </div>
 
-          {/* Home Score */}
+          {/* Right Score */}
           <span
             className={`${layoutConfig.scoreSize} font-black ${layoutConfig.scoreMinW} text-left ${
-              isFinal && game.homeTeam.score > game.awayTeam.score
+              isFinal && rightTeam.score > leftTeam.score
                 ? 'text-white'
                 : isFinal
                 ? 'text-white/50'
@@ -379,21 +443,23 @@ function GameCard({ game, onSelect, hasScoreChange, scoringTeam, layoutConfig }:
                 : 'text-white'
             }`}
             style={{
-              textShadow: isScheduled ? 'none' : `0 0 15px #${game.homeTeam.color}80`,
+              textShadow: isScheduled ? 'none' : `0 0 15px #${rightTeam.color}80`,
             }}
           >
-            {isScheduled ? '-' : game.homeTeam.score}
+            {isScheduled ? '-' : rightTeam.score}
           </span>
         </div>
 
-        {/* Home Team */}
-        <TeamBadge
-          team={game.homeTeam}
-          isFinal={isFinal}
-          isWinner={game.homeTeam.score > game.awayTeam.score}
-          layoutConfig={layoutConfig}
-          hasScored={scoringTeam === 'home'}
-        />
+        {/* Right Team (Away for Bundesliga, Home for NFL) */}
+        <div className="flex justify-start">
+          <TeamBadge
+            team={rightTeam}
+            isFinal={isFinal}
+            isWinner={rightTeam.score > leftTeam.score}
+            layoutConfig={layoutConfig}
+            hasScored={rightScored}
+          />
+        </div>
       </div>
     </button>
   );
@@ -408,6 +474,15 @@ interface TeamBadgeProps {
 }
 
 function TeamBadge({ team, isFinal, isWinner, layoutConfig, hasScored }: TeamBadgeProps) {
+  // Special rendering for RB Leipzig - white box with red text
+  const isLeipzig = team.name.includes('Leipzig');
+  // Special rendering for HSV - blue box with white text
+  const isHSV = team.name.includes('HSV') || team.name.includes('Hamburger');
+  // Special rendering for BVB - yellow box with black text
+  const isBVB = team.name.includes('Dortmund') || team.abbreviation === 'BVB';
+  // Special rendering for Heidenheim - blue border instead of red
+  const isHeidenheim = team.name.includes('Heidenheim');
+
   // Check if the primary color is too dark (for glow visibility)
   const hexToRgbSum = (hex: string) => {
     const r = parseInt(hex.slice(0, 2), 16);
@@ -419,13 +494,14 @@ function TeamBadge({ team, isFinal, isWinner, layoutConfig, hasScored }: TeamBad
   const primaryColor = team.color;
   const altColor = team.alternateColor || 'ffffff';
   const isPrimaryDark = hexToRgbSum(primaryColor) < 180;
-  const glowColor = isPrimaryDark ? altColor : primaryColor;
+  // Special glow colors for custom teams
+  const glowColor = isHSV ? '0069B4' : (isPrimaryDark ? altColor : primaryColor);
 
   // Dim everything for losing team in final games
   const opacity = isFinal && !isWinner ? 0.5 : 1;
 
   return (
-    <div className={`flex flex-col items-center gap-1 ${layoutConfig.teamBoxWidth}`} style={{ opacity }}>
+    <div className={`flex flex-col items-center gap-0.5 ${layoutConfig.teamBoxWidth}`} style={{ opacity }}>
       {/* Team Logo with Glow Effect */}
       <div
         className={`relative ${layoutConfig.logoSize} rounded-full flex items-center justify-center ${hasScored ? 'animate-pulse' : ''}`}
@@ -449,7 +525,7 @@ function TeamBadge({ team, isFinal, isWinner, layoutConfig, hasScored }: TeamBad
         <div
           className="absolute inset-0.5 rounded-full"
           style={{
-            border: `2px solid #${primaryColor}`,
+            border: isHSV ? '2px solid #0069B4' : `2px solid #${primaryColor}`,
             boxShadow: hasScored
               ? `
                   0 0 20px #${glowColor}90,
@@ -471,6 +547,11 @@ function TeamBadge({ team, isFinal, isWinner, layoutConfig, hasScored }: TeamBad
               ? `drop-shadow(0 0 16px #${glowColor}) brightness(1.2)`
               : `drop-shadow(0 0 8px #${glowColor}80)`,
           }}
+          onError={(e) => {
+            // Fallback to TBD placeholder if logo fails to load
+            e.currentTarget.src = '/images/tbd-logo.svg';
+            e.currentTarget.onerror = null; // Prevent infinite loop
+          }}
         />
       </div>
 
@@ -480,7 +561,7 @@ function TeamBadge({ team, isFinal, isWinner, layoutConfig, hasScored }: TeamBad
         <div
           className="absolute inset-0 blur-sm rounded"
           style={{
-            backgroundColor: `#${team.color}`,
+            backgroundColor: isLeipzig ? '#DD0741' : isHSV ? '#0069B4' : `#${team.color}`,
             opacity: hasScored ? 0.9 : 0.5,
           }}
         />
@@ -489,27 +570,47 @@ function TeamBadge({ team, isFinal, isWinner, layoutConfig, hasScored }: TeamBad
         <div
           className="relative px-1.5 py-0.5 rounded border w-full"
           style={{
-            background: hasScored
+            background: isLeipzig
+              ? 'linear-gradient(180deg, #FFFFFF 0%, #F5F5F5 100%)'
+              : isHSV
+              ? hasScored
+                ? 'linear-gradient(180deg, #0069B4 0%, #0069B4cc 100%)'
+                : 'linear-gradient(180deg, #0069B4cc 0%, #0069B488 100%)'
+              : hasScored
               ? `linear-gradient(180deg, #${team.color} 0%, #${team.color}cc 100%)`
               : `linear-gradient(180deg, #${team.color}cc 0%, #${team.color}88 100%)`,
-            borderColor: `#${team.alternateColor || team.color}`,
+            borderColor: isLeipzig ? '#DD0741' : isHSV ? '#FFFFFF' : isHeidenheim ? '#003D7A' : `#${team.alternateColor || team.color}`,
             boxShadow: hasScored
-              ? `
-                  0 0 15px #${team.color},
-                  0 0 25px #${team.color}80,
-                  0 1px 8px #${team.color}50
-                `
+              ? isLeipzig
+                ? '0 0 15px #DD0741, 0 0 25px #DD074180, 0 1px 8px #DD074150'
+                : isHSV
+                ? '0 0 15px #0069B4, 0 0 25px #0069B480, 0 1px 8px #0069B450'
+                : `0 0 15px #${team.color}, 0 0 25px #${team.color}80, 0 1px 8px #${team.color}50`
+              : isLeipzig
+              ? '0 1px 8px #DD074150'
+              : isHSV
+              ? '0 1px 8px #0069B450'
               : `0 1px 8px #${team.color}50`,
           }}
         >
           <span
-            className="text-[10px] font-bold text-white uppercase tracking-tight block text-center truncate leading-tight"
+            className="text-[10px] font-bold uppercase tracking-tight block text-center truncate leading-tight"
             style={{
-              textShadow: hasScored
-                ? `
-                    0 0 8px #${glowColor},
-                    0 1px 2px rgba(0,0,0,0.5)
-                  `
+              color: isLeipzig ? '#DD0741' : isBVB ? '#000000' : '#FFFFFF',
+              textShadow: isLeipzig
+                ? hasScored
+                  ? '0 0 8px #DD0741, 0 1px 2px rgba(0,0,0,0.2)'
+                  : '0 1px 2px rgba(0,0,0,0.2)'
+                : isBVB
+                ? hasScored
+                  ? '0 0 8px #000000, 0 1px 2px rgba(255,255,255,0.5)'
+                  : '0 1px 2px rgba(255,255,255,0.5)'
+                : isHSV
+                ? hasScored
+                  ? '0 0 8px #FFFFFF, 0 1px 2px rgba(0,0,0,0.5)'
+                  : '0 1px 2px rgba(0,0,0,0.5)'
+                : hasScored
+                ? `0 0 8px #${glowColor}, 0 1px 2px rgba(0,0,0,0.5)`
                 : '0 1px 2px rgba(0,0,0,0.5)',
             }}
           >

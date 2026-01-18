@@ -2,6 +2,7 @@ import { useGameStore } from '../../stores/gameStore';
 import { useUIStore } from '../../stores/uiStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import type { Game } from '../../types/game';
+import { isBundesligaGame } from '../../types/game';
 
 export function GameSelector() {
   const availableGames = useGameStore((state) => state.availableGames);
@@ -9,24 +10,31 @@ export function GameSelector() {
   const confirmGameSelection = useGameStore((state) => state.confirmGameSelection);
   const setView = useUIStore((state) => state.setView);
   const multiViewFilters = useSettingsStore((state) => state.multiViewFilters);
+  const currentCompetition = useSettingsStore((state) => state.currentCompetition);
 
   const handleSelectGame = (game: Game) => {
     confirmGameSelection(game);
     setView('scoreboard');
   };
 
-  if (availableGames.length === 0) {
+  // Filter games by current competition
+  const filteredGames = availableGames.filter(g => g.competition === currentCompetition);
+
+  if (filteredGames.length === 0) {
     return (
       <div className="text-center py-4 text-white/50">
-        No games available
+        {availableGames.length > 0
+          ? `Keine Spiele für ${currentCompetition === 'dfb-pokal' ? 'DFB-Pokal' : currentCompetition} verfügbar`
+          : 'Keine Spiele verfügbar'
+        }
       </div>
     );
   }
 
   // Group games by status
-  const liveGames = availableGames.filter(g => g.status === 'in_progress' || g.status === 'halftime');
-  const scheduledGames = availableGames.filter(g => g.status === 'scheduled');
-  const finishedGames = availableGames.filter(g => g.status === 'final');
+  const liveGames = filteredGames.filter(g => g.status === 'in_progress' || g.status === 'halftime');
+  const scheduledGames = filteredGames.filter(g => g.status === 'scheduled');
+  const finishedGames = filteredGames.filter(g => g.status === 'final');
 
   // Apply filters from settings
   const filteredLiveGames = multiViewFilters.showLive ? liveGames : [];
@@ -114,6 +122,11 @@ function GameCard({ game, isSelected, onSelect }: GameCardProps) {
   const isFinal = game.status === 'final';
   const isScheduled = game.status === 'scheduled';
 
+  // Determine team display order: Bundesliga = Home left, NFL = Away left
+  const isBundesliga = isBundesligaGame(game);
+  const leftTeam = isBundesliga ? game.homeTeam : game.awayTeam;
+  const rightTeam = isBundesliga ? game.awayTeam : game.homeTeam;
+
   const formatDateTime = (dateStr?: string) => {
     if (!dateStr) return { date: '', time: 'TBD' };
     const date = new Date(dateStr);
@@ -172,7 +185,7 @@ function GameCard({ game, isSelected, onSelect }: GameCardProps) {
         {isLive && (
           <span className="flex items-center gap-1 text-[10px] text-red-400 font-bold">
             <span className="w-1 h-1 bg-red-500 rounded-full animate-pulse"></span>
-            {game.clock.periodName} {game.clock.displayValue}
+            {game.clock?.periodName} {game.clock?.displayValue}
           </span>
         )}
         {isHalftime && (
@@ -185,15 +198,19 @@ function GameCard({ game, isSelected, onSelect }: GameCardProps) {
 
       {/* Main row: Teams & Score */}
       <div className="flex items-center gap-2">
-        {/* Away Team */}
+        {/* Left Team (Home for Bundesliga, Away for NFL) */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <img
-            src={game.awayTeam.logo}
-            alt={game.awayTeam.abbreviation}
+            src={leftTeam.logo}
+            alt={leftTeam.abbreviation}
             className="w-10 h-10 flex-shrink-0 object-contain"
+            onError={(e) => {
+              e.currentTarget.src = '/images/tbd-logo.svg';
+              e.currentTarget.onerror = null;
+            }}
           />
           <span className="font-bold text-white text-sm truncate">
-            {game.awayTeam.shortDisplayName}
+            {leftTeam.shortDisplayName}
           </span>
         </div>
 
@@ -201,7 +218,7 @@ function GameCard({ game, isSelected, onSelect }: GameCardProps) {
         <div className="flex items-center justify-center flex-shrink-0">
           {isLive || isFinal || isHalftime ? (
             <span className="text-lg font-black text-white">
-              {game.awayTeam.score} - {game.homeTeam.score}
+              {leftTeam.score} - {rightTeam.score}
             </span>
           ) : (
             <span className="text-sm font-bold text-blue-400">
@@ -210,15 +227,19 @@ function GameCard({ game, isSelected, onSelect }: GameCardProps) {
           )}
         </div>
 
-        {/* Home Team */}
+        {/* Right Team (Away for Bundesliga, Home for NFL) */}
         <div className="flex items-center gap-2 flex-1 justify-end min-w-0">
           <span className="font-bold text-white text-sm truncate">
-            {game.homeTeam.shortDisplayName}
+            {rightTeam.shortDisplayName}
           </span>
           <img
-            src={game.homeTeam.logo}
-            alt={game.homeTeam.abbreviation}
+            src={rightTeam.logo}
+            alt={rightTeam.abbreviation}
             className="w-10 h-10 flex-shrink-0 object-contain"
+            onError={(e) => {
+              e.currentTarget.src = '/images/tbd-logo.svg';
+              e.currentTarget.onerror = null;
+            }}
           />
         </div>
       </div>

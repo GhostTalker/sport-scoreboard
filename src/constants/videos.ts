@@ -1,5 +1,6 @@
 // Video configuration
 export const VIDEOS = {
+  // NFL celebrations
   touchdown: {
     src: '/videos/touchdown.mp4',
     duration: 8000, // 8 seconds
@@ -30,6 +31,33 @@ export const VIDEOS = {
     duration: 5000, // 5 seconds
     poster: '/videos/safety-poster.jpg',
   },
+
+  // Bundesliga celebrations
+  goal: {
+    src: '/videos/goal.mp4',
+    duration: 6000, // 6 seconds
+    poster: '/videos/goal-poster.jpg',
+  },
+  penalty: {
+    src: '/videos/penalty.mp4',
+    duration: 6000, // 6 seconds
+    poster: '/videos/penalty-poster.jpg',
+  },
+  own_goal: {
+    src: '/videos/own_goal.mp4',
+    duration: 5000, // 5 seconds
+    poster: '/videos/own_goal-poster.jpg',
+  },
+  red_card: {
+    src: '/videos/red_card.mp4',
+    duration: 5000, // 5 seconds
+    poster: '/videos/red_card-poster.jpg',
+  },
+  yellow_red_card: {
+    src: '/videos/yellow_red_card.mp4',
+    duration: 5000, // 5 seconds
+    poster: '/videos/yellow_red_card-poster.jpg',
+  },
 } as const;
 
 // All celebration types
@@ -49,7 +77,7 @@ export const AUDIO = {
 // Placeholder video sources (free to use)
 // You can replace these with your own videos
 export const PLACEHOLDER_VIDEOS: Record<CelebrationVideoType, string[]> = {
-  // Pixabay free videos (no attribution required)
+  // NFL - Pixabay free videos (no attribution required)
   touchdown: [
     'https://cdn.pixabay.com/video/2020/08/08/46944-449634027_large.mp4', // Fireworks
     'https://cdn.pixabay.com/video/2019/06/24/24880-344745604_large.mp4', // Celebration
@@ -68,6 +96,23 @@ export const PLACEHOLDER_VIDEOS: Record<CelebrationVideoType, string[]> = {
   ],
   safety: [
     'https://cdn.pixabay.com/video/2020/08/08/46944-449634027_large.mp4', // Celebration
+  ],
+
+  // Bundesliga - Soccer celebrations
+  goal: [
+    'https://cdn.pixabay.com/video/2020/08/08/46944-449634027_large.mp4', // Celebration
+  ],
+  penalty: [
+    'https://cdn.pixabay.com/video/2019/06/24/24880-344745604_large.mp4', // Celebration
+  ],
+  own_goal: [
+    'https://cdn.pixabay.com/video/2020/05/25/40107-424176365_large.mp4', // Action
+  ],
+  red_card: [
+    'https://cdn.pixabay.com/video/2019/09/11/26963-360345416_large.mp4', // Impact
+  ],
+  yellow_red_card: [
+    'https://cdn.pixabay.com/video/2019/09/11/26963-360345416_large.mp4', // Impact
   ],
 };
 

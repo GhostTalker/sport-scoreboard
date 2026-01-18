@@ -46,3 +46,7 @@ session-*.md
 # Temp files
 *espn*.json
 C:Users*
+
+# Deployment artifacts
+.builds/
+.dist_rollback_backup/

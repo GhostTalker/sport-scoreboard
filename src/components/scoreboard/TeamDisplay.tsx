@@ -6,6 +6,12 @@ interface TeamDisplayProps {
 }
 
 export function TeamDisplay({ team, hasScored = false }: TeamDisplayProps) {
+  // Special rendering for specific Bundesliga teams (matching MultiGameView)
+  const isLeipzig = team.name.includes('Leipzig');
+  const isHSV = team.name.includes('HSV') || team.name.includes('Hamburger');
+  const isBVB = team.name.includes('Dortmund') || team.abbreviation === 'BVB';
+  const isHeidenheim = team.name.includes('Heidenheim');
+
   // Check if the primary color is too dark (for glow visibility)
   // Convert hex to brightness: if R+G+B < 150, it's too dark
   const hexToRgbSum = (hex: string) => {
@@ -14,15 +20,16 @@ export function TeamDisplay({ team, hasScored = false }: TeamDisplayProps) {
     const b = parseInt(hex.slice(4, 6), 16);
     return r + g + b;
   };
-  
+
   const primaryColor = team.color;
   const altColor = team.alternateColor || 'ffffff';
   const isPrimaryDark = hexToRgbSum(primaryColor) < 180;
-  
+
   // Use alternate color for glow if primary is too dark
-  const glowColor = isPrimaryDark ? altColor : primaryColor;
-  const ringColor = primaryColor; // Keep ring in primary color
-  
+  // Special glow colors for custom teams
+  const glowColor = isLeipzig ? 'DD0741' : isHSV ? '0069B4' : (isPrimaryDark ? altColor : primaryColor);
+  const ringColor = isLeipzig ? 'DD0741' : isHSV ? '0069B4' : primaryColor; // Keep ring in primary color
+
   return (
     <div className="flex flex-col items-center gap-5">
       {/* Team Logo with Glow Effect */}
@@ -63,15 +70,15 @@ export function TeamDisplay({ team, hasScored = false }: TeamDisplayProps) {
               `,
           }}
         />
-        
+
         {/* Inner glow ring */}
-        <div 
+        <div
           className="absolute inset-5 rounded-full opacity-50"
           style={{
-            border: `3px solid #${altColor}`,
+            border: `3px solid #${isLeipzig ? 'DD0741' : altColor}`,
           }}
         />
-        
+
         <img
           src={team.logo}
           alt={team.displayName}
@@ -98,7 +105,7 @@ export function TeamDisplay({ team, hasScored = false }: TeamDisplayProps) {
         <div
           className="absolute inset-0 blur-xl rounded-xl"
           style={{
-            backgroundColor: `#${team.color}`,
+            backgroundColor: isLeipzig ? '#DD0741' : isHSV ? '#0069B4' : `#${team.color}`,
             opacity: hasScored ? 0.9 : 0.6
           }}
         />
@@ -107,19 +114,42 @@ export function TeamDisplay({ team, hasScored = false }: TeamDisplayProps) {
         <div
           className="relative px-8 py-3 rounded-xl border-2"
           style={{
-            background: hasScored
+            background: isLeipzig
+              ? 'linear-gradient(180deg, #FFFFFF 0%, #F5F5F5 100%)'
+              : isHSV
+              ? hasScored
+                ? 'linear-gradient(180deg, #0069B4 0%, #0069B4cc 100%)'
+                : 'linear-gradient(180deg, #0069B4cc 0%, #0069B488 100%)'
+              : hasScored
               ? `linear-gradient(180deg, #${team.color} 0%, #${team.color}cc 100%)`
               : `linear-gradient(180deg, #${team.color}dd 0%, #${team.color}99 100%)`,
-            borderColor: `#${team.alternateColor || team.color}`,
+            borderColor: isLeipzig ? '#DD0741' : isHSV ? '#FFFFFF' : isHeidenheim ? '#003D7A' : `#${team.alternateColor || team.color}`,
             boxShadow: hasScored
-              ? `0 0 15px #${team.color}, 0 0 25px #${team.color}80, 0 4px 30px #${team.color}90`
+              ? isLeipzig
+                ? '0 0 15px #DD0741, 0 0 25px #DD074180, 0 4px 30px #DD074190'
+                : isHSV
+                ? '0 0 15px #0069B4, 0 0 25px #0069B480, 0 4px 30px #0069B490'
+                : `0 0 15px #${team.color}, 0 0 25px #${team.color}80, 0 4px 30px #${team.color}90`
+              : isLeipzig
+              ? '0 4px 25px #DD074170'
+              : isHSV
+              ? '0 4px 25px #0069B470'
               : `0 4px 25px #${team.color}70`,
           }}
         >
           <span
-            className="text-3xl font-black text-white uppercase tracking-widest"
+            className="text-3xl font-black uppercase tracking-widest"
             style={{
-              textShadow: hasScored
+              color: isLeipzig ? '#DD0741' : isBVB ? '#000000' : '#FFFFFF',
+              textShadow: isLeipzig
+                ? hasScored
+                  ? '0 0 8px #DD0741, 0 3px 6px rgba(0,0,0,0.3)'
+                  : '0 3px 6px rgba(0,0,0,0.3)'
+                : isBVB
+                ? hasScored
+                  ? '0 0 8px #000000, 0 3px 6px rgba(255,255,255,0.5)'
+                  : '0 3px 6px rgba(255,255,255,0.5)'
+                : hasScored
                 ? `0 0 8px #${glowColor}, 0 3px 6px rgba(0,0,0,0.6), 0 0 30px rgba(255,255,255,0.5)`
                 : '0 3px 6px rgba(0,0,0,0.6), 0 0 25px rgba(255,255,255,0.4)',
             }}

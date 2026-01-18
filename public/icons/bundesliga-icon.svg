@@ -1,0 +1,28 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="soccer-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Soccer ball circle -->
+  <circle cx="100" cy="100" r="80" fill="#ffffff" filter="url(#soccer-glow)"/>
+
+  <!-- Pentagon in center (black) -->
+  <polygon points="100,40 130,60 120,95 80,95 70,60" fill="#000000"/>
+
+  <!-- Hexagons around the pentagon -->
+  <polygon points="130,60 160,65 155,95 120,95" fill="#000000"/>
+  <polygon points="100,40 130,60 145,30 115,20" fill="#000000"/>
+  <polygon points="70,60 100,40 85,20 55,30" fill="#000000"/>
+  <polygon points="70,60 40,65 45,95 80,95" fill="#000000"/>
+  <polygon points="120,95 155,95 160,130 130,140" fill="#000000"/>
+  <polygon points="80,95 45,95 40,130 70,140" fill="#000000"/>
+
+  <!-- Highlight -->
+  <circle cx="75" cy="65" r="15" fill="#ffffff" opacity="0.5"/>
+</svg>

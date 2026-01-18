@@ -4,12 +4,18 @@ import { MainScoreboard } from './components/scoreboard/MainScoreboard';
 import { MultiGameView } from './components/scoreboard/MultiGameView';
 import { StatsPanel } from './components/stats/StatsPanel';
 import { SettingsPanel } from './components/settings/SettingsPanel';
+import { NFLPlayoffBracket } from './components/bracket/NFLPlayoffBracket';
+import { LiveTable } from './components/table/LiveTable';
+import { SportSelectionScreen } from './components/onboarding/SportSelectionScreen';
 import { VideoOverlay } from './components/celebration/VideoOverlay';
+import { StaleDataBanner } from './components/StaleDataBanner';
 import { useUIStore } from './stores/uiStore';
 import { useSettingsStore } from './stores/settingsStore';
+import { useGameStore } from './stores/gameStore';
 import { useGameData } from './hooks/useGameData';
 import { useScoreChange } from './hooks/useScoreChange';
 import { usePlayByPlay } from './hooks/usePlayByPlay';
+import { useCardEvents } from './hooks/useCardEvents';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
 import { useVideoPreloader } from './hooks/useVideoPreloader';
 
@@ -17,6 +23,14 @@ function App() {
   const currentView = useUIStore((state) => state.currentView);
   const celebrationOverlay = useUIStore((state) => state.celebrationOverlay);
   const viewMode = useSettingsStore((state) => state.viewMode);
+  const hasSelectedInitialSport = useSettingsStore((state) => state.hasSelectedInitialSport);
+  const currentSport = useSettingsStore((state) => state.currentSport);
+  const availableGames = useGameStore((state) => state.availableGames);
+
+  // Calculate current Bundesliga season (Aug-Jul, so Jan 2026 = 2025/2026 season)
+  const currentMonth = new Date().getMonth() + 1; // 1-12
+  const currentYear = new Date().getFullYear();
+  const bundesligaSeason = currentMonth >= 8 ? currentYear : currentYear - 1;
 
   // Preload celebration videos at app start
   const { isPreloading, progress } = useVideoPreloader();
@@ -30,8 +44,21 @@ function App() {
   // Watch for play-by-play events (interceptions, sacks, fumbles)
   usePlayByPlay();
 
+  // Watch for red card events in Bundesliga games
+  // (OpenLigaDB doesn't provide cards, so we use API-Football)
+  useCardEvents();
+
   // Keyboard navigation for desktop browsers
   useKeyboardNavigation();
+
+  // Update document title based on current sport
+  useEffect(() => {
+    const sportName =
+      currentSport === 'nfl' ? 'NFL' :
+      currentSport === 'uefa' ? 'UEFA Champions League' :
+      'Bundesliga';
+    document.title = `${sportName} - Sport-Scoreboard`;
+  }, [currentSport]);
 
   // Prevent context menu on long press
   useEffect(() => {
@@ -40,8 +67,20 @@ function App() {
     return () => document.removeEventListener('contextmenu', handler);
   }, []);
 
+  // Show sport selection screen if user hasn't selected initial sport
+  if (!hasSelectedInitialSport) {
+    return (
+      <div className="h-full w-full bg-slate-900 text-white overflow-hidden">
+        <SportSelectionScreen />
+      </div>
+    );
+  }
+
   return (
     <div className="h-full w-full bg-slate-900 text-white overflow-hidden">
+      {/* Stale Data Warning Banner */}
+      <StaleDataBanner />
+
       <SwipeContainer>
         {/* Main Views */}
         <div className="h-full w-full relative">
@@ -49,6 +88,8 @@ function App() {
           {currentView === 'scoreboard' && viewMode === 'multi' && <MultiGameView />}
           {currentView === 'stats' && <StatsPanel />}
           {currentView === 'settings' && <SettingsPanel />}
+          {currentView === 'bracket' && <NFLPlayoffBracket />}
+          {currentView === 'table' && <LiveTable currentGames={availableGames} season={bundesligaSeason} />}
         </div>
       </SwipeContainer>
 

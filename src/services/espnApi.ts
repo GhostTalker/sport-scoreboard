@@ -2,34 +2,57 @@ import { API_ENDPOINTS } from '../constants/api';
 import type { Game, GameStatus } from '../types/game';
 import type { GameStats, TeamStats, PlayerStats } from '../types/stats';
 import { getTeamById } from '../constants/teams';
+import { useCacheStore } from '../stores/cacheStore';
+import {
+  parseCacheHeaders,
+  saveScoreboardToCache,
+  getScoreboardFromCache,
+  saveGameDetailsToCache,
+  getGameDetailsFromCache,
+  getScoreboardCacheTimestamp,
+} from './cacheService';
 
 // Fetch scoreboard data (all games for current week + upcoming weeks)
-export async function fetchScoreboard(): Promise<Game[]> {
+export async function fetchScoreboard(signal?: AbortSignal): Promise<Game[]> {
+  const cacheStore = useCacheStore.getState();
+
   try {
-    const response = await fetch(API_ENDPOINTS.scoreboard);
+    cacheStore.setRecovery(true);
+
+    // RACE CONDITION FIX: Pass abort signal to fetch
+    const response = await fetch(API_ENDPOINTS.scoreboard, { signal });
+
+    // Parse cache headers from backend
+    const cacheInfo = parseCacheHeaders(response);
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+
     const data = await response.json();
     let games = parseScoreboardResponse(data);
-    
+
     // Check if we have upcoming games - if not, try to fetch next week(s)
-    const hasUpcoming = games.some(g => g.status === 'scheduled');
-    const hasLive = games.some(g => g.status === 'in_progress' || g.status === 'halftime');
-    
+    const hasUpcoming = games.some((g) => g.status === 'scheduled');
+    const hasLive = games.some((g) =>
+      g.status === 'in_progress' ||
+      g.status === 'halftime' ||
+      g.status === 'end_period'
+    );
+
     if (!hasUpcoming && !hasLive) {
       // Get current season info
       const seasonType = data.season?.type || data.leagues?.[0]?.season?.type || 2;
       const currentWeek = data.week?.number || 1;
       const year = data.season?.year || new Date().getFullYear();
-      
-      
+
       // For playoffs (seasonType 3), try to fetch upcoming rounds
       if (seasonType === 3) {
         // Try fetching next few playoff weeks
         for (let week = currentWeek + 1; week <= 5; week++) {
           try {
-            const futureGames = await fetchScheduleWeek(year, 3, week);
+            // Pass abort signal to nested fetches
+            const futureGames = await fetchScheduleWeek(year, 3, week, signal);
             if (futureGames.length > 0) {
               games = [...games, ...futureGames];
             }
@@ -38,11 +61,12 @@ export async function fetchScoreboard(): Promise<Game[]> {
           }
         }
       }
-      
+
       // If regular season week 18 and all games final, fetch playoff week 1 (Wild Card)
       if (seasonType === 2 && currentWeek >= 18) {
         try {
-          const playoffGames = await fetchScheduleWeek(year, 3, 1);
+          // Pass abort signal to nested fetches
+          const playoffGames = await fetchScheduleWeek(year, 3, 1, signal);
           if (playoffGames.length > 0) {
             games = [...games, ...playoffGames];
           }
@@ -51,20 +75,63 @@ export async function fetchScoreboard(): Promise<Game[]> {
         }
       }
     }
-    
+
+    // Update cache status based on response headers
+    if (cacheInfo.isStale) {
+      // Backend returned stale data - show warning banner
+      cacheStore.setCacheStatus({
+        isStale: true,
+        cacheAge: cacheInfo.cacheAge,
+        apiError: cacheInfo.apiError,
+        lastSuccessfulFetch: getScoreboardCacheTimestamp('nfl'),
+      });
+      cacheStore.incrementRetry();
+    } else {
+      // Fresh data - clear stale status and save to localStorage
+      cacheStore.clearStaleStatus();
+      saveScoreboardToCache(games, 'nfl');
+    }
+
+    cacheStore.setRecovery(false);
     return games;
   } catch (error) {
     console.error('Error fetching scoreboard:', error);
+
+    // Try to return cached data on error
+    const cachedGames = getScoreboardFromCache('nfl');
+    if (cachedGames && cachedGames.length > 0) {
+      console.log('[ESPN API] Using cached scoreboard data due to fetch error');
+
+      // Calculate cache age from localStorage timestamp
+      const cacheTimestamp = getScoreboardCacheTimestamp('nfl');
+      const cacheAge = cacheTimestamp
+        ? Math.floor((Date.now() - cacheTimestamp.getTime()) / 1000)
+        : null;
+
+      cacheStore.setCacheStatus({
+        isStale: true,
+        cacheAge,
+        apiError: error instanceof Error ? error.message : 'Network error',
+        lastSuccessfulFetch: cacheTimestamp,
+      });
+      cacheStore.incrementRetry();
+      cacheStore.setRecovery(false);
+
+      return cachedGames;
+    }
+
+    cacheStore.setRecovery(false);
     throw error;
   }
 }
 
 // Fetch games for a specific week
-async function fetchScheduleWeek(year: number, seasonType: number, week: number): Promise<Game[]> {
+async function fetchScheduleWeek(year: number, seasonType: number, week: number, signal?: AbortSignal): Promise<Game[]> {
   try {
     const url = `${API_ENDPOINTS.schedule}?year=${year}&seasonType=${seasonType}&week=${week}`;
-    
-    const response = await fetch(url);
+
+    // RACE CONDITION FIX: Pass abort signal
+    const response = await fetch(url, { signal });
     if (!response.ok) {
       return [];
     }
@@ -75,17 +142,74 @@ async function fetchScheduleWeek(year: number, seasonType: number, week: number)
   }
 }
 
-// Fetch single game with detailed stats
-export async function fetchGameDetails(gameId: string): Promise<{ game: Game; stats: GameStats } | null> {
+// Fetch all playoff games (Wild Card, Divisional, Conference, Super Bowl)
+export async function fetchAllPlayoffGames(year?: number): Promise<Game[]> {
+  const currentYear = year || new Date().getFullYear();
+  const playoffWeeks = [1, 2, 3, 5]; // Wild Card, Divisional, Conference, Super Bowl
+
   try {
-    const response = await fetch(API_ENDPOINTS.game(gameId));
+    // Fetch all playoff weeks in parallel
+    const allWeeksPromises = playoffWeeks.map(week =>
+      fetchScheduleWeek(currentYear, 3, week)
+    );
+
+    const allWeeksResults = await Promise.all(allWeeksPromises);
+
+    // Flatten and combine all games
+    const allPlayoffGames = allWeeksResults.flat();
+
+    console.log(`[ESPN API] Fetched ${allPlayoffGames.length} playoff games across all rounds`);
+
+    return allPlayoffGames;
+  } catch (error) {
+    console.error('Error fetching all playoff games:', error);
+    return [];
+  }
+}
+
+// Fetch single game with detailed stats
+export async function fetchGameDetails(gameId: string, signal?: AbortSignal): Promise<{ game: Game; stats: GameStats | null } | null> {
+  const cacheStore = useCacheStore.getState();
+
+  try {
+    // RACE CONDITION FIX: Pass abort signal
+    const response = await fetch(API_ENDPOINTS.game(gameId), { signal });
+
+    // Parse cache headers from backend
+    const cacheInfo = parseCacheHeaders(response);
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+
     const data = await response.json();
-    return parseGameDetailsResponse(data);
+    const result = parseGameDetailsResponse(data);
+
+    // Cache the result if fresh
+    if (result && !cacheInfo.isStale) {
+      saveGameDetailsToCache(gameId, result.game, result.stats, 'nfl');
+    }
+
+    // If stale, update cache status (but don't override scoreboard stale status)
+    if (cacheInfo.isStale && !cacheStore.isStale) {
+      cacheStore.setCacheStatus({
+        isStale: true,
+        cacheAge: cacheInfo.cacheAge,
+        apiError: cacheInfo.apiError,
+      });
+    }
+
+    return result;
   } catch (error) {
     console.error('Error fetching game details:', error);
+
+    // Try to return cached game details on error
+    const cachedDetails = getGameDetailsFromCache(gameId, 'nfl');
+    if (cachedDetails) {
+      console.log('[ESPN API] Using cached game details due to fetch error');
+      return cachedDetails;
+    }
+
     throw error;
   }
 }
@@ -119,6 +243,8 @@ function parseScoreboardResponse(data: any): Game[] {
     
     return {
       id: event.id,
+      sport: 'nfl',
+      competition: 'nfl',
       status,
       homeTeam: parseTeam(homeCompetitor),
       awayTeam: parseTeam(awayCompetitor),
@@ -249,6 +375,8 @@ function parseGameDetailsResponse(data: any): { game: Game; stats: GameStats } |
 
   const game: Game = {
     id: header.id,
+    sport: 'nfl',
+    competition: 'nfl',
     status: parseGameStatus(header.status),
     homeTeam: parseTeam(homeCompetitor),
     awayTeam: parseTeam(awayCompetitor),

@@ -1,13 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useGameStore } from '../../stores/gameStore';
+import { useSettingsStore } from '../../stores/settingsStore';
 import { TeamDisplay } from './TeamDisplay';
 import { GameSituation } from './GameSituation';
+import { AggregateScoreDisplay } from './AggregateScoreDisplay';
 import { getTitleGraphic } from '../../constants/titleGraphics';
 import { DebugPanel } from '../debug/DebugPanel';
+import { MainScoreboardSkeleton } from '../LoadingSkeleton';
 import { version } from '../../../package.json';
+import { isNFLGame, isBundesligaGame, isUEFAGame } from '../../types/game';
+import type { UEFAGame } from '../../types/game';
+import { calculateAggregateScore, isTwoLegRound } from '../../services/aggregateScore';
 
 export function MainScoreboard() {
   const currentGame = useGameStore((state) => state.currentGame);
+  const availableGames = useGameStore((state) => state.availableGames);
   const scoringTeam = useGameStore((state) => state.scoringTeam);
   const scoringTimestamp = useGameStore((state) => state.scoringTimestamp);
   const isLoading = useGameStore((state) => state.isLoading);
@@ -40,8 +47,16 @@ export function MainScoreboard() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, []);
 
+  // Calculate aggregate score for UEFA knockout games (must be before early returns)
+  const aggregateScore = useMemo(() => {
+    if (!currentGame) return null;
+    if (!isUEFAGame(currentGame)) return null;
+    if (!isTwoLegRound(currentGame.round)) return null;
+    return calculateAggregateScore(currentGame as UEFAGame, availableGames);
+  }, [currentGame, availableGames]);
+
   if (isLoading && !currentGame) {
-    return <LoadingState />;
+    return <MainScoreboardSkeleton />;
   }
 
   if (error && !currentGame) {
@@ -53,8 +68,26 @@ export function MainScoreboard() {
   }
 
   // Use debug season if active, otherwise use actual game data
-  const effectiveSeason = debugSeason || currentGame.seasonName;
-  
+  const effectiveSeason = debugSeason || (
+    isNFLGame(currentGame)
+      ? currentGame.seasonName
+      : isUEFAGame(currentGame)
+      ? currentGame.round?.toUpperCase() || 'LEAGUE PHASE' // UEFA: use round name
+      : currentGame.competition === 'bundesliga'
+      ? 'BUNDESLIGA'
+      : currentGame.competition === 'dfb-pokal'
+      ? (() => {
+          // DFB-Pokal Finale detection: only 1 game in round AND in Berlin
+          const dfbGames = availableGames.filter(g =>
+            !isNFLGame(g) && g.competition === 'dfb-pokal'
+          );
+          const isFinale = dfbGames.length === 1 &&
+                          (currentGame.venue?.toLowerCase().includes('berlin') || false);
+          return isFinale ? 'DFB-POKAL FINALE' : 'DFB-POKAL';
+        })()
+      : undefined
+  );
+
   // Determine background style based on game type (or debug override)
   const isSuperBowl = debugBackground === 'superbowl' || effectiveSeason === 'SUPER BOWL';
   const isConference = debugBackground === 'conference' || effectiveSeason === 'CONFERENCE CHAMPIONSHIP';
@@ -163,20 +196,24 @@ export function MainScoreboard() {
         hideDateTime={true}
       />
 
-      {/* Main Score Display - Grid for perfect centering */}
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full max-w-7xl px-8 gap-12 mt-24">
-        {/* Away Team - Right aligned */}
+      {/* Main Score Display - Grid with items-start for precise logo-score alignment */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-start w-full max-w-7xl px-8 gap-10 mt-32">
+        {/* Home Team - Left side for Soccer (Bundesliga/UEFA), Away for NFL */}
         <div className="flex justify-end">
           <TeamDisplay
-            team={currentGame.awayTeam}
-            hasScored={scoringTeam === 'away' && scoringTimestamp !== null && Date.now() - scoringTimestamp < 30000}
+            team={(isBundesligaGame(currentGame) || isUEFAGame(currentGame)) ? currentGame.homeTeam : currentGame.awayTeam}
+            hasScored={(isBundesligaGame(currentGame) || isUEFAGame(currentGame))
+              ? (scoringTeam === 'home' && scoringTimestamp !== null && Date.now() - scoringTimestamp < 30000)
+              : (scoringTeam === 'away' && scoringTimestamp !== null && Date.now() - scoringTimestamp < 30000)}
           />
         </div>
 
-        {/* Center Section - Score or Start Time - Always centered */}
+        {/* Center Section - Score or Start Time - Offset to align with logo center */}
+        {/* Logo is 208px (w-52 h-52), center at 104px. ScoreBox is 144px (h-36), center at 72px */}
+        {/* Offset: 104px - 72px = 32px (mt-8) to align centers */}
         {currentGame.status === 'scheduled' ? (
-          // Show start time for upcoming games
-          <div className="flex flex-col items-center gap-3">
+          // Show start time for upcoming games - align with logo center
+          <div className="flex flex-col items-center gap-3 mt-8">
             <div className="flex flex-col items-center">
               <span className="text-xs text-white/50 uppercase tracking-wider mb-2">Kickoff</span>
               <span className="text-5xl font-black text-white font-mono">
@@ -231,21 +268,27 @@ export function MainScoreboard() {
             )}
           </div>
         ) : (
-          // Show score and clock for live/final games
-          <div className="flex flex-col items-center gap-4">
+          // Show score and clock for live/final games - align score with logo center
+          <div className="flex flex-col items-center gap-4 mt-8">
             {/* Score Display */}
             <div className="flex items-center gap-3">
-              {/* Away Score */}
-              <ScoreBox score={currentGame.awayTeam.score} teamColor={currentGame.awayTeam.color} />
-              
+              {/* First Score (Home for Soccer, Away for NFL) */}
+              <ScoreBox
+                score={(isBundesligaGame(currentGame) || isUEFAGame(currentGame)) ? currentGame.homeTeam.score : currentGame.awayTeam.score}
+                teamColor={(isBundesligaGame(currentGame) || isUEFAGame(currentGame)) ? currentGame.homeTeam.color : currentGame.awayTeam.color}
+              />
+
               {/* Separator */}
               <div className="flex flex-col items-center gap-1">
                 <div className="w-3 h-3 rounded-full bg-white/40" />
                 <div className="w-3 h-3 rounded-full bg-white/40" />
               </div>
-              
-              {/* Home Score */}
-              <ScoreBox score={currentGame.homeTeam.score} teamColor={currentGame.homeTeam.color} />
+
+              {/* Second Score (Away for Soccer, Home for NFL) */}
+              <ScoreBox
+                score={(isBundesligaGame(currentGame) || isUEFAGame(currentGame)) ? currentGame.awayTeam.score : currentGame.homeTeam.score}
+                teamColor={(isBundesligaGame(currentGame) || isUEFAGame(currentGame)) ? currentGame.awayTeam.color : currentGame.homeTeam.color}
+              />
             </div>
 
             {/* Game Clock or Final */}
@@ -279,56 +322,202 @@ export function MainScoreboard() {
               </div>
             ) : (
               // Show game clock for live games
-              <div
-                className="flex items-center gap-4 px-6 py-3 rounded-xl"
-                style={{
-                  background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 100%)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                }}
-              >
-                {/* Quarter */}
-                <div className="flex flex-col items-center">
-                  <span className="text-xs text-white/50 uppercase tracking-wider">Quarter</span>
-                  <span className="text-3xl font-black text-white">
-                    {currentGame.clock.periodName || '-'}
-                  </span>
-                </div>
-
-                {/* Divider */}
-                <div className="w-px h-12 bg-white/20" />
-
-                {/* Time */}
-                <div className="flex flex-col items-center">
-                  <span className="text-xs text-white/50 uppercase tracking-wider">Time</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-3xl font-black text-white font-mono">
-                      {currentGame.clock.displayValue || '0:00'}
-                    </span>
-                    {currentGame.status === 'in_progress' && (
-                      <span className="relative flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+              <>
+                {/* NFL: Horizontal layout */}
+                {isNFLGame(currentGame) && (
+                  <div
+                    className="flex items-center gap-4 px-6 py-3 rounded-xl"
+                    style={{
+                      background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 100%)',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                    }}
+                  >
+                    {/* Quarter */}
+                    <div className="flex flex-col items-center">
+                      <span className="text-xs text-white/50 uppercase tracking-wider">Quarter</span>
+                      <span className="text-3xl font-black text-white">
+                        {currentGame.clock?.periodName || '-'}
                       </span>
-                    )}
+                    </div>
+
+                    {/* Divider */}
+                    <div className="w-px h-12 bg-white/20" />
+
+                    {/* Time */}
+                    <div className="flex flex-col items-center">
+                      <span className="text-xs text-white/50 uppercase tracking-wider">Time</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-3xl font-black text-white font-mono">
+                          {currentGame.clock.displayValue || '0:00'}
+                        </span>
+                        {currentGame.status === 'in_progress' && (
+                          <span className="relative flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                )}
+
+                {/* Bundesliga: Compact vertical layout with additional info */}
+                {isBundesligaGame(currentGame) && (
+                  <div className="flex flex-col gap-1.5">
+                    {/* Time and Period - Combined compact box */}
+                    <div
+                      className="flex items-center gap-4 px-5 py-2 rounded-xl"
+                      style={{
+                        background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 100%)',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                      }}
+                    >
+                      {/* Time */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-4xl font-black text-white font-mono">
+                          {currentGame.clock.displayValue || '0\''}
+                        </span>
+                        {currentGame.status === 'in_progress' && (
+                          <span className="relative flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Divider */}
+                      <div className="w-px h-8 bg-white/20" />
+
+                      {/* Period */}
+                      <span className="text-lg font-bold text-white/80">
+                        {currentGame.clock?.periodName || '-'}
+                      </span>
+                    </div>
+
+                    {/* Halftime Score (if available and past halftime) */}
+                    {currentGame.halftimeScore && currentGame.clock.period !== 'first_half' && (
+                      <div className="flex justify-center">
+                        <span className="text-xs text-white/40 px-3 py-0.5 rounded-full bg-white/5">
+                          HZ: {currentGame.halftimeScore.home} - {currentGame.halftimeScore.away}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Last Scorer (if goals exist) */}
+                    {currentGame.goals && currentGame.goals.length > 0 && (() => {
+                      const lastGoal = currentGame.goals[currentGame.goals.length - 1];
+                      const scorerInfo = lastGoal.isPenalty ? '(P)' : lastGoal.isOwnGoal ? '(ET)' : '';
+                      return (
+                        <div className="flex justify-center">
+                          <div className="flex items-center gap-1.5 text-xs text-white/50 px-3 py-0.5 rounded-full bg-white/5">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                              <circle cx="12" cy="12" r="4" fill="currentColor" />
+                            </svg>
+                            <span className="truncate max-w-[180px]">
+                              {lastGoal.scorerName} ({lastGoal.minute}') {scorerInfo}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {/* UEFA Champions League: Similar to Bundesliga with round info */}
+                {isUEFAGame(currentGame) && (
+                  <div className="flex flex-col gap-1.5">
+                    {/* Time and Period - Combined compact box */}
+                    <div
+                      className="flex items-center gap-4 px-5 py-2 rounded-xl"
+                      style={{
+                        background: 'linear-gradient(180deg, rgba(0,50,100,0.6) 0%, rgba(0,30,80,0.4) 100%)',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)',
+                        border: '1px solid rgba(0,100,200,0.3)',
+                      }}
+                    >
+                      {/* Time */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-4xl font-black text-white font-mono">
+                          {currentGame.clock.displayValue || '0\''}
+                        </span>
+                        {currentGame.status === 'in_progress' && (
+                          <span className="relative flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500" />
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Divider */}
+                      <div className="w-px h-8 bg-white/20" />
+
+                      {/* Period */}
+                      <span className="text-lg font-bold text-white/80">
+                        {currentGame.clock?.periodName || '-'}
+                      </span>
+                    </div>
+
+                    {/* Halftime Score (if available and past halftime) */}
+                    {currentGame.halftimeScore && currentGame.clock.period !== 'first_half' && (
+                      <div className="flex justify-center">
+                        <span className="text-xs text-white/40 px-3 py-0.5 rounded-full bg-white/5">
+                          HZ: {currentGame.halftimeScore.home} - {currentGame.halftimeScore.away}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Last Scorer (if goals exist) */}
+                    {currentGame.goals && currentGame.goals.length > 0 && (() => {
+                      const lastGoal = currentGame.goals[currentGame.goals.length - 1];
+                      const scorerInfo = lastGoal.isPenalty ? '(P)' : lastGoal.isOwnGoal ? '(ET)' : '';
+                      return (
+                        <div className="flex justify-center">
+                          <div className="flex items-center gap-1.5 text-xs text-white/50 px-3 py-0.5 rounded-full bg-white/5">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                              <circle cx="12" cy="12" r="4" fill="currentColor" />
+                            </svg>
+                            <span className="truncate max-w-[180px]">
+                              {lastGoal.scorerName} ({lastGoal.minute}') {scorerInfo}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
 
-        {/* Home Team */}
+        {/* Away Team - Right side for Soccer (Bundesliga/UEFA), Home for NFL */}
         <div className="flex justify-start">
           <TeamDisplay
-            team={currentGame.homeTeam}
-            hasScored={scoringTeam === 'home' && scoringTimestamp !== null && Date.now() - scoringTimestamp < 30000}
+            team={(isBundesligaGame(currentGame) || isUEFAGame(currentGame)) ? currentGame.awayTeam : currentGame.homeTeam}
+            hasScored={(isBundesligaGame(currentGame) || isUEFAGame(currentGame))
+              ? (scoringTeam === 'away' && scoringTimestamp !== null && Date.now() - scoringTimestamp < 30000)
+              : (scoringTeam === 'home' && scoringTimestamp !== null && Date.now() - scoringTimestamp < 30000)}
           />
         </div>
       </div>
 
+      {/* UEFA Aggregate Score Display - for knockout 2-leg matches */}
+      {isUEFAGame(currentGame) && aggregateScore && (
+        <div className="mt-4">
+          <AggregateScoreDisplay
+            aggregate={aggregateScore}
+            homeTeamAbbr={currentGame.homeTeam.abbreviation}
+            awayTeamAbbr={currentGame.awayTeam.abbreviation}
+          />
+        </div>
+      )}
+
       {/* Game Situation */}
-      {currentGame.situation && currentGame.status === 'in_progress' && (
+      {isNFLGame(currentGame) && currentGame.situation && currentGame.status === 'in_progress' && (
         <div className="mt-6">
           <GameSituation
             situation={currentGame.situation}
@@ -338,7 +527,7 @@ export function MainScoreboard() {
         </div>
       )}
 
-      {/* Bottom Info Section - LIVE badge and Venue/Broadcast */}
+      {/* Bottom Info Section - LIVE badge, Matchday, and Venue/Broadcast */}
       <div className="absolute bottom-12 left-0 right-0 flex flex-col items-center gap-2">
         {/* LIVE Badge for in-progress games */}
         {(currentGame.status === 'in_progress' || currentGame.status === 'halftime') && (
@@ -350,6 +539,15 @@ export function MainScoreboard() {
               <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
               LIVE
             </span>
+          </div>
+        )}
+
+        {/* Competition & Matchday for Bundesliga */}
+        {isBundesligaGame(currentGame) && (
+          <div className="flex items-center gap-2 text-sm text-white/50 font-medium">
+            <span>{currentGame.competition === 'bundesliga' ? 'Bundesliga' : 'DFB-Pokal'}</span>
+            <span className="text-white/30">•</span>
+            <span>{currentGame.matchday}. Spieltag</span>
           </div>
         )}
 
@@ -380,9 +578,9 @@ export function MainScoreboard() {
         )}
       </div>
 
-      {/* Navigation hint - very subtle */}
+      {/* Version info - very subtle */}
       <div className="absolute bottom-3 left-0 right-0 text-center text-white/20 text-xs">
-        Arrow Keys to navigate | v{version}
+        v{version}
       </div>
       
       {/* Debug Panel */}
@@ -444,20 +642,6 @@ function ScoreBox({ score, teamColor }: ScoreBoxProps) {
   );
 }
 
-function LoadingState() {
-  return (
-    <div className="h-full w-full flex items-center justify-center bg-slate-900">
-      <div className="flex flex-col items-center gap-4">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500" />
-          <div className="absolute inset-0 animate-ping rounded-full h-16 w-16 border border-blue-500/30" />
-        </div>
-        <p className="text-white/70 text-xl">Loading game data...</p>
-      </div>
-    </div>
-  );
-}
-
 function ErrorState({ message }: { message: string }) {
   return (
     <div className="h-full w-full flex items-center justify-center bg-slate-900">
@@ -477,6 +661,7 @@ function ErrorState({ message }: { message: string }) {
 function NoGameState() {
   const availableGames = useGameStore((state) => state.availableGames);
   const confirmGameSelection = useGameStore((state) => state.confirmGameSelection);
+  const currentSport = useSettingsStore((state) => state.currentSport);
 
   const handleSelectGame = (game: any) => {
     confirmGameSelection(game);
@@ -513,7 +698,13 @@ function NoGameState() {
       <div className="w-full max-w-4xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-white mb-2">🏈 NFL Scoreboard</h1>
+          <h1 className="text-4xl font-black text-white mb-2">
+            {currentSport === 'nfl'
+              ? '🏈 NFL Scoreboard'
+              : currentSport === 'uefa'
+              ? '⭐ UEFA Champions League'
+              : '⚽ Bundesliga Scoreboard'}
+          </h1>
           <p className="text-white/60 text-lg">Wählen Sie ein Spiel aus</p>
         </div>
 
@@ -532,8 +723,8 @@ function NoGameState() {
                   className="bg-gradient-to-br from-red-900/40 to-red-800/30 hover:from-red-800/50 hover:to-red-700/40 border-2 border-red-500/50 hover:border-red-400 rounded-xl p-4 transition-all hover:scale-[1.02] text-left"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-red-400 text-sm font-bold">{game.clock.periodName} {game.clock.displayValue}</span>
-                    <span className="text-xs text-white/40">{game.seasonName}</span>
+                    <span className="text-red-400 text-sm font-bold">{game.clock?.periodName} {game.clock?.displayValue}</span>
+                    <span className="text-xs text-white/40">{isNFLGame(game) && game.seasonName}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">
@@ -578,7 +769,7 @@ function NoGameState() {
                   >
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-blue-400 text-sm font-bold">{dateTime.date} {dateTime.time}</span>
-                      <span className="text-xs text-white/40">{game.seasonName}</span>
+                      <span className="text-xs text-white/40">{isNFLGame(game) && game.seasonName}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -616,7 +807,7 @@ function NoGameState() {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-gray-400 text-sm font-bold">FINAL</span>
-                    <span className="text-xs text-white/40">{game.seasonName}</span>
+                    <span className="text-xs text-white/40">{isNFLGame(game) && game.seasonName}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">

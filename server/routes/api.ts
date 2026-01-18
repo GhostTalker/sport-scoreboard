@@ -1,20 +1,233 @@
-import { Router } from 'express';
-import { espnProxy } from '../services/espnProxy';
+/**
+ * API Routes for Sports Scoreboard
+ *
+ * Provides endpoints for:
+ * - NFL data (via ESPN proxy with resilience features)
+ * - Bundesliga data (via OpenLigaDB proxy)
+ * - Health checks with detailed circuit breaker status
+ * - Admin endpoints for manual intervention
+ */
+
+import { Router, Response, Request, NextFunction } from 'express';
+import { espnProxy, FetchResult } from '../services/espnProxy';
+import { openligadbProxy, FetchResult as OpenLigaFetchResult } from '../services/openligadbProxy';
 
 // Force stdout/stderr for PM2
-const logError = (msg: string, ...args: any[]) => {
+const logError = (msg: string, ...args: unknown[]) => {
   process.stderr.write(msg + ' ' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ') + '\n');
 };
 
+// Track server start time for uptime calculation
+const serverStartTime = Date.now();
+
 export const apiRouter = Router();
+
+// ═══════════════════════════════════════════════════════════════════════
+// Security: Input Validation Middleware
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Validate gameId parameter
+ * SECURITY: CWE-20 - Prevents injection attacks via malicious gameIds
+ *
+ * Valid format: Alphanumeric with hyphens, max 20 characters
+ * Examples: "401437812", "nfl-2024-playoffs"
+ */
+function validateGameId(req: Request, res: Response, next: NextFunction): void {
+  const { gameId } = req.params;
+
+  // Alphanumeric with hyphens only, max 20 chars
+  if (!gameId || !/^[a-zA-Z0-9-]{1,20}$/.test(gameId)) {
+    res.status(400).json({
+      error: 'Invalid gameId',
+      message: 'gameId must be alphanumeric with hyphens only (max 20 characters)',
+      provided: gameId,
+    });
+    return;
+  }
+
+  next();
+}
+
+/**
+ * Validate matchId parameter (Bundesliga)
+ * SECURITY: CWE-20 - Prevents injection attacks via malicious matchIds
+ *
+ * Valid format: Numeric only, max 10 digits
+ */
+function validateMatchId(req: Request, res: Response, next: NextFunction): void {
+  const { matchId } = req.params;
+
+  // Numeric only, max 10 digits
+  if (!matchId || !/^\d{1,10}$/.test(matchId)) {
+    res.status(400).json({
+      error: 'Invalid matchId',
+      message: 'matchId must be numeric only (max 10 digits)',
+      provided: matchId,
+    });
+    return;
+  }
+
+  next();
+}
+
+/**
+ * Validate matchday parameter (Bundesliga)
+ * SECURITY: CWE-20 - Prevents injection attacks
+ *
+ * Valid range: 1-34 (Bundesliga has max 34 matchdays)
+ */
+function validateMatchday(req: Request, res: Response, next: NextFunction): void {
+  const { matchday } = req.params;
+  const matchdayNum = parseInt(matchday, 10);
+
+  if (isNaN(matchdayNum) || matchdayNum < 1 || matchdayNum > 34) {
+    res.status(400).json({
+      error: 'Invalid matchday',
+      message: 'matchday must be a number between 1 and 34',
+      provided: matchday,
+    });
+    return;
+  }
+
+  next();
+}
+
+/**
+ * Validate teamId parameter
+ * SECURITY: CWE-20 - Prevents injection attacks
+ *
+ * Valid format: Numeric only, max 10 digits
+ */
+function validateTeamId(req: Request, res: Response, next: NextFunction): void {
+  const { teamId } = req.params;
+
+  // Numeric only, max 10 digits
+  if (!teamId || !/^\d{1,10}$/.test(teamId)) {
+    res.status(400).json({
+      error: 'Invalid teamId',
+      message: 'teamId must be numeric only (max 10 digits)',
+      provided: teamId,
+    });
+    return;
+  }
+
+  next();
+}
+
+/**
+ * Validate schedule query parameters
+ * SECURITY: CWE-20 - Prevents injection and resource exhaustion
+ *
+ * Valid ranges:
+ * - year: 2000-2100
+ * - week: 1-22 (NFL has max 22 weeks including playoffs)
+ * - seasonType: 1-4 (preseason=1, regular=2, postseason=3, allstar=4)
+ */
+function validateScheduleParams(req: Request, res: Response, next: NextFunction): void {
+  const { year, week, seasonType } = req.query;
+
+  // Validate year if provided
+  if (year !== undefined) {
+    const yearNum = parseInt(year as string, 10);
+    if (isNaN(yearNum) || yearNum < 2000 || yearNum > 2100) {
+      res.status(400).json({
+        error: 'Invalid year parameter',
+        message: 'year must be a number between 2000 and 2100',
+        provided: year,
+      });
+      return;
+    }
+  }
+
+  // Validate week if provided
+  if (week !== undefined) {
+    const weekNum = parseInt(week as string, 10);
+    if (isNaN(weekNum) || weekNum < 1 || weekNum > 22) {
+      res.status(400).json({
+        error: 'Invalid week parameter',
+        message: 'week must be a number between 1 and 22',
+        provided: week,
+      });
+      return;
+    }
+  }
+
+  // Validate seasonType if provided
+  if (seasonType !== undefined) {
+    const seasonTypeNum = parseInt(seasonType as string, 10);
+    if (isNaN(seasonTypeNum) || seasonTypeNum < 1 || seasonTypeNum > 4) {
+      res.status(400).json({
+        error: 'Invalid seasonType parameter',
+        message: 'seasonType must be a number between 1 and 4 (1=preseason, 2=regular, 3=postseason, 4=allstar)',
+        provided: seasonType,
+      });
+      return;
+    }
+  }
+
+  next();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Helper Functions
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Handle FetchResult and set appropriate headers for frontend
+ * Adds X-Cache-Status and X-Cache-Age headers so frontend can show
+ * "Last updated X mins ago" banners when serving stale data
+ */
+function handleFetchResult(res: Response, result: FetchResult | OpenLigaFetchResult): void {
+  // Add cache metadata headers for frontend awareness
+  res.set('X-Cache-Status', result.fromCache ? 'HIT' : 'MISS');
+
+  // Mark as stale if we're returning cached data due to an error
+  if (result.error && result.fromCache) {
+    res.set('X-Cache-Status', 'stale');
+  }
+
+  if (result.cacheAge !== undefined && result.cacheAge > 0) {
+    res.set('X-Cache-Age', String(Math.round(result.cacheAge / 1000))); // Age in seconds
+  }
+
+  if (result.error) {
+    // We're serving stale data due to API error - include error info
+    res.set('X-API-Error', result.error);
+  }
+
+  res.json(result.data);
+}
+
+/**
+ * Format uptime seconds to human-readable string
+ */
+function formatUptime(seconds: number): string {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  const parts: string[] = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (secs > 0 || parts.length === 0) parts.push(`${secs}s`);
+
+  return parts.join(' ');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// NFL Endpoints (ESPN Proxy with Resilience)
+// ═══════════════════════════════════════════════════════════════════════
 
 // GET /api/scoreboard - Get all current games
 apiRouter.get('/scoreboard', async (_req, res) => {
   try {
-    const data = await espnProxy.fetchScoreboard();
-    res.json(data);
+    const result = await espnProxy.fetchScoreboard();
+    handleFetchResult(res, result);
   } catch (error) {
-    logError('❌ [API Error] Scoreboard failed:', error instanceof Error ? error.message : error);
+    logError('[API Error] Scoreboard failed:', error instanceof Error ? error.message : error);
     if (error instanceof Error && error.stack) {
       logError('Stack trace:', error.stack);
     }
@@ -26,13 +239,13 @@ apiRouter.get('/scoreboard', async (_req, res) => {
 });
 
 // GET /api/game/:gameId - Get detailed game data
-apiRouter.get('/game/:gameId', async (req, res) => {
+apiRouter.get('/game/:gameId', validateGameId, async (req, res) => {
   try {
     const { gameId } = req.params;
-    const data = await espnProxy.fetchGameDetails(gameId);
-    res.json(data);
+    const result = await espnProxy.fetchGameDetails(gameId);
+    handleFetchResult(res, result);
   } catch (error) {
-    logError(`❌ [API Error] Game ${req.params.gameId} failed:`, error instanceof Error ? error.message : error);
+    logError(`[API Error] Game ${req.params.gameId} failed:`, error instanceof Error ? error.message : error);
     if (error instanceof Error && error.stack) {
       logError('Stack trace:', error.stack);
     }
@@ -44,13 +257,13 @@ apiRouter.get('/game/:gameId', async (req, res) => {
 });
 
 // GET /api/plays/:gameId - Get play-by-play data (faster polling for live events)
-apiRouter.get('/plays/:gameId', async (req, res) => {
+apiRouter.get('/plays/:gameId', validateGameId, async (req, res) => {
   try {
     const { gameId } = req.params;
-    const data = await espnProxy.fetchPlays(gameId);
-    res.json(data);
+    const result = await espnProxy.fetchPlays(gameId);
+    handleFetchResult(res, result);
   } catch (error) {
-    logError(`❌ [API Error] Plays ${req.params.gameId} failed:`, error instanceof Error ? error.message : error);
+    logError(`[API Error] Plays ${req.params.gameId} failed:`, error instanceof Error ? error.message : error);
     res.status(500).json({
       error: 'Failed to fetch plays',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -59,17 +272,17 @@ apiRouter.get('/plays/:gameId', async (req, res) => {
 });
 
 // GET /api/schedule - Get schedule for specific week/season
-apiRouter.get('/schedule', async (req, res) => {
+apiRouter.get('/schedule', validateScheduleParams, async (req, res) => {
   try {
     const { year, week, seasonType } = req.query;
-    const data = await espnProxy.fetchSchedule(
+    const result = await espnProxy.fetchSchedule(
       year ? parseInt(year as string) : undefined,
       week ? parseInt(week as string) : undefined,
       seasonType ? parseInt(seasonType as string) : undefined
     );
-    res.json(data);
+    handleFetchResult(res, result);
   } catch (error) {
-    logError('❌ [API Error] Schedule failed:', error instanceof Error ? error.message : error);
+    logError('[API Error] Schedule failed:', error instanceof Error ? error.message : error);
     if (error instanceof Error && error.stack) {
       logError('Stack trace:', error.stack);
     }
@@ -81,25 +294,313 @@ apiRouter.get('/schedule', async (req, res) => {
 });
 
 // GET /api/team/:teamId - Get team info
-apiRouter.get('/team/:teamId', async (req, res) => {
+apiRouter.get('/team/:teamId', validateTeamId, async (req, res) => {
   try {
     const { teamId } = req.params;
-    const data = await espnProxy.fetchTeam(teamId);
-    res.json(data);
+    const result = await espnProxy.fetchTeam(teamId);
+    handleFetchResult(res, result);
   } catch (error) {
     logError('Error fetching team:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch team',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
 
-// GET /api/health - Health check
+// ═══════════════════════════════════════════════════════════════════════
+// Bundesliga Endpoints (OpenLigaDB)
+// ═══════════════════════════════════════════════════════════════════════
+
+// GET /api/bundesliga/current-group - Get current matchday info
+apiRouter.get('/bundesliga/current-group', async (req, res) => {
+  try {
+    const { league = 'bl1' } = req.query;
+    const result = await openligadbProxy.fetchCurrentGroupWithResult(league as string);
+    handleFetchResult(res, result);
+  } catch (error) {
+    logError('[API Error] Bundesliga current group failed:', error instanceof Error ? error.message : error);
+    if (error instanceof Error && error.stack) {
+      logError('Stack trace:', error.stack);
+    }
+    res.status(500).json({
+      error: 'Failed to fetch current matchday',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/bundesliga/matchday/:matchday - Get all matches for a matchday
+apiRouter.get('/bundesliga/matchday/:matchday', validateMatchday, async (req, res) => {
+  try {
+    const { matchday } = req.params;
+    const { league = 'bl1', season } = req.query;
+
+    // If season not provided, fetch current group first
+    let seasonYear = season as string;
+    if (!seasonYear) {
+      const groupResult = await openligadbProxy.fetchCurrentGroupWithResult(league as string);
+      const currentGroup = groupResult.data as { GroupYear?: string };
+      seasonYear = currentGroup.GroupYear || new Date().getFullYear().toString();
+    }
+
+    const result = await openligadbProxy.fetchMatchdayWithResult(
+      league as string,
+      seasonYear,
+      parseInt(matchday)
+    );
+    handleFetchResult(res, result);
+  } catch (error) {
+    logError(`[API Error] Bundesliga matchday ${req.params.matchday} failed:`, error instanceof Error ? error.message : error);
+    if (error instanceof Error && error.stack) {
+      logError('Stack trace:', error.stack);
+    }
+    res.status(500).json({
+      error: 'Failed to fetch matchday',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/bundesliga/match/:matchId - Get single match details
+apiRouter.get('/bundesliga/match/:matchId', validateMatchId, async (req, res) => {
+  try {
+    const { matchId } = req.params;
+    const result = await openligadbProxy.fetchMatchWithResult(matchId);
+    handleFetchResult(res, result);
+  } catch (error) {
+    logError(`[API Error] Bundesliga match ${req.params.matchId} failed:`, error instanceof Error ? error.message : error);
+    if (error instanceof Error && error.stack) {
+      logError('Stack trace:', error.stack);
+    }
+    res.status(500).json({
+      error: 'Failed to fetch match',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Health & Status Endpoints
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/health - Comprehensive health check
+ *
+ * Returns:
+ * - Overall status (healthy/degraded)
+ * - Server uptime and memory usage
+ * - Cache statistics for both services
+ * - Circuit breaker status (ESPN)
+ * - Active request count
+ *
+ * Status logic:
+ * - "healthy": Everything working normally
+ * - "degraded": ESPN circuit breaker is open (serving cached data)
+ */
 apiRouter.get('/health', (_req, res) => {
-  res.json({ 
-    status: 'ok', 
+  // Calculate uptime in seconds
+  const uptimeMs = Date.now() - serverStartTime;
+  const uptimeSeconds = Math.floor(uptimeMs / 1000);
+
+  // Get memory usage from Node.js process
+  const memUsage = process.memoryUsage();
+  const heapUsedMB = Math.round(memUsage.heapUsed / (1024 * 1024) * 10) / 10;
+  const heapTotalMB = Math.round(memUsage.heapTotal / (1024 * 1024) * 10) / 10;
+  const rssMB = Math.round(memUsage.rss / (1024 * 1024) * 10) / 10;
+
+  // Get cache and circuit breaker statistics
+  const espnStats = espnProxy.getCacheStats();
+  const espnCircuit = espnProxy.getCircuitStatus();
+  const openligadbStats = openligadbProxy.getCacheStats();
+
+  // Determine overall status based on circuit breaker
+  const status = espnCircuit.isHealthy ? 'healthy' : 'degraded';
+
+  res.json({
+    status,
+    uptime: uptimeSeconds,
+    uptimeFormatted: formatUptime(uptimeSeconds),
+    memory: {
+      used: `${heapUsedMB}MB`,
+      total: `${heapTotalMB}MB`,
+      rss: `${rssMB}MB`,
+      usedBytes: memUsage.heapUsed,
+      totalBytes: memUsage.heapTotal,
+    },
+    services: {
+      espn: {
+        status: espnCircuit.isHealthy ? 'healthy' : 'degraded',
+        circuitBreaker: {
+          state: espnCircuit.state,
+          failureCount: espnCircuit.failureCount,
+          nextRetryIn: espnCircuit.nextRetryIn
+            ? `${Math.round(espnCircuit.nextRetryIn / 1000)}s`
+            : undefined,
+        },
+        activeRequests: espnStats.activeRequests,
+      },
+      openligadb: {
+        status: 'healthy', // OpenLigaDB doesn't have circuit breaker yet
+      },
+    },
+    cache: {
+      espn: {
+        size: espnStats.size,
+        sizeBytes: espnStats.sizeBytes,
+        entries: espnStats.entries,
+        hitRate: espnStats.hitRate,
+        hits: espnStats.hits,
+        misses: espnStats.misses,
+        maxSize: espnStats.maxSize,
+      },
+      openligadb: {
+        size: openligadbStats.size,
+        sizeBytes: openligadbStats.sizeBytes,
+        entries: openligadbStats.entries,
+        hitRate: openligadbStats.hitRate,
+        hits: openligadbStats.hits,
+        misses: openligadbStats.misses,
+        maxSize: openligadbStats.maxSize,
+      },
+    },
+    lastUpdate: new Date().toISOString(),
+  });
+});
+
+/**
+ * GET /api/health/live - Quick liveness check (for Kubernetes/PM2)
+ * Returns 200 if server is running
+ * This is the most basic health check - just confirms the process is alive
+ */
+apiRouter.get('/health/live', (_req, res) => {
+  res.status(200).json({
+    status: 'alive',
+    timestamp: Date.now(),
+  });
+});
+
+/**
+ * GET /api/health/ready - Readiness check (for Kubernetes/PM2)
+ * Returns status based on whether server is ready to accept traffic
+ *
+ * Unlike /health/live, this considers service health:
+ * - 200 "ready": All systems operational
+ * - 200 "degraded": ESPN API having issues but still serving cached data
+ */
+apiRouter.get('/health/ready', (_req, res) => {
+  const espnCircuit = espnProxy.getCircuitStatus();
+
+  if (espnCircuit.isHealthy) {
+    res.status(200).json({
+      status: 'ready',
+      timestamp: Date.now(),
+    });
+  } else {
+    // Return 200 but indicate degraded mode
+    // This allows traffic through while warning about degraded service
+    res.status(200).json({
+      status: 'degraded',
+      reason: 'ESPN API circuit breaker is open - serving cached data',
+      circuitState: espnCircuit.state,
+      nextRetryIn: espnCircuit.nextRetryIn
+        ? `${Math.round(espnCircuit.nextRetryIn / 1000)}s`
+        : undefined,
+      timestamp: Date.now(),
+    });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Admin Endpoints (for manual intervention during incidents)
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/admin - List available admin endpoints
+ *
+ * NOTE: Admin endpoints are open to all IPs as this is an internal tool.
+ * In production Kubernetes deployment, use proper RBAC/service account auth.
+ */
+apiRouter.get('/admin', (_req, res) => {
+  res.json({
+    available_endpoints: [
+      {
+        method: 'POST',
+        path: '/api/admin/reset-circuit',
+        description: 'Manually reset ESPN circuit breaker',
+        use_case: 'Use when ESPN is back online but circuit breaker hasn\'t auto-recovered'
+      },
+      {
+        method: 'POST',
+        path: '/api/admin/clear-cache',
+        description: 'Clear cached data',
+        query_params: {
+          service: 'espn | bundesliga | undefined (all)'
+        },
+        warning: 'Will cause a burst of API requests as cache refills'
+      },
+      {
+        method: 'POST',
+        path: '/api/admin/cancel-requests',
+        description: 'Cancel all active ESPN API requests',
+        use_case: 'Emergency use to stop all outgoing requests'
+      }
+    ],
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
+ * POST /api/admin/reset-circuit - Manually reset ESPN circuit breaker
+ *
+ * Use this if you know ESPN is back online but the circuit breaker
+ * hasn't auto-recovered yet (e.g., after a long outage)
+ */
+apiRouter.post('/admin/reset-circuit', (_req, res) => {
+  espnProxy.resetCircuitBreaker();
+  res.json({
+    success: true,
+    message: 'ESPN circuit breaker has been reset to CLOSED',
     timestamp: new Date().toISOString(),
-    cache: espnProxy.getCacheStats()
+  });
+});
+
+/**
+ * POST /api/admin/clear-cache - Clear cached data
+ *
+ * Query params:
+ * - service: 'espn' | 'bundesliga' | undefined (all)
+ *
+ * Use with caution - will cause a burst of API requests as cache refills
+ */
+apiRouter.post('/admin/clear-cache', (req, res) => {
+  const { service } = req.query;
+
+  if (service === 'espn' || !service) {
+    espnProxy.clearCache();
+  }
+  if (service === 'bundesliga' || !service) {
+    openligadbProxy.clearCache();
+  }
+
+  res.json({
+    success: true,
+    message: service ? `${service} cache cleared` : 'All caches cleared',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+/**
+ * POST /api/admin/cancel-requests - Cancel all active ESPN API requests
+ *
+ * Use during emergencies to immediately stop all outgoing requests
+ * (e.g., if ESPN is causing timeouts that block shutdown)
+ */
+apiRouter.post('/admin/cancel-requests', (_req, res) => {
+  espnProxy.cancelAllRequests();
+  res.json({
+    success: true,
+    message: 'All active ESPN requests have been cancelled',
+    timestamp: new Date().toISOString(),
   });
 });

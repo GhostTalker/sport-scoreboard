@@ -1,15 +1,18 @@
 import { useSwipeable } from 'react-swipeable';
 import { useUIStore } from '../stores/uiStore';
+import { useGameStore } from '../stores/gameStore';
+import { useSettingsStore } from '../stores/settingsStore';
+import { isNFLGame, isBundesligaGame } from '../types/game';
 
-type View = 'scoreboard' | 'stats' | 'settings';
+type View = 'scoreboard' | 'stats' | 'settings' | 'bracket' | 'table';
 
-// Navigation map: from view -> swipe direction -> to view
-const NAVIGATION: Record<View, Record<string, View | null>> = {
+// Base navigation map: from view -> swipe direction -> to view
+const BASE_NAVIGATION: Record<View, Record<string, View | null>> = {
   scoreboard: {
     up: 'stats',
     down: null,
-    left: 'settings',
-    right: null,
+    left: 'settings', // Always settings
+    right: null, // Will be 'table' for Bundesliga or 'bracket' for NFL playoffs
   },
   stats: {
     up: null,
@@ -23,16 +26,60 @@ const NAVIGATION: Record<View, Record<string, View | null>> = {
     left: null,
     right: 'scoreboard',
   },
+  bracket: {
+    up: null,
+    down: null,
+    left: 'scoreboard', // Go back to scoreboard
+    right: null,
+  },
+  table: {
+    up: null,
+    down: null,
+    left: 'scoreboard', // Go back to scoreboard
+    right: null,
+  },
 };
 
 export function useSwipe() {
   const currentView = useUIStore((state) => state.currentView);
   const setView = useUIStore((state) => state.setView);
+  const currentGame = useGameStore((state) => state.currentGame);
+  const availableGames = useGameStore((state) => state.availableGames);
+  const viewMode = useSettingsStore((state) => state.viewMode);
+
+  // Check if bracket view is available (NFL playoffs only)
+  // In single-view mode: check currentGame
+  // In multi-view mode: check if any game is NFL playoffs
+  const isBracketAvailableSingle = currentGame && isNFLGame(currentGame) && currentGame.seasonType === 3;
+  const isBracketAvailableMulti = viewMode === 'multi' && availableGames.some(
+    (game) => isNFLGame(game) && game.seasonType === 3
+  );
+  const isBracketAvailable = isBracketAvailableSingle || isBracketAvailableMulti;
+
+  // Check if table view is available (Bundesliga only)
+  const isTableAvailableSingle = currentGame && isBundesligaGame(currentGame);
+  const isTableAvailableMulti = viewMode === 'multi' && availableGames.some((game) => isBundesligaGame(game));
+  const isTableAvailable = isTableAvailableSingle || isTableAvailableMulti;
 
   const handleSwipe = (direction: string) => {
-    const navigation = NAVIGATION[currentView];
+    // Get dynamic navigation based on current game
+    const navigation = { ...BASE_NAVIGATION[currentView] };
+
+    // Enable table navigation for Bundesliga (right from scoreboard)
+    if (isTableAvailable) {
+      if (currentView === 'scoreboard') {
+        navigation.right = 'table';
+      }
+    }
+    // Enable bracket navigation for NFL playoffs (right from scoreboard)
+    else if (isBracketAvailable) {
+      if (currentView === 'scoreboard' || currentView === 'stats') {
+        navigation.right = 'bracket';
+      }
+    }
+
     const nextView = navigation[direction];
-    
+
     if (nextView) {
       setView(nextView);
     }
@@ -59,7 +106,7 @@ export function useSwipe() {
 
 // Get available navigation directions for current view
 export function getAvailableDirections(view: View): string[] {
-  const nav = NAVIGATION[view];
+  const nav = BASE_NAVIGATION[view];
   return Object.entries(nav)
     .filter(([, target]) => target !== null)
     .map(([direction]) => direction);
