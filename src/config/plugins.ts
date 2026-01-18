@@ -47,7 +47,7 @@ export const PLUGIN_DEFINITIONS: PluginDefinition[] = [
   {
     manifest: {
       id: 'bundesliga',
-      version: '1.1.0',
+      version: '1.2.0',
       name: 'Bundesliga Plugin',
       displayName: 'Bundesliga',
       description: 'Deutscher Fußball',
